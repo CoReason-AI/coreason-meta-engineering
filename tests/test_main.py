@@ -51,3 +51,44 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
     # Assert optional field logic separately to avoid E501
     assert "optional_field: Annotated[str, StringConstraints(max_length=2000)] | None" in new_content
     assert 'Field(default=None, description="")' in new_content
+
+
+def test_scaffold_model_cli_file_payload(tmp_path: Path) -> None:
+    target_file = tmp_path / "dummy_file.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    schema = {
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "integer"},
+        },
+        "required": ["name", "age"],
+    }
+    schema_file = tmp_path / "schema.json"
+    schema_file.write_text(json.dumps(schema), encoding="utf-8")
+
+    result = runner.invoke(app, ["PersonFile", str(schema_file), "--target-file", str(target_file)])
+
+    assert result.exit_code == 0, result.stdout
+    assert "Successfully injected PersonFile into" in result.stdout
+
+    new_content = target_file.read_text(encoding="utf-8")
+    assert "class PersonFile(CoreasonBaseState):" in new_content
+
+
+def test_scaffold_model_cli_invalid_file_fallback(tmp_path: Path) -> None:
+    target_file = tmp_path / "dummy_file.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    # Use a schema payload that triggers OSError but is still a valid json string
+    # To test actual fallback code block and hit OSError
+    from unittest.mock import patch
+
+    schema_payload_fallback_clean = '{"properties": {"name": {"type": "string"}}}'
+
+    with patch("src.coreason_meta_engineering.main.Path.is_file") as mock_is_file:
+        mock_is_file.side_effect = OSError("Mocked OS Error")
+        result3 = runner.invoke(
+            app, ["PersonFallbackClean", schema_payload_fallback_clean, "--target-file", str(target_file)]
+        )
+        assert result3.exit_code == 0

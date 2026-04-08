@@ -21,7 +21,7 @@ from coreason_meta_engineering.utils.logger import logger
 app = typer.Typer()
 
 
-@app.command(name="scaffold-model")  # type: ignore
+@app.command(name="scaffold-model")
 def scaffold_model(
     model_name: str,
     schema_payload: str,
@@ -33,6 +33,13 @@ def scaffold_model(
     logger.info(f"Scaffolding model {model_name} into {target_file}")
 
     # 1. Parse schema payload
+    try:
+        payload_path = Path(schema_payload)
+        if payload_path.is_file():
+            schema_payload = payload_path.read_text(encoding="utf-8")
+    except OSError:
+        pass  # Not a valid path string, treat as raw JSON
+
     schema_dict = json.loads(schema_payload)
 
     # 2. Resolve fields
