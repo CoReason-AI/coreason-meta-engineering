@@ -12,7 +12,9 @@ authors = [
     { name = "Gowtham A Rao", email = "gowtham.rao@coreason.ai" },
 ]
 dependencies = [
+    "libcst>=1.8.6",
     "loguru>=0.7.2",
+    "pydantic>=2.12.5",
 ]
 license = { file = "LICENSE" }
 classifiers = [
