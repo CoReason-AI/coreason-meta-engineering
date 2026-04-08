@@ -57,9 +57,9 @@ ignore = ["DEP002"]
 packages = ["src/coreason_meta_engineering"]
 
 [project.urls]
-Homepage = "https://github.com/CoReason-AI/coreason_meta_engineering"
-Repository = "https://github.com/CoReason-AI/coreason_meta_engineering"
-Documentation = "https://github.com/CoReason-AI/coreason_meta_engineering"
+Homepage = "https://github.com/CoReason-AI/coreason-meta-engineering"
+Repository = "https://github.com/CoReason-AI/coreason-meta-engineering"
+Documentation = "https://github.com/CoReason-AI/coreason-meta-engineering"
 
 [tool.ruff]
 line-length = 120
