@@ -10,9 +10,10 @@
 
 
 import libcst as cst
+import pydantic  # noqa: F401
 
 
-class ClassInjectTransformer(cst.CSTTransformer):
+class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
     """
     A decoupled libcst transformer that injects a newly defined class and its
     accompanying model_rebuild() call into a given Python module AST.
@@ -25,8 +26,8 @@ class ClassInjectTransformer(cst.CSTTransformer):
 
         self.docstring = (
             '"""\n    AGENT INSTRUCTION: [Define topological boundary]\n\n'
-            '    CAUSAL AFFORDANCE: [Define graph mutation or tool execution]\n\n'
-            '    EPISTEMIC BOUNDS: [Define mathematical/physical limits]\n\n'
+            "    CAUSAL AFFORDANCE: [Define graph mutation or tool execution]\n\n"
+            "    EPISTEMIC BOUNDS: [Define mathematical/physical limits]\n\n"
             '    MCP ROUTING TRIGGERS: [Comma-separated algorithmic tags]\n    """'
         )
 
