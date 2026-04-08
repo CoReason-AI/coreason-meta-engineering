@@ -20,7 +20,7 @@ from coreason_meta_engineering.schema import resolve_json_schema_to_fields
 mcp = FastMCP("CoReason Agentic Forge")
 
 
-@mcp.tool()
+@mcp.tool()  # type: ignore[misc]
 def scaffold_ontology_model(
     model_name: str,
     schema_payload: str,
