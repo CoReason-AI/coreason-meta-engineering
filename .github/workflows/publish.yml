@@ -37,9 +37,8 @@ jobs:
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          path: ./dist
           format: spdx-json
-          output-file: dist/sbom.spdx.json
+          output-file: sbom.spdx.json
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -58,7 +57,7 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/*.sigstore.json
-            dist/sbom.spdx.json
+            sbom.spdx.json
 
       - name: Build Docs
         run: uv run zensical build --clean
