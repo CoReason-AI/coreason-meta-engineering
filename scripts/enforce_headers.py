@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import sys
 import os
+import sys
 
 HEADER = """# Copyright (c) 2026 CoReason, Inc.
 #
@@ -15,7 +15,7 @@ HEADER = """# Copyright (c) 2026 CoReason, Inc.
 
 def process_file(filepath: str) -> bool:
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             content = f.read()
     except Exception as e:
         print(f"Error reading {filepath}: {e}", file=sys.stderr)
