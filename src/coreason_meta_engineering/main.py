@@ -21,7 +21,7 @@ from coreason_meta_engineering.utils.logger import logger
 app = typer.Typer()
 
 
-@app.command(name="scaffold-model")
+@app.command(name="scaffold-model")  # type: ignore
 def scaffold_model(
     model_name: str,
     schema_payload: str,
