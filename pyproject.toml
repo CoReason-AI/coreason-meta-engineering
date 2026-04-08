@@ -44,6 +44,9 @@ dev = [
     "pytest-xdist>=3.6.1"
 ]
 
+[project.scripts]
+coreason-meta-mcp = "coreason_meta_engineering.mcp_server:main"
+
 [tool.deptry]
 ignore = ["DEP002"]
 
