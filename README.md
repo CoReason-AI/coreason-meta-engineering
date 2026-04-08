@@ -7,7 +7,7 @@ The Agentic Forge & AST Manipulation Layer
 [![Security](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/security.yml/badge.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/security.yml)
 [![PyPI](https://img.shields.io/pypi/v/coreason-meta-engineering.svg)](https://pypi.org/project/coreason-meta-engineering/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/coreason-meta-engineering.svg)](https://pypi.org/project/coreason-meta-engineering/)
-[![License](https://img.shields.io/github/license/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/blob/main/LICENSE)
+[![License: Prosperity 3.0](https://img.shields.io/badge/License-Prosperity_3.0-blue.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/blob/main/LICENSE)
 [![Codecov](https://codecov.io/gh/CoReason-AI/coreason-meta-engineering/branch/main/graph/badge.svg)](https://codecov.io/gh/CoReason-AI/coreason-meta-engineering)
 [![Downloads](https://img.shields.io/pypi/dm/coreason-meta-engineering.svg)](https://pypi.org/project/coreason-meta-engineering/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
