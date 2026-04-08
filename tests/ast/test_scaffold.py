@@ -8,6 +8,8 @@
 #
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
+from typing import Any
+
 import libcst as cst
 
 from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
@@ -81,12 +83,12 @@ def test_class_inject_optional_list_validator() -> None:
 def test_class_inject_self_import_exists() -> None:
     code = "from typing import Self\nimport pydantic\n"
     module = cst.parse_module(code)
-    fields = [{"name": "basic_field", "type": "int", "description": "basic int field"}]
+    fields = [{"name": "basic_field", "type": "list[int]", "description": "basic int field"}]
     transformer = ClassInjectTransformer("NewState", fields)
     modified = module.visit(transformer)
     modified_code = modified.code
 
-    # Should only be imported once
+    # Should only be imported once (already existing, should not be injected again)
     assert modified_code.count("from typing import Self") == 1
 
 
@@ -109,3 +111,67 @@ def test_class_inject_before_existing_rebuild() -> None:
     # Verify the class is inserted before Existing model rebuild
     class_idx = modified_code.find("class InjectedClass")
     assert class_idx < injected_idx
+
+
+def test_class_inject_auto_imports() -> None:
+    code = "import pydantic\n"
+    module = cst.parse_module(code)
+    fields: list[dict[str, Any]] = [
+        {
+            "name": "basic",
+            "type": "Annotated[str, StringConstraints(max_length=20)] | None",
+            "description": "basic",
+            "optional": True,
+        },
+        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
+        {"name": "a_list", "type": "list[int]", "description": "a list"},
+    ]
+    transformer = ClassInjectTransformer("AutoImportState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    assert "from typing import Self, Any, Annotated" in modified_code
+    assert "from pydantic import Field, model_validator, StringConstraints" in modified_code
+
+
+def test_class_inject_auto_imports_existing() -> None:
+    code = "from typing import Self, Any, Annotated\nfrom pydantic import Field, model_validator, StringConstraints\n"
+    module = cst.parse_module(code)
+    fields: list[dict[str, Any]] = [
+        {
+            "name": "basic",
+            "type": "Annotated[str, StringConstraints(max_length=20)] | None",
+            "description": "basic",
+            "optional": True,
+        },
+        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
+        {"name": "a_list", "type": "list[int]", "description": "a list"},
+    ]
+    transformer = ClassInjectTransformer("AutoImportState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    assert modified_code.count("Any") == 2
+    assert modified_code.count("Annotated") == 2
+    assert modified_code.count("Self") == 2
+    assert modified_code.count("Field") == 4
+    assert modified_code.count("model_validator") == 2
+    assert modified_code.count("StringConstraints") == 2
+
+
+def test_class_inject_no_list_no_self_or_model_validator() -> None:
+    code = "import pydantic\n"
+    module = cst.parse_module(code)
+    fields: list[dict[str, Any]] = [
+        {
+            "name": "basic",
+            "type": "int",
+            "description": "basic",
+        },
+    ]
+    transformer = ClassInjectTransformer("NoListState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    assert "Self" not in modified_code
+    assert "model_validator" not in modified_code
