@@ -64,7 +64,7 @@ def test_class_inject_optional_list_validator() -> None:
     module = cst.parse_module(code)
     fields = [
         {"name": "opt_list", "type": "list[str] | None", "description": "optional list"},
-        {"name": "ann_list", "type": "Annotated[list[int], Field()]", "description": "annotated list"}
+        {"name": "ann_list", "type": "Annotated[list[int], Field()]", "description": "annotated list"},
     ]
     transformer = ClassInjectTransformer("SortOptState", fields)
     modified = module.visit(transformer)

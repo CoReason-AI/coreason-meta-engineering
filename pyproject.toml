@@ -44,6 +44,9 @@ dev = [
     "pytest-xdist>=3.6.1"
 ]
 
+[tool.deptry]
+ignore = ["DEP002"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/coreason_meta_engineering"]
 
