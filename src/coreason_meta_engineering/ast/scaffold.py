@@ -10,18 +10,19 @@
 
 
 import textwrap
+import typing
 
 import libcst as cst
 import pydantic  # noqa: F401
 
 
-class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
+class ClassInjectTransformer(cst.CSTTransformer):
     """
     A decoupled libcst transformer that injects a newly defined class and its
     accompanying model_rebuild() call into a given Python module AST.
     """
 
-    def __init__(self, name: str, fields: list[dict[str, str]]):
+    def __init__(self, name: str, fields: list[dict[str, typing.Any]]):
         super().__init__()
         self.name = name
         self.fields = fields
@@ -42,13 +43,38 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
     def _build_docstring(self) -> cst.SimpleStatementLine:
         return cst.SimpleStatementLine(body=[cst.Expr(value=cst.SimpleString(value=self.docstring))])
 
-    def _build_field(self, field_def: dict[str, str]) -> cst.SimpleStatementLine:
+    def _build_field(self, field_def: dict[str, typing.Any]) -> cst.SimpleStatementLine:
         name = field_def["name"]
         field_type = field_def["type"]
         description = field_def["description"]
+        is_optional = field_def.get("optional", False)
 
         # Parse type annotation. We need to parse this string to CST nodes.
         type_node = cst.parse_expression(field_type)
+
+        field_args = []
+        if is_optional:
+            field_args.append(
+                cst.Arg(
+                    value=cst.Name(value="None"),
+                    keyword=cst.Name(value="default"),
+                    equal=cst.AssignEqual(
+                        whitespace_before=cst.SimpleWhitespace(""),
+                        whitespace_after=cst.SimpleWhitespace(""),
+                    ),
+                )
+            )
+
+        field_args.append(
+            cst.Arg(
+                value=cst.SimpleString(value=f'"{description}"'),
+                keyword=cst.Name(value="description"),
+                equal=cst.AssignEqual(
+                    whitespace_before=cst.SimpleWhitespace(""),
+                    whitespace_after=cst.SimpleWhitespace(""),
+                ),
+            )
+        )
 
         return cst.SimpleStatementLine(
             body=[
@@ -57,16 +83,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                     annotation=cst.Annotation(annotation=type_node),
                     value=cst.Call(
                         func=cst.Name(value="Field"),
-                        args=[
-                            cst.Arg(
-                                value=cst.SimpleString(value=f'"{description}"'),
-                                keyword=cst.Name(value="description"),
-                                equal=cst.AssignEqual(
-                                    whitespace_before=cst.SimpleWhitespace(""),
-                                    whitespace_after=cst.SimpleWhitespace(""),
-                                ),
-                            )
-                        ],
+                        args=field_args,
                     ),
                 )
             ]
@@ -187,41 +204,77 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         new_class = self._build_class()
         new_rebuild = self._build_rebuild_call()
 
-        # Check for `Self` import
+        # Gather required imports based on schema fields
+        needs_any = any("Any" in f["type"] for f in self.fields)
+        needs_annotated = any("Annotated" in f["type"] for f in self.fields)
+        needs_string_constraints = any("StringConstraints" in f["type"] for f in self.fields)
+
         has_self_import = False
+        has_any_import = False
+        has_annotated_import = False
+        has_field_import = False
+        has_string_constraints_import = False
+
         for stmt in updated_node.body:
             if isinstance(stmt, cst.SimpleStatementLine):
                 for node in stmt.body:
-                    if (
-                        isinstance(node, cst.ImportFrom)
-                        and node.module
-                        and getattr(node.module, "value", None) == "typing"
-                        and isinstance(node.names, (tuple, list))
-                    ):
+                    if isinstance(node, cst.ImportFrom) and node.module and isinstance(node.names, (tuple, list)):
+                        mod_name = getattr(node.module, "value", None)
                         for name_item in node.names:
-                            if name_item.name.value == "Self":
-                                has_self_import = True
-                                break
+                            if mod_name == "typing":
+                                if name_item.name.value == "Self":
+                                    has_self_import = True
+                                if name_item.name.value == "Any":
+                                    has_any_import = True
+                                if name_item.name.value == "Annotated":
+                                    has_annotated_import = True
+                            elif mod_name == "pydantic":
+                                if name_item.name.value == "Field":
+                                    has_field_import = True
+                                if name_item.name.value == "StringConstraints":
+                                    has_string_constraints_import = True
 
         new_body = list(updated_node.body)
 
+        insert_import_idx = 0
+        for i, stmt in enumerate(new_body):
+            if isinstance(stmt, cst.SimpleStatementLine) and any(
+                isinstance(n, (cst.Import, cst.ImportFrom)) for n in stmt.body
+            ):
+                insert_import_idx = i + 1
+                break
+
+        typing_imports = []
         if not has_self_import:
-            self_import = cst.SimpleStatementLine(
-                body=[
-                    cst.ImportFrom(
-                        module=cst.Name(value="typing"), names=[cst.ImportAlias(name=cst.Name(value="Self"))]
-                    )
-                ]
+            typing_imports.append(cst.ImportAlias(name=cst.Name(value="Self")))
+        if needs_any and not has_any_import:
+            typing_imports.append(cst.ImportAlias(name=cst.Name(value="Any")))
+        if needs_annotated and not has_annotated_import:
+            typing_imports.append(cst.ImportAlias(name=cst.Name(value="Annotated")))
+
+        if typing_imports:
+            new_body.insert(
+                insert_import_idx,
+                cst.SimpleStatementLine(
+                    body=[cst.ImportFrom(module=cst.Name(value="typing"), names=typing_imports)]
+                ),
             )
-            # Insert at the beginning of the file but after the docstring or first existing import
-            insert_import_idx = 0
-            for i, stmt in enumerate(new_body):
-                if isinstance(stmt, cst.SimpleStatementLine) and any(
-                    isinstance(n, (cst.Import, cst.ImportFrom)) for n in stmt.body
-                ):
-                    insert_import_idx = i + 1
-                    break
-            new_body.insert(insert_import_idx, self_import)
+            insert_import_idx += 1
+
+        pydantic_imports = []
+        if not has_field_import:
+            pydantic_imports.append(cst.ImportAlias(name=cst.Name(value="Field")))
+        if needs_string_constraints and not has_string_constraints_import:
+            pydantic_imports.append(cst.ImportAlias(name=cst.Name(value="StringConstraints")))
+
+        if pydantic_imports:
+            new_body.insert(
+                insert_import_idx,
+                cst.SimpleStatementLine(
+                    body=[cst.ImportFrom(module=cst.Name(value="pydantic"), names=pydantic_imports)]
+                ),
+            )
+            insert_import_idx += 1
 
         # We need to insert before the first .model_rebuild() call.
         # If none exists, we append to the end.

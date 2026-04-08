@@ -33,26 +33,32 @@ def test_resolve_json_schema_to_fields_basic() -> None:
     name_field = next(f for f in fields if f["name"] == "name")
     assert name_field["type"] == "Annotated[str, StringConstraints(max_length=2000)]"
     assert name_field["description"] == "Name of the person"
+    assert name_field["optional"] is False
 
     age_field = next(f for f in fields if f["name"] == "age")
     assert age_field["type"] == "int"
     assert age_field["description"] == ""
+    assert age_field["optional"] is False
 
     score_field = next(f for f in fields if f["name"] == "score")
     assert score_field["type"] == "float | None"
     assert score_field["description"] == "Score value"
+    assert score_field["optional"] is True
 
     is_active_field = next(f for f in fields if f["name"] == "is_active")
     assert is_active_field["type"] == "bool | None"
     assert is_active_field["description"] == "Active flag"
+    assert is_active_field["optional"] is True
 
     tags_field = next(f for f in fields if f["name"] == "tags")
     assert tags_field["type"] == "list[Annotated[str, StringConstraints(max_length=2000)]] | None"
     assert tags_field["description"] == ""
+    assert tags_field["optional"] is True
 
     metadata_field = next(f for f in fields if f["name"] == "metadata")
     assert metadata_field["type"] == "dict[str, Any] | None"
     assert metadata_field["description"] == "Extra metadata"
+    assert metadata_field["optional"] is True
 
 
 def test_resolve_json_schema_to_fields_unknown_type() -> None:
@@ -66,6 +72,7 @@ def test_resolve_json_schema_to_fields_unknown_type() -> None:
     fields = resolve_json_schema_to_fields(schema)
     assert len(fields) == 1
     assert fields[0]["type"] == "Any"
+    assert fields[0]["optional"] is False
 
 
 def test_resolve_json_schema_to_fields_empty() -> None:

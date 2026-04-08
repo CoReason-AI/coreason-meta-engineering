@@ -109,3 +109,45 @@ def test_class_inject_before_existing_rebuild() -> None:
     # Verify the class is inserted before Existing model rebuild
     class_idx = modified_code.find("class InjectedClass")
     assert class_idx < injected_idx
+
+
+def test_class_inject_auto_imports() -> None:
+    code = "import pydantic\n"
+    module = cst.parse_module(code)
+    fields = [
+        {
+            "name": "basic",
+            "type": "Annotated[str, StringConstraints(max_length=20)] | None",
+            "description": "basic",
+            "optional": True
+        },
+        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"}
+    ]
+    transformer = ClassInjectTransformer("AutoImportState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    assert "from typing import Self, Any, Annotated" in modified_code
+    assert "from pydantic import Field, StringConstraints" in modified_code
+
+
+def test_class_inject_auto_imports_existing() -> None:
+    code = "from typing import Any, Annotated\nfrom pydantic import Field, StringConstraints\n"
+    module = cst.parse_module(code)
+    fields = [
+        {
+            "name": "basic",
+            "type": "Annotated[str, StringConstraints(max_length=20)] | None",
+            "description": "basic",
+            "optional": True
+        },
+        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"}
+    ]
+    transformer = ClassInjectTransformer("AutoImportState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    assert modified_code.count("Any") == 2
+    assert modified_code.count("Annotated") == 2
+    assert modified_code.count("Field") == 3
+    assert modified_code.count("StringConstraints") == 2

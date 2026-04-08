@@ -13,13 +13,9 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from coreason_meta_engineering.main import app, hello_world
+from coreason_meta_engineering.main import app
 
 runner = CliRunner()
-
-
-def test_hello_world() -> None:
-    assert hello_world() == "Hello World!"
 
 
 def test_scaffold_model_cli(tmp_path: Path) -> None:
@@ -29,7 +25,11 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
 
     # 2. Schema payload
     schema = {
-        "properties": {"name": {"type": "string", "description": "Person's name"}, "age": {"type": "integer"}},
+        "properties": {
+            "name": {"type": "string", "description": "Person's name"},
+            "age": {"type": "integer"},
+            "optional_field": {"type": "string"}
+        },
         "required": ["name", "age"],
     }
     schema_payload = json.dumps(schema)
@@ -47,3 +47,4 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
     assert "Person.model_rebuild()" in new_content
     assert "name: Annotated[str, StringConstraints(max_length=2000)]" in new_content
     assert "age: int" in new_content
+    assert 'optional_field: Annotated[str, StringConstraints(max_length=2000)] | None = Field(default=None, description="")' in new_content

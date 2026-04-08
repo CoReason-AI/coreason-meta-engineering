@@ -53,10 +53,5 @@ def scaffold_model(
     typer.echo(f"Successfully injected {model_name} into {target_file}")
 
 
-def hello_world() -> str:
-    logger.info("Hello World!")
-    return "Hello World!"
-
-
 if __name__ == "__main__":  # pragma: no cover
     app()

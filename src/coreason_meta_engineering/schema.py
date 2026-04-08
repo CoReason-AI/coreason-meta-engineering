@@ -11,13 +11,13 @@
 from typing import Any
 
 
-def resolve_json_schema_to_fields(schema: dict[str, Any]) -> list[dict[str, str]]:
+def resolve_json_schema_to_fields(schema: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Translates standard JSON Schema properties into coreason-manifest's highly bounded Pydantic types.
     """
     properties = schema.get("properties", {})
     required_fields = set(schema.get("required", []))
-    fields: list[dict[str, str]] = []
+    fields: list[dict[str, Any]] = []
 
     def _resolve_type(prop_schema: dict[str, Any]) -> str:
         schema_type = prop_schema.get("type")
@@ -50,6 +50,7 @@ def resolve_json_schema_to_fields(schema: dict[str, Any]) -> list[dict[str, str]
                 "name": prop_name,
                 "type": final_type,
                 "description": description,
+                "optional": not is_required,
             }
         )
 
