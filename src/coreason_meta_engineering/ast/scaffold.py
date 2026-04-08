@@ -15,7 +15,7 @@ import libcst as cst
 import pydantic  # noqa: F401
 
 
-class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
+class ClassInjectTransformer(cst.CSTTransformer):
     """
     A decoupled libcst transformer that injects a newly defined class and its
     accompanying model_rebuild() call into a given Python module AST.

@@ -8,8 +8,42 @@
 #
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
-from coreason_meta_engineering.main import hello_world
+import json
+from pathlib import Path
+
+from typer.testing import CliRunner
+
+from coreason_meta_engineering.main import app, hello_world
+
+runner = CliRunner()
 
 
 def test_hello_world() -> None:
     assert hello_world() == "Hello World!"
+
+
+def test_scaffold_model_cli(tmp_path: Path) -> None:
+    # 1. Create dummy file
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    # 2. Schema payload
+    schema = {
+        "properties": {"name": {"type": "string", "description": "Person's name"}, "age": {"type": "integer"}},
+        "required": ["name", "age"],
+    }
+    schema_payload = json.dumps(schema)
+
+    # 3. Invoke CLI
+    result = runner.invoke(app, ["Person", schema_payload, "--target-file", str(target_file)])
+
+    # 4. Assert exit code
+    assert result.exit_code == 0, result.stdout
+    assert "Successfully injected Person into" in result.stdout
+
+    # 5. Assert file modifications
+    new_content = target_file.read_text(encoding="utf-8")
+    assert "class Person(CoreasonBaseState):" in new_content
+    assert "Person.model_rebuild()" in new_content
+    assert "name: Annotated[str, StringConstraints(max_length=2000)]" in new_content
+    assert "age: int" in new_content
