@@ -1,11 +1,7 @@
-
 name: CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
   pull_request:
 
 permissions:
@@ -28,8 +24,20 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
         shell: bash
-      - name: Run pre-commit
-        run: uv run pre-commit run --all-files
+      - name: Check code
+        run: uvx ruff check .
+        shell: bash
+      - name: Format check
+        run: uvx ruff format --check .
+        shell: bash
+      - name: Typecheck
+        run: uv run mypy src/ tests/
+        shell: bash
+      - name: Audit dependencies
+        run: uv run deptry src/
+        shell: bash
+      - name: Build docs
+        run: uv run zensical build
         shell: bash
 
   test-ubuntu:
@@ -47,9 +55,9 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - name: Set PYTHON_GIL for Free-Threading
+      - name: Configure free-threading execution
         if: matrix.python-version == '3.14t'
-        run: echo "PYTHON_GIL=0" >> $GITHUB_ENV
+        run: echo "PYTHON_GIL=0" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Install dependencies
@@ -72,16 +80,14 @@ jobs:
           verbose: true
 
   test-extended:
-    needs: [lint-and-audit]
-    if: always() && needs.lint-and-audit.result == 'success'
+    needs: [test-ubuntu]
+    if: always() && needs.test-ubuntu.result == 'success'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
         python-version: ["3.14", "3.14t"]
         exclude:
-          - os: windows-latest
-            python-version: "3.14"
           - os: windows-latest
             python-version: "3.14t"
     steps:
@@ -92,9 +98,9 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - name: Set PYTHON_GIL for Free-Threading
+      - name: Configure free-threading execution
         if: matrix.python-version == '3.14t'
-        run: echo "PYTHON_GIL=0" >> $GITHUB_ENV
+        run: echo "PYTHON_GIL=0" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Install dependencies
@@ -106,7 +112,7 @@ jobs:
         shell: bash
 
   reproducible-builds:
-    name: Reproducible Builds (Determinism Verification)
+    name: Determinism Verification
     needs: [test-ubuntu, test-extended]
     runs-on: ubuntu-latest
     steps:
@@ -119,6 +125,6 @@ jobs:
       - name: Build wheel
         run: uv build
         shell: bash
-      - name: Verify SHA256
+      - name: Verify SHA256 sum
         run: sha256sum dist/*.whl
         shell: bash
