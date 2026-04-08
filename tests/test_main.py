@@ -8,8 +8,87 @@
 #
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
-from coreason_meta_engineering.main import hello_world
+import json
+from pathlib import Path
+
+from typer.testing import CliRunner
+
+from coreason_meta_engineering.main import app
+
+runner = CliRunner()
 
 
-def test_hello_world() -> None:
-    assert hello_world() == "Hello World!"
+def test_scaffold_model_cli(tmp_path: Path) -> None:
+    # 1. Create dummy file
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    # 2. Schema payload
+    schema = {
+        "properties": {
+            "name": {"type": "string", "description": "Person's name"},
+            "age": {"type": "integer"},
+            "optional_field": {"type": "string"},
+        },
+        "required": ["name", "age"],
+    }
+    schema_payload = json.dumps(schema)
+
+    # 3. Invoke CLI
+    result = runner.invoke(app, ["Person", schema_payload, "--target-file", str(target_file)])
+
+    # 4. Assert exit code
+    assert result.exit_code == 0, result.stdout
+    assert "Successfully injected Person into" in result.stdout
+
+    # 5. Assert file modifications
+    new_content = target_file.read_text(encoding="utf-8")
+    assert "class Person(CoreasonBaseState):" in new_content
+    assert "Person.model_rebuild()" in new_content
+    assert "name: Annotated[str, StringConstraints(max_length=2000)]" in new_content
+    assert "age: int" in new_content
+
+    # Assert optional field logic separately to avoid E501
+    assert "optional_field: Annotated[str, StringConstraints(max_length=2000)] | None" in new_content
+    assert 'Field(default=None, description="")' in new_content
+
+
+def test_scaffold_model_cli_file_payload(tmp_path: Path) -> None:
+    target_file = tmp_path / "dummy_file.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    schema = {
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "integer"},
+        },
+        "required": ["name", "age"],
+    }
+    schema_file = tmp_path / "schema.json"
+    schema_file.write_text(json.dumps(schema), encoding="utf-8")
+
+    result = runner.invoke(app, ["PersonFile", str(schema_file), "--target-file", str(target_file)])
+
+    assert result.exit_code == 0, result.stdout
+    assert "Successfully injected PersonFile into" in result.stdout
+
+    new_content = target_file.read_text(encoding="utf-8")
+    assert "class PersonFile(CoreasonBaseState):" in new_content
+
+
+def test_scaffold_model_cli_invalid_file_fallback(tmp_path: Path) -> None:
+    target_file = tmp_path / "dummy_file.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    # Use a schema payload that triggers OSError but is still a valid json string
+    # To test actual fallback code block and hit OSError
+    from unittest.mock import patch
+
+    schema_payload_fallback_clean = '{"properties": {"name": {"type": "string"}}}'
+
+    with patch("src.coreason_meta_engineering.main.Path.is_file") as mock_is_file:
+        mock_is_file.side_effect = OSError("Mocked OS Error")
+        result3 = runner.invoke(
+            app, ["PersonFallbackClean", schema_payload_fallback_clean, "--target-file", str(target_file)]
+        )
+        assert result3.exit_code == 0

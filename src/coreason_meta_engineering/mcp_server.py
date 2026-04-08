@@ -12,25 +12,26 @@ import json
 from pathlib import Path
 
 import libcst as cst
-import typer
+from mcp.server.fastmcp import FastMCP
 
 from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
 from coreason_meta_engineering.schema import resolve_json_schema_to_fields
-from coreason_meta_engineering.utils.logger import logger
 
-app = typer.Typer()
+mcp = FastMCP("CoReason Agentic Forge")
 
 
-@app.command(name="scaffold-model")  # type: ignore[misc]
-def scaffold_model(
+@mcp.tool()  # type: ignore[misc]
+def scaffold_ontology_model(
     model_name: str,
     schema_payload: str,
-    target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
-) -> None:
+    target_file_path: str,
+) -> str:
     """
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
-    logger.info(f"Scaffolding model {model_name} into {target_file}")
+    target_file = Path(target_file_path)
+    if not target_file.exists() or not target_file.is_file():
+        raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
 
     # 1. Parse schema payload
     try:
@@ -56,9 +57,9 @@ def scaffold_model(
     # 5. Write modified code
     target_file.write_text(new_module.code, encoding="utf-8")
 
-    # 6. Print success message
-    typer.echo(f"Successfully injected {model_name} into {target_file}")
+    # 6. Return success message
+    return f"Successfully injected {model_name} into {target_file_path}"
 
 
-if __name__ == "__main__":  # pragma: no cover
-    app()
+def main() -> None:  # pragma: no cover
+    mcp.run()

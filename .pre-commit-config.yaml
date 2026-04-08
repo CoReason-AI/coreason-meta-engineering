@@ -32,6 +32,11 @@ repos:
       - id: codespell
   - repo: local
     hooks:
+      - id: enforce-headers
+        name: enforce license headers
+        entry: uv run python scripts/enforce_headers.py
+        language: system
+        files: \.py$
       - id: deptry
         name: deptry
         entry: uv run deptry src/
