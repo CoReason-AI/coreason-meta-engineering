@@ -255,9 +255,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore
         if typing_imports:
             new_body.insert(
                 insert_import_idx,
-                cst.SimpleStatementLine(
-                    body=[cst.ImportFrom(module=cst.Name(value="typing"), names=typing_imports)]
-                ),
+                cst.SimpleStatementLine(body=[cst.ImportFrom(module=cst.Name(value="typing"), names=typing_imports)]),
             )
             insert_import_idx += 1
 

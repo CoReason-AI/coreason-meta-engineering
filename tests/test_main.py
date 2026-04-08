@@ -28,7 +28,7 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
         "properties": {
             "name": {"type": "string", "description": "Person's name"},
             "age": {"type": "integer"},
-            "optional_field": {"type": "string"}
+            "optional_field": {"type": "string"},
         },
         "required": ["name", "age"],
     }

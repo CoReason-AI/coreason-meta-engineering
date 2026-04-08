@@ -121,9 +121,9 @@ def test_class_inject_auto_imports() -> None:
             "name": "basic",
             "type": "Annotated[str, StringConstraints(max_length=20)] | None",
             "description": "basic",
-            "optional": True
+            "optional": True,
         },
-        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"}
+        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
     ]
     transformer = ClassInjectTransformer("AutoImportState", fields)
     modified = module.visit(transformer)
@@ -141,9 +141,9 @@ def test_class_inject_auto_imports_existing() -> None:
             "name": "basic",
             "type": "Annotated[str, StringConstraints(max_length=20)] | None",
             "description": "basic",
-            "optional": True
+            "optional": True,
         },
-        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"}
+        {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
     ]
     transformer = ClassInjectTransformer("AutoImportState", fields)
     modified = module.visit(transformer)
