@@ -1,10 +1,13 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = [
+    "hatchling",
+    "hatch-vcs"
+]
 build-backend = "hatchling.build"
 
 [project]
 name = "coreason_meta_engineering"
-version = "0.1.0"
+dynamic = ["version"]
 description = "The Agentic Forge & AST Manipulation Layer"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -81,3 +84,6 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 omit = ["tests/*"]
+
+[tool.hatch.version]
+source = "vcs"
