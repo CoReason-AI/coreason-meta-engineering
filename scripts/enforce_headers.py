@@ -13,6 +13,7 @@ HEADER = """# Copyright (c) 2026 CoReason, Inc.
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 """
 
+
 def process_file(filepath: str) -> bool:
     try:
         with open(filepath) as f:
@@ -48,7 +49,7 @@ def process_file(filepath: str) -> bool:
 
     if new_content != content:
         try:
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 f.write(new_content)
             print(f"Added header to {filepath}")
             return True
@@ -57,6 +58,7 @@ def process_file(filepath: str) -> bool:
             return False
 
     return False
+
 
 def main() -> None:
     modified = False
@@ -70,6 +72,7 @@ def main() -> None:
         sys.exit(1)
     else:
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
