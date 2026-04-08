@@ -2,14 +2,19 @@
 
 The Agentic Forge & AST Manipulation Layer
 
-[![CI/CD](https://github.com/CoReason-AI/coreason_meta_engineering/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/CoReason-AI/coreason_meta_engineering/actions/workflows/ci-cd.yml)
-[![PyPI](https://img.shields.io/pypi/v/coreason_meta_engineering.svg)](https://pypi.org/project/coreason_meta_engineering/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/coreason_meta_engineering.svg)](https://pypi.org/project/coreason_meta_engineering/)
-[![License](https://img.shields.io/github/license/CoReason-AI/coreason_meta_engineering)](https://github.com/CoReason-AI/coreason_meta_engineering/blob/main/LICENSE)
-[![Codecov](https://codecov.io/gh/CoReason-AI/coreason_meta_engineering/branch/main/graph/badge.svg)](https://codecov.io/gh/CoReason-AI/coreason_meta_engineering)
-[![Downloads](https://static.pepy.tech/badge/coreason_meta_engineering)](https://pepy.tech/project/coreason_meta_engineering)
+[![CI](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/ci.yml)
+[![Publish](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/publish.yml/badge.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/publish.yml)
+[![Security](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/security.yml/badge.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/security.yml)
+[![PyPI](https://img.shields.io/pypi/v/coreason-meta-engineering.svg)](https://pypi.org/project/coreason-meta-engineering/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/coreason-meta-engineering.svg)](https://pypi.org/project/coreason-meta-engineering/)
+[![License](https://img.shields.io/github/license/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/blob/main/LICENSE)
+[![Codecov](https://codecov.io/gh/CoReason-AI/coreason-meta-engineering/branch/main/graph/badge.svg)](https://codecov.io/gh/CoReason-AI/coreason-meta-engineering)
+[![Downloads](https://img.shields.io/pypi/dm/coreason-meta-engineering.svg)](https://pypi.org/project/coreason-meta-engineering/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![GitHub Stars](https://img.shields.io/github/stars/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/issues)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/pulls)
 
 ## Getting Started
 
@@ -22,8 +27,8 @@ The Agentic Forge & AST Manipulation Layer
 
 1.  Clone the repository:
     ```sh
-    git clone https://github.com/CoReason-AI/coreason_meta_engineering.git
-    cd coreason_meta_engineering
+    git clone https://github.com/CoReason-AI/coreason-meta-engineering.git
+    cd coreason-meta-engineering
     ```
 2.  Install dependencies:
     ```sh
