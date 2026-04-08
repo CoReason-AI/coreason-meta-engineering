@@ -47,4 +47,7 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
     assert "Person.model_rebuild()" in new_content
     assert "name: Annotated[str, StringConstraints(max_length=2000)]" in new_content
     assert "age: int" in new_content
-    assert 'optional_field: Annotated[str, StringConstraints(max_length=2000)] | None = Field(default=None, description="")' in new_content
+
+    # Assert optional field logic separately to avoid E501
+    assert "optional_field: Annotated[str, StringConstraints(max_length=2000)] | None" in new_content
+    assert 'Field(default=None, description="")' in new_content

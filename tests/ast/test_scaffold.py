@@ -8,6 +8,8 @@
 #
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
+from typing import Any
+
 import libcst as cst
 
 from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
@@ -114,7 +116,7 @@ def test_class_inject_before_existing_rebuild() -> None:
 def test_class_inject_auto_imports() -> None:
     code = "import pydantic\n"
     module = cst.parse_module(code)
-    fields = [
+    fields: list[dict[str, Any]] = [
         {
             "name": "basic",
             "type": "Annotated[str, StringConstraints(max_length=20)] | None",
@@ -134,7 +136,7 @@ def test_class_inject_auto_imports() -> None:
 def test_class_inject_auto_imports_existing() -> None:
     code = "from typing import Any, Annotated\nfrom pydantic import Field, StringConstraints\n"
     module = cst.parse_module(code)
-    fields = [
+    fields: list[dict[str, Any]] = [
         {
             "name": "basic",
             "type": "Annotated[str, StringConstraints(max_length=20)] | None",
