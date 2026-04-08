@@ -55,7 +55,39 @@ def test_class_inject_list_validator() -> None:
     # Verify enforce_canonical_sort validator exists
     assert '@model_validator(mode="after")' in modified_code
     assert "def _enforce_canonical_sort(self) -> Self:" in modified_code
+    assert 'if getattr(self, "str_list", None) is not None:' in modified_code
     assert 'object.__setattr__(self, "str_list", sorted(self.str_list))' in modified_code
+
+
+def test_class_inject_optional_list_validator() -> None:
+    code = "import pydantic\n"
+    module = cst.parse_module(code)
+    fields = [
+        {"name": "opt_list", "type": "list[str] | None", "description": "optional list"},
+        {"name": "ann_list", "type": "Annotated[list[int], Field()]", "description": "annotated list"}
+    ]
+    transformer = ClassInjectTransformer("SortOptState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    # Verify both fragile arrays were detected
+    assert 'if getattr(self, "opt_list", None) is not None:' in modified_code
+    assert 'if getattr(self, "ann_list", None) is not None:' in modified_code
+
+    # Verify missing import insertion
+    assert "from typing import Self" in modified_code
+
+
+def test_class_inject_self_import_exists() -> None:
+    code = "from typing import Self\nimport pydantic\n"
+    module = cst.parse_module(code)
+    fields = [{"name": "basic_field", "type": "int", "description": "basic int field"}]
+    transformer = ClassInjectTransformer("NewState", fields)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    # Should only be imported once
+    assert modified_code.count("from typing import Self") == 1
 
 
 def test_class_inject_before_existing_rebuild() -> None:

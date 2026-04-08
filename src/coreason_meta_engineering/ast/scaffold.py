@@ -9,11 +9,13 @@
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
 
+import textwrap
+
 import libcst as cst
 import pydantic  # noqa: F401
 
 
-class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
+class ClassInjectTransformer(cst.CSTTransformer):
     """
     A decoupled libcst transformer that injects a newly defined class and its
     accompanying model_rebuild() call into a given Python module AST.
@@ -24,11 +26,17 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         self.name = name
         self.fields = fields
 
-        self.docstring = (
-            '"""\n    AGENT INSTRUCTION: [Define topological boundary]\n\n'
-            "    CAUSAL AFFORDANCE: [Define graph mutation or tool execution]\n\n"
-            "    EPISTEMIC BOUNDS: [Define mathematical/physical limits]\n\n"
-            '    MCP ROUTING TRIGGERS: [Comma-separated algorithmic tags]\n    """'
+        self.docstring = textwrap.dedent(
+            '''\
+            """
+            AGENT INSTRUCTION: [Define topological boundary]
+
+            CAUSAL AFFORDANCE: [Define graph mutation or tool execution]
+
+            EPISTEMIC BOUNDS: [Define mathematical/physical limits]
+
+            MCP ROUTING TRIGGERS: [Comma-separated algorithmic tags]
+            """'''
         )
 
     def _build_docstring(self) -> cst.SimpleStatementLine:
@@ -66,30 +74,54 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
 
     def _build_validator(self, list_fields: list[str]) -> cst.FunctionDef:
         body_lines: list[cst.BaseStatement] = [
-            cst.SimpleStatementLine(
-                body=[
-                    cst.Expr(
-                        value=cst.Call(
-                            func=cst.Attribute(value=cst.Name(value="object"), attr=cst.Name(value="__setattr__")),
-                            args=[
-                                cst.Arg(value=cst.Name(value="self")),
-                                cst.Arg(value=cst.SimpleString(value=f'"{field}"')),
-                                cst.Arg(
+            cst.If(
+                test=cst.Comparison(
+                    left=cst.Call(
+                        func=cst.Name(value="getattr"),
+                        args=[
+                            cst.Arg(value=cst.Name(value="self")),
+                            cst.Arg(value=cst.SimpleString(value=f'"{field}"')),
+                            cst.Arg(value=cst.Name(value="None")),
+                        ],
+                    ),
+                    comparisons=[
+                        cst.ComparisonTarget(
+                            operator=cst.IsNot(),
+                            comparator=cst.Name(value="None"),
+                        ),
+                    ],
+                ),
+                body=cst.IndentedBlock(
+                    body=[
+                        cst.SimpleStatementLine(
+                            body=[
+                                cst.Expr(
                                     value=cst.Call(
-                                        func=cst.Name(value="sorted"),
+                                        func=cst.Attribute(
+                                            value=cst.Name(value="object"), attr=cst.Name(value="__setattr__")
+                                        ),
                                         args=[
+                                            cst.Arg(value=cst.Name(value="self")),
+                                            cst.Arg(value=cst.SimpleString(value=f'"{field}"')),
                                             cst.Arg(
-                                                value=cst.Attribute(
-                                                    value=cst.Name(value="self"), attr=cst.Name(value=field)
+                                                value=cst.Call(
+                                                    func=cst.Name(value="sorted"),
+                                                    args=[
+                                                        cst.Arg(
+                                                            value=cst.Attribute(
+                                                                value=cst.Name(value="self"), attr=cst.Name(value=field)
+                                                            )
+                                                        )
+                                                    ],
                                                 )
-                                            )
+                                            ),
                                         ],
                                     )
-                                ),
-                            ],
+                                )
+                            ]
                         )
-                    )
-                ]
+                    ]
+                ),
             )
             for field in list_fields
         ]
@@ -127,7 +159,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         list_fields = []
         for f in self.fields:
             body_elements.append(self._build_field(f))
-            if f["type"].startswith("list["):
+            if "list[" in f["type"]:
                 list_fields.append(f["name"])
 
         if list_fields:
@@ -155,11 +187,47 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         new_class = self._build_class()
         new_rebuild = self._build_rebuild_call()
 
+        # Check for `Self` import
+        has_self_import = False
+        for stmt in updated_node.body:
+            if isinstance(stmt, cst.SimpleStatementLine):
+                for node in stmt.body:
+                    if (
+                        isinstance(node, cst.ImportFrom)
+                        and node.module
+                        and getattr(node.module, "value", None) == "typing"
+                        and isinstance(node.names, (tuple, list))
+                    ):
+                        for name_item in node.names:
+                            if name_item.name.value == "Self":
+                                has_self_import = True
+                                break
+
+        new_body = list(updated_node.body)
+
+        if not has_self_import:
+            self_import = cst.SimpleStatementLine(
+                body=[
+                    cst.ImportFrom(
+                        module=cst.Name(value="typing"), names=[cst.ImportAlias(name=cst.Name(value="Self"))]
+                    )
+                ]
+            )
+            # Insert at the beginning of the file but after the docstring or first existing import
+            insert_import_idx = 0
+            for i, stmt in enumerate(new_body):
+                if isinstance(stmt, cst.SimpleStatementLine) and any(
+                    isinstance(n, (cst.Import, cst.ImportFrom)) for n in stmt.body
+                ):
+                    insert_import_idx = i + 1
+                    break
+            new_body.insert(insert_import_idx, self_import)
+
         # We need to insert before the first .model_rebuild() call.
         # If none exists, we append to the end.
-        insert_idx = len(updated_node.body)
+        insert_idx = len(new_body)
 
-        for i, stmt in enumerate(updated_node.body):
+        for i, stmt in enumerate(new_body):
             if isinstance(stmt, cst.SimpleStatementLine):
                 for expr in stmt.body:
                     if (
@@ -170,10 +238,9 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                     ):
                         insert_idx = i
                         break
-                if insert_idx != len(updated_node.body):
+                if insert_idx != len(new_body):
                     break
 
-        new_body = list(updated_node.body)
         new_body.insert(insert_idx, new_class)
         new_body.insert(insert_idx + 1, new_rebuild)
 
