@@ -13,7 +13,6 @@ import textwrap
 import typing
 
 import libcst as cst
-import pydantic  # noqa: F401
 
 
 class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
@@ -205,6 +204,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         new_rebuild = self._build_rebuild_call()
 
         # Gather required imports based on schema fields
+        needs_self = any("list[" in f["type"] for f in self.fields)
         needs_any = any("Any" in f["type"] for f in self.fields)
         needs_annotated = any("Annotated" in f["type"] for f in self.fields)
         needs_string_constraints = any("StringConstraints" in f["type"] for f in self.fields)
@@ -213,6 +213,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         has_any_import = False
         has_annotated_import = False
         has_field_import = False
+        has_model_validator_import = False
         has_string_constraints_import = False
 
         for stmt in updated_node.body:
@@ -231,6 +232,8 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                             elif mod_name == "pydantic":
                                 if name_item.name.value == "Field":
                                     has_field_import = True
+                                if name_item.name.value == "model_validator":
+                                    has_model_validator_import = True
                                 if name_item.name.value == "StringConstraints":
                                     has_string_constraints_import = True
 
@@ -245,7 +248,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                 break
 
         typing_imports = []
-        if not has_self_import:
+        if needs_self and not has_self_import:
             typing_imports.append(cst.ImportAlias(name=cst.Name(value="Self")))
         if needs_any and not has_any_import:
             typing_imports.append(cst.ImportAlias(name=cst.Name(value="Any")))
@@ -262,6 +265,8 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         pydantic_imports = []
         if not has_field_import:
             pydantic_imports.append(cst.ImportAlias(name=cst.Name(value="Field")))
+        if needs_self and not has_model_validator_import:
+            pydantic_imports.append(cst.ImportAlias(name=cst.Name(value="model_validator")))
         if needs_string_constraints and not has_string_constraints_import:
             pydantic_imports.append(cst.ImportAlias(name=cst.Name(value="StringConstraints")))
 
