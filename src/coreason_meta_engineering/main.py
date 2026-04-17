@@ -76,11 +76,11 @@ def scaffold_logic_actuator(
     actuator_name: str,
     geometric_schema: str,
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
-    action_space_id: str = typer.Option(..., help="The globally unique URN for this tool"),
+    action_space_id: str = typer.Option(..., help="The globally unique URN for this actuator"),
     return_type: str = typer.Option("None", help="Return type of the function"),
 ) -> None:
     """
-    Scaffolds a new MCP tool function by parsing JSON schema and injecting it into the target Python file.
+    Scaffolds a new logic actuator function by parsing JSON schema and injecting it into the target Python file.
     """
     logger.info(f"Fabricating active logic {actuator_name} into {target_file}")
     try:

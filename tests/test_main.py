@@ -148,7 +148,7 @@ def test_scaffold_model_cli_invalid_urn(tmp_path: Path) -> None:
     assert "urn:coreason:actionspace:" in result.output
 
 
-def test_scaffold_mcp_tool_cli(tmp_path: Path) -> None:
+def test_scaffold_actuator_cli(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = (
@@ -158,21 +158,21 @@ def test_scaffold_mcp_tool_cli(tmp_path: Path) -> None:
         app,
         [
             "scaffold-logic-actuator",
-            "MyTool",
+            "MyActuator",
             schema_payload,
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:my_tool:v1",
+            "urn:coreason:actionspace:my_actuator:v1",
         ],
     )
     assert result.exit_code == 0
-    assert "Successfully injected MyTool" in result.output
+    assert "Successfully injected MyActuator" in result.output
     content = target_file.read_text()
-    assert "def MyTool" in content
+    assert "def MyActuator" in content
 
 
-def test_scaffold_mcp_tool_cli_invalid_urn(tmp_path: Path) -> None:
+def test_scaffold_actuator_cli_invalid_urn(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = '{"properties": {"name": {"type": "string"}}}'
@@ -180,7 +180,7 @@ def test_scaffold_mcp_tool_cli_invalid_urn(tmp_path: Path) -> None:
         app,
         [
             "scaffold-logic-actuator",
-            "MyTool",
+            "MyActuator",
             schema_payload,
             "--target-file",
             str(target_file),
@@ -192,7 +192,7 @@ def test_scaffold_mcp_tool_cli_invalid_urn(tmp_path: Path) -> None:
     assert "Invalid URN" in result.output
 
 
-def test_scaffold_mcp_tool_cli_fallback(tmp_path: Path) -> None:
+def test_scaffold_actuator_cli_fallback(tmp_path: Path) -> None:
     from unittest.mock import patch
 
     target_file = tmp_path / "dummy.py"
@@ -204,7 +204,7 @@ def test_scaffold_mcp_tool_cli_fallback(tmp_path: Path) -> None:
             app,
             [
                 "scaffold-logic-actuator",
-                "MyTool",
+                "MyActuator",
                 schema_payload,
                 "--target-file",
                 str(target_file),
@@ -215,7 +215,7 @@ def test_scaffold_mcp_tool_cli_fallback(tmp_path: Path) -> None:
         assert result.exit_code == 0
 
 
-def test_scaffold_mcp_tool_cli_file(tmp_path: Path) -> None:
+def test_scaffold_actuator_cli_file(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_file = tmp_path / "schema.json"
@@ -224,12 +224,12 @@ def test_scaffold_mcp_tool_cli_file(tmp_path: Path) -> None:
         app,
         [
             "scaffold-logic-actuator",
-            "MyTool",
+            "MyActuator",
             str(schema_file),
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:my_tool:v1",
+            "urn:coreason:actionspace:my_actuator:v1",
         ],
     )
     assert result.exit_code == 0

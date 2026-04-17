@@ -78,7 +78,7 @@ def scaffold_logic_actuator(
     return_type: str = "None",
 ) -> str:
     """
-    Scaffolds a new MCP tool function by parsing JSON schema and injecting it into the target Python file.
+    Scaffolds a new logic actuator function by parsing JSON schema and injecting it into the target Python file.
     """
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)

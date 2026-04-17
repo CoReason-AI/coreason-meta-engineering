@@ -16,21 +16,21 @@ def test_function_inject_transformer_basic() -> None:
     source = "def existing_function():\n    pass\n"
     module = cst.parse_module(source)
     transformer = LogicInjectionFunctor(
-        actuator_name="my_new_tool",
+        actuator_name="my_new_actuator",
         geometric_schema=[
             {"name": "x", "type": "int"},
             {"name": "y", "type": "Annotated[str, StringConstraints(max_length=200)]"},
         ],
         return_type="str",
-        action_space_id="urn:coreason:actionspace:my_tool:v1",
+        action_space_id="urn:coreason:actionspace:my_actuator:v1",
     )
     new_module = module.visit(transformer)
     code = new_module.code
 
-    assert "def my_new_tool(x: int, y: Annotated[str, StringConstraints(max_length=200)]) -> str:" in code
+    assert "def my_new_actuator(x: int, y: Annotated[str, StringConstraints(max_length=200)]) -> str:" in code
     assert "@mcp.tool()" in code
-    assert 'my_new_tool.__action_space_urn__ = "urn:coreason:actionspace:my_tool:v1"' in code
-    assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:my_tool:v1" in code
+    assert 'my_new_actuator.__action_space_urn__ = "urn:coreason:actionspace:my_actuator:v1"' in code
+    assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:my_actuator:v1" in code
     assert "from mcp.server.fastmcp import mcp" in code
     assert "from typing import Annotated" in code
     assert "from pydantic import StringConstraints" in code
@@ -38,19 +38,19 @@ def test_function_inject_transformer_basic() -> None:
 
 
 def test_function_inject_transformer_idempotency() -> None:
-    source = "def my_new_tool():\n    pass\n"
+    source = "def my_new_actuator():\n    pass\n"
     module = cst.parse_module(source)
     transformer = LogicInjectionFunctor(
-        actuator_name="my_new_tool",
+        actuator_name="my_new_actuator",
         geometric_schema=[],
         return_type="None",
-        action_space_id="urn:coreason:actionspace:my_tool:v1",
+        action_space_id="urn:coreason:actionspace:my_actuator:v1",
     )
     new_module = module.visit(transformer)
     code = new_module.code
 
     # Should not inject a second time
-    assert code.count("def my_new_tool") == 1
+    assert code.count("def my_new_actuator") == 1
     assert "@mcp.tool()" not in code
 
 
@@ -78,7 +78,7 @@ def test_function_inject_with_existing_mcp_import() -> None:
     )
     module = cst.parse_module(source)
     transformer = LogicInjectionFunctor(
-        actuator_name="my_tool",
+        actuator_name="my_actuator",
         geometric_schema=[{"name": "a", "type": "Annotated[Any, StringConstraints()]"}],
         return_type="",
         action_space_id="urn:x",
@@ -96,7 +96,7 @@ def test_function_inject_with_any_import() -> None:
     source = "def x(): pass\n"
     module = cst.parse_module(source)
     transformer = LogicInjectionFunctor(
-        actuator_name="my_tool",
+        actuator_name="my_actuator",
         geometric_schema=[{"name": "a", "type": "Any"}],
         return_type="",
         action_space_id="urn:x"
