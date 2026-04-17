@@ -25,6 +25,7 @@ def scaffold_ontology_model(
     model_name: str,
     schema_payload: str,
     target_file_path: str,
+    action_space_id: str,
 ) -> str:
     """
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
@@ -51,7 +52,7 @@ def scaffold_ontology_model(
 
     # 4. Parse AST and inject
     module = cst.parse_module(source_code)
-    transformer = ClassInjectTransformer(name=model_name, fields=fields)
+    transformer = ClassInjectTransformer(name=model_name, fields=fields, action_space_id=action_space_id)
     new_module = module.visit(transformer)
 
     # 5. Write modified code

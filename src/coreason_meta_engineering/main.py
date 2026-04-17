@@ -26,6 +26,7 @@ def scaffold_model(
     model_name: str,
     schema_payload: str,
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
+    action_space_id: str = typer.Option(..., help="The globally unique URN for this capability"),
 ) -> None:
     """
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
@@ -50,7 +51,7 @@ def scaffold_model(
 
     # 4. Parse AST and inject
     module = cst.parse_module(source_code)
-    transformer = ClassInjectTransformer(name=model_name, fields=fields)
+    transformer = ClassInjectTransformer(name=model_name, fields=fields, action_space_id=action_space_id)
     new_module = module.visit(transformer)
 
     # 5. Write modified code

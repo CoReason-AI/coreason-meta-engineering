@@ -36,6 +36,7 @@ def test_scaffold_ontology_model_with_json_string(tmp_path: Path) -> None:
         model_name="TestModel",
         schema_payload=schema_payload,
         target_file_path=str(target_file),
+        action_space_id="urn:coreason:actionspace:test:v1",
     )
 
     # Assertions
@@ -65,6 +66,7 @@ def test_scaffold_ontology_model_with_file_path(tmp_path: Path) -> None:
         model_name="AnotherModel",
         schema_payload=str(schema_file),
         target_file_path=str(target_file),
+        action_space_id="urn:coreason:actionspace:test:v1",
     )
 
     # Assertions
@@ -82,6 +84,7 @@ def test_scaffold_ontology_model_target_not_found(tmp_path: Path) -> None:
             model_name="FailModel",
             schema_payload="{}",
             target_file_path=str(missing_target),
+            action_space_id="urn:coreason:actionspace:test:v1",
         )
 
 
@@ -106,6 +109,7 @@ def test_scaffold_ontology_model_invalid_file_fallback(tmp_path: Path) -> None:
             model_name="PersonFallbackClean",
             schema_payload=schema_payload_fallback_clean,
             target_file_path=str(target_file),
+            action_space_id="urn:coreason:actionspace:test:v1",
         )
         assert result == f"Successfully injected PersonFallbackClean into {target_file}"
         assert "class PersonFallbackClean(CoreasonBaseState):" in target_file.read_text(encoding="utf-8")

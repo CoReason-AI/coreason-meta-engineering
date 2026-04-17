@@ -21,13 +21,14 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
     accompanying model_rebuild() call into a given Python module AST.
     """
 
-    def __init__(self, name: str, fields: list[dict[str, typing.Any]]):
+    def __init__(self, name: str, fields: list[dict[str, typing.Any]], action_space_id: str):
         super().__init__()
         self.name = name
         self.fields = fields
+        self.action_space_id = action_space_id
 
         self.docstring = textwrap.dedent(
-            '''\
+            f'''\
             """
             AGENT INSTRUCTION: [Define topological boundary]
 
@@ -35,7 +36,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
 
             EPISTEMIC BOUNDS: [Define mathematical/physical limits]
 
-            MCP ROUTING TRIGGERS: [Comma-separated algorithmic tags]
+            MCP ROUTING TRIGGERS: {self.action_space_id}
             """'''
         )
 
@@ -168,9 +169,20 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
             returns=cst.Annotation(annotation=cst.Name(value="Self")),
         )
 
+    def _build_urn_attribute(self) -> cst.SimpleStatementLine:
+        return cst.SimpleStatementLine(
+            body=[
+                cst.Assign(
+                    targets=[cst.AssignTarget(target=cst.Name(value="__action_space_urn__"))],
+                    value=cst.SimpleString(value=f'"{self.action_space_id}"'),
+                )
+            ]
+        )
+
     def _build_class(self) -> cst.ClassDef:
         body_elements: list[cst.BaseStatement] = []
         body_elements.append(self._build_docstring())
+        body_elements.append(self._build_urn_attribute())
 
         list_fields = []
         for f in self.fields:
@@ -200,6 +212,11 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         )
 
     def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:  # noqa: N802, ARG002
+        # Idempotency Axiom: If the class already exists, halt injection entirely.
+        for stmt in updated_node.body:
+            if isinstance(stmt, cst.ClassDef) and stmt.name.value == self.name:
+                return updated_node
+
         new_class = self._build_class()
         new_rebuild = self._build_rebuild_call()
 

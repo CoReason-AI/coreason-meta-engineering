@@ -35,7 +35,17 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
     schema_payload = json.dumps(schema)
 
     # 3. Invoke CLI
-    result = runner.invoke(app, ["Person", schema_payload, "--target-file", str(target_file)])
+    result = runner.invoke(
+        app,
+        [
+            "Person",
+            schema_payload,
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "urn:coreason:actionspace:test:v1",
+        ],
+    )
 
     # 4. Assert exit code
     assert result.exit_code == 0, result.stdout
@@ -67,7 +77,17 @@ def test_scaffold_model_cli_file_payload(tmp_path: Path) -> None:
     schema_file = tmp_path / "schema.json"
     schema_file.write_text(json.dumps(schema), encoding="utf-8")
 
-    result = runner.invoke(app, ["PersonFile", str(schema_file), "--target-file", str(target_file)])
+    result = runner.invoke(
+        app,
+        [
+            "PersonFile",
+            str(schema_file),
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "urn:coreason:actionspace:test:v1",
+        ],
+    )
 
     assert result.exit_code == 0, result.stdout
     assert "Successfully injected PersonFile into" in result.stdout
@@ -89,6 +109,14 @@ def test_scaffold_model_cli_invalid_file_fallback(tmp_path: Path) -> None:
     with patch("src.coreason_meta_engineering.main.Path.is_file") as mock_is_file:
         mock_is_file.side_effect = OSError("Mocked OS Error")
         result3 = runner.invoke(
-            app, ["PersonFallbackClean", schema_payload_fallback_clean, "--target-file", str(target_file)]
+            app,
+            [
+                "PersonFallbackClean",
+                schema_payload_fallback_clean,
+                "--target-file",
+                str(target_file),
+                "--action-space-id",
+                "urn:coreason:actionspace:test:v1",
+            ],
         )
         assert result3.exit_code == 0
