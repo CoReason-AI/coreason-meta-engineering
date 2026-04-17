@@ -14,8 +14,11 @@ from pathlib import Path
 import libcst as cst
 from mcp.server.fastmcp import FastMCP
 
+from coreason_meta_engineering.ast.agent_scaffold import AgentInjectTransformer
 from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
+from coreason_meta_engineering.ast.tool_scaffold import FunctionInjectTransformer
 from coreason_meta_engineering.schema import resolve_json_schema_to_fields
+from coreason_meta_engineering.utils.validation import validate_action_space_urn
 
 mcp = FastMCP("CoReason Agentic Forge")
 
@@ -32,11 +35,7 @@ def scaffold_ontology_model(
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
     target_file = Path(target_file_path)
-    if not action_space_id.startswith("urn:coreason:actionspace:"):
-        raise ValueError(
-            f"Invalid URN format. action_space_id must start with 'urn:coreason:actionspace:'."
-            f" Received: {action_space_id}"
-        )
+    validate_action_space_urn(action_space_id)
     if not target_file.exists() or not target_file.is_file():
         raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
 
@@ -68,6 +67,70 @@ def scaffold_ontology_model(
 
     # 6. Return success message
     return f"Successfully injected {model_name} into {target_file_path}"
+
+
+@mcp.tool()  # type: ignore[misc]
+def scaffold_mcp_tool(
+    tool_name: str,
+    schema_payload: str,
+    target_file_path: str,
+    action_space_id: str,
+    return_type: str = "None",
+) -> str:
+    """
+    Scaffolds a new MCP tool function by parsing JSON schema and injecting it into the target Python file.
+    """
+    target_file = Path(target_file_path)
+    validate_action_space_urn(action_space_id)
+    if not target_file.exists() or not target_file.is_file():
+        raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
+
+    try:
+        payload_path = Path(schema_payload)
+        if payload_path.is_file():
+            schema_payload = payload_path.read_text(encoding="utf-8")
+    except OSError:
+        pass
+
+    schema_dict = json.loads(schema_payload)
+
+    # Convert schema to parameters list
+    parameters = resolve_json_schema_to_fields(schema_dict)
+
+    source_code = target_file.read_text(encoding="utf-8")
+    module = cst.parse_module(source_code)
+    transformer = FunctionInjectTransformer(
+        tool_name=tool_name, parameters=parameters, return_type=return_type, action_space_id=action_space_id
+    )
+    new_module = module.visit(transformer)
+    target_file.write_text(new_module.code, encoding="utf-8")
+    return f"Successfully injected {tool_name} into {target_file_path}"
+
+
+@mcp.tool()  # type: ignore[misc]
+def scaffold_agent_node(
+    agent_name: str,
+    role_description: str,
+    target_file_path: str,
+    action_space_id: str,
+    base_class: str = "CoReasonBaseAgent",
+) -> str:
+    """
+    Scaffolds a new Swarm Agent structure into the target Python file.
+    """
+    target_file = Path(target_file_path)
+    validate_action_space_urn(action_space_id)
+    if not target_file.exists() or not target_file.is_file():
+        raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
+
+    source_code = target_file.read_text(encoding="utf-8")
+    module = cst.parse_module(source_code)
+    transformer = AgentInjectTransformer(
+        agent_name=agent_name, role_description=role_description, action_space_id=action_space_id, base_class=base_class
+    )
+    new_module = module.visit(transformer)
+    target_file.write_text(new_module.code, encoding="utf-8")
+    return f"Successfully injected {agent_name} into {target_file_path}"
 
 
 def main() -> None:  # pragma: no cover

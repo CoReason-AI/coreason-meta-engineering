@@ -1,0 +1,69 @@
+# Copyright (c) 2026 CoReason, Inc.
+#
+# This software is proprietary and dual-licensed.
+# Licensed under the Prosperity Public License 3.0 (the "License").
+# A copy of the license is available at https://prosperitylicense.com/versions/3.0.0
+# For details, see the LICENSE file.
+# Commercial use beyond a 30-day trial requires a separate license.
+#
+# Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
+
+import libcst as cst
+
+from coreason_meta_engineering.ast.agent_scaffold import AgentInjectTransformer
+
+
+def test_agent_inject_transformer_basic() -> None:
+    source = "class ExistingAgent:\n    pass\n"
+    module = cst.parse_module(source)
+    transformer = AgentInjectTransformer(
+        agent_name="MyNewAgent",
+        role_description="This is a test agent.",
+        action_space_id="urn:coreason:actionspace:agent:v1",
+        base_class="CoReasonBaseAgent",
+    )
+    new_module = module.visit(transformer)
+    code = new_module.code
+    print("CODE OUTPUT:")
+    print(code)
+
+    assert "class MyNewAgent(CoReasonBaseAgent):" in code
+    assert '__action_space_urn__ = "urn:coreason:actionspace:agent:v1"' in code
+    assert 'system_prompt: str = """This is a test agent."""' in code
+    assert "authorized_tools: list[Any] = []" in code
+    assert "from typing import Any, Self" in code
+    assert "from pydantic import model_validator" in code
+    assert "def _enforce_canonical_sort(self) -> Self:" in code
+    assert "self.authorized_tools = sorted(self.authorized_tools)" in code
+    assert '@model_validator(mode="after")' in code
+    assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:agent:v1" in code
+    assert "MyNewAgent.model_rebuild()" in code
+
+
+def test_agent_inject_transformer_idempotency() -> None:
+    source = "class MyNewAgent:\n    pass\n"
+    module = cst.parse_module(source)
+    transformer = AgentInjectTransformer(
+        agent_name="MyNewAgent",
+        role_description="Test",
+        action_space_id="urn:val",
+    )
+    new_module = module.visit(transformer)
+    code = new_module.code
+
+    assert code.count("class MyNewAgent") == 1
+    assert "system_prompt" not in code
+
+
+def test_agent_inject_existing_import() -> None:
+    source = "from typing import Any\n"
+    module = cst.parse_module(source)
+    transformer = AgentInjectTransformer(
+        agent_name="MyNewAgent",
+        role_description="Test",
+        action_space_id="urn:val",
+    )
+    new_module = module.visit(transformer)
+    code = new_module.code
+
+    assert code.count("from typing import Any") == 1

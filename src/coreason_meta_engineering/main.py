@@ -14,9 +14,12 @@ from pathlib import Path
 import libcst as cst
 import typer
 
+from coreason_meta_engineering.ast.agent_scaffold import AgentInjectTransformer
 from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
+from coreason_meta_engineering.ast.tool_scaffold import FunctionInjectTransformer
 from coreason_meta_engineering.schema import resolve_json_schema_to_fields
 from coreason_meta_engineering.utils.logger import logger
+from coreason_meta_engineering.utils.validation import validate_action_space_urn
 
 app = typer.Typer()
 
@@ -33,10 +36,10 @@ def scaffold_model(
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
     logger.info(f"Scaffolding model {model_name} into {target_file}")
-    if not action_space_id.startswith("urn:coreason:actionspace:"):
-        raise typer.BadParameter(
-            f"action_space_id must start with 'urn:coreason:actionspace:'. Received: {action_space_id}"
-        )
+    try:
+        validate_action_space_urn(action_space_id)
+    except ValueError as e:
+        raise typer.BadParameter(str(e))
 
     # 1. Parse schema payload
     try:
@@ -66,6 +69,73 @@ def scaffold_model(
 
     # 6. Print success message
     typer.echo(f"Successfully injected {model_name} into {target_file}")
+
+
+@app.command(name="scaffold-mcp-tool")  # type: ignore[misc]
+def scaffold_mcp_tool(
+    tool_name: str,
+    schema_payload: str,
+    target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
+    action_space_id: str = typer.Option(..., help="The globally unique URN for this tool"),
+    return_type: str = typer.Option("None", help="Return type of the function"),
+) -> None:
+    """
+    Scaffolds a new MCP tool function by parsing JSON schema and injecting it into the target Python file.
+    """
+    logger.info(f"Scaffolding MCP tool {tool_name} into {target_file}")
+    try:
+        validate_action_space_urn(action_space_id)
+    except ValueError as e:
+        raise typer.BadParameter(str(e))
+
+    try:
+        payload_path = Path(schema_payload)
+        if payload_path.is_file():
+            schema_payload = payload_path.read_text(encoding="utf-8")
+    except OSError:
+        pass
+
+    schema_dict = json.loads(schema_payload)
+
+    parameters = resolve_json_schema_to_fields(schema_dict)
+
+    source_code = target_file.read_text(encoding="utf-8")
+    module = cst.parse_module(source_code)
+    transformer = FunctionInjectTransformer(
+        tool_name=tool_name, parameters=parameters, return_type=return_type, action_space_id=action_space_id
+    )
+    new_module = module.visit(transformer)
+    target_file.write_text(new_module.code, encoding="utf-8")
+
+    typer.echo(f"Successfully injected {tool_name} into {target_file}")
+
+
+@app.command(name="scaffold-agent-node")  # type: ignore[misc]
+def scaffold_agent_node(
+    agent_name: str,
+    role_description: str,
+    target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
+    action_space_id: str = typer.Option(..., help="The globally unique URN for this capability"),
+    base_class: str = typer.Option("CoReasonBaseAgent", help="The base class to inherit from"),
+) -> None:
+    """
+    Scaffolds a new Swarm Agent structure into the target Python file.
+    """
+    logger.info(f"Scaffolding agent {agent_name} into {target_file}")
+    try:
+        validate_action_space_urn(action_space_id)
+    except ValueError as e:
+        raise typer.BadParameter(str(e))
+
+    source_code = target_file.read_text(encoding="utf-8")
+    module = cst.parse_module(source_code)
+    transformer = AgentInjectTransformer(
+        agent_name=agent_name, role_description=role_description, action_space_id=action_space_id, base_class=base_class
+    )
+    new_module = module.visit(transformer)
+    target_file.write_text(new_module.code, encoding="utf-8")
+
+    typer.echo(f"Successfully injected {agent_name} into {target_file}")
 
 
 if __name__ == "__main__":  # pragma: no cover
