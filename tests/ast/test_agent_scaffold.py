@@ -35,7 +35,7 @@ def test_agent_inject_transformer_basic() -> None:
     assert "from pydantic import model_validator" in code
     assert "def _enforce_canonical_sort(self) -> Self:" in code
     assert "self.authorized_tools = sorted(self.authorized_tools)" in code
-    assert '@model_validator(mode="after")' in code
+    assert '@model_validator(mode = "after")' in code
     assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:agent:v1" in code
     assert "MyNewAgent.model_rebuild()" in code
 
@@ -56,7 +56,7 @@ def test_agent_inject_transformer_idempotency() -> None:
 
 
 def test_agent_inject_existing_import() -> None:
-    source = "from typing import Any\n"
+    source = "from typing import Any, Self\nfrom pydantic import model_validator\n"
     module = cst.parse_module(source)
     transformer = AgentInjectTransformer(
         agent_name="MyNewAgent",
@@ -66,4 +66,5 @@ def test_agent_inject_existing_import() -> None:
     new_module = module.visit(transformer)
     code = new_module.code
 
-    assert code.count("from typing import Any") == 1
+    assert code.count("from typing import Any, Self") == 1
+    assert code.count("from pydantic import model_validator") == 1

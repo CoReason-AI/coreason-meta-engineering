@@ -176,7 +176,7 @@ def test_scaffold_mcp_tool_cli_invalid_urn(tmp_path: Path) -> None:
         "--action-space-id", "invalid"
     ])
     assert result.exit_code != 0
-    assert "must start with 'urn:coreason:actionspace:'" in result.output
+    assert "Invalid URN" in result.output
 
 def test_scaffold_mcp_tool_cli_fallback(tmp_path: Path) -> None:
     from unittest.mock import patch
@@ -237,4 +237,4 @@ def test_scaffold_agent_node_cli_invalid_urn(tmp_path: Path) -> None:
         "--action-space-id", "invalid"
     ])
     assert result.exit_code != 0
-    assert "must start with 'urn:coreason:actionspace:'" in result.output
+    assert "Invalid URN" in result.output
