@@ -14,7 +14,7 @@ import typing
 import libcst as cst
 
 
-class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
+class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
     """
     A decoupled libcst transformer that injects a newly defined function bounded by
     the @mcp.tool() decorator.
@@ -22,14 +22,14 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
 
     def __init__(
         self,
-        tool_name: str,
-        parameters: list[dict[str, typing.Any]],
+        actuator_name: str,
+        geometric_schema: list[dict[str, typing.Any]],
         return_type: str,
         action_space_id: str,
     ):
         super().__init__()
-        self.tool_name = tool_name
-        self.parameters = parameters
+        self.actuator_name = actuator_name
+        self.geometric_schema = geometric_schema
         self.return_type = return_type
         self.action_space_id = action_space_id
 
@@ -63,7 +63,7 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                     targets=[
                         cst.AssignTarget(
                             target=cst.Attribute(
-                                value=cst.Name(value=self.tool_name),
+                                value=cst.Name(value=self.actuator_name),
                                 attr=cst.Name(value="__action_space_urn__"),
                             )
                         )
@@ -78,10 +78,10 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         body_elements.append(self._build_docstring())
         body_elements.append(cst.SimpleStatementLine(body=[cst.Pass()]))
 
-        params = [self._build_parameter(p) for p in self.parameters]
+        params = [self._build_parameter(p) for p in self.geometric_schema]
 
         return cst.FunctionDef(
-            name=cst.Name(value=self.tool_name),
+            name=cst.Name(value=self.actuator_name),
             params=cst.Parameters(params=params),
             body=cst.IndentedBlock(body=body_elements),
             decorators=[
@@ -98,14 +98,14 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
     def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:  # noqa: N802, ARG002
         # Idempotency Axiom: If the function already exists, halt injection entirely.
         for stmt in updated_node.body:
-            if isinstance(stmt, cst.FunctionDef) and stmt.name.value == self.tool_name:
+            if isinstance(stmt, cst.FunctionDef) and stmt.name.value == self.actuator_name:
                 return updated_node
 
         new_function = self._build_function()
 
-        needs_any = any("Any" in p.get("type", "") for p in self.parameters)
-        needs_annotated = any("Annotated" in p.get("type", "") for p in self.parameters)
-        needs_stringconfig = any("StringConstraints" in p.get("type", "") for p in self.parameters)
+        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema)
+        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema)
+        needs_stringconfig = any("StringConstraints" in p.get("type", "") for p in self.geometric_schema)
 
         has_mcp_import = False
         has_any_import = False
@@ -123,7 +123,7 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                         mod_name = ""
                         if getattr(node, "module", None) is not None and isinstance(node.module, cst.Name):
                             mod_name = node.module.value
-                        
+
                         for name_item in node.names:
                             val = name_item.name.value
                             if val == "mcp":
@@ -146,7 +146,7 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
             missing_typing.append("Any")
         if needs_annotated and not has_annotated_import:
             missing_typing.append("Annotated")
-        
+
         if missing_typing:
             typing_import = cst.SimpleStatementLine(
                 body=[
@@ -158,7 +158,7 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
             )
             new_body.insert(insert_import_idx, typing_import)
             insert_import_idx += 1
-            
+
         if needs_stringconfig and not has_stringconstraints_import:
             pydantic_import = cst.SimpleStatementLine(
                 body=[

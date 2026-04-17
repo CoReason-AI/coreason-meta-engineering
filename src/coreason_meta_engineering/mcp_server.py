@@ -14,19 +14,19 @@ from pathlib import Path
 import libcst as cst
 from mcp.server.fastmcp import FastMCP
 
-from coreason_meta_engineering.ast.agent_scaffold import AgentInjectTransformer
-from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
-from coreason_meta_engineering.ast.tool_scaffold import FunctionInjectTransformer
-from coreason_meta_engineering.schema import resolve_json_schema_to_fields
-from coreason_meta_engineering.utils.validation import validate_action_space_urn
+from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
+from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
+from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
+from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
+from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
 
 mcp = FastMCP("CoReason Agentic Forge")
 
 
 @mcp.tool()  # type: ignore[misc]
-def scaffold_ontology_model(
-    model_name: str,
-    schema_payload: str,
+def scaffold_manifest_state(
+    state_name: str,
+    geometric_schema: str,
     target_file_path: str,
     action_space_id: str,
     base_class: str = "CoreasonBaseState",
@@ -35,30 +35,30 @@ def scaffold_ontology_model(
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
     target_file = Path(target_file_path)
-    validate_action_space_urn(action_space_id)
+    verify_cryptographic_urn_boundary(action_space_id)
     if not target_file.exists() or not target_file.is_file():
         raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
 
     # 1. Parse schema payload
     try:
-        payload_path = Path(schema_payload)
+        payload_path = Path(geometric_schema)
         if payload_path.is_file():
-            schema_payload = payload_path.read_text(encoding="utf-8")
+            geometric_schema = payload_path.read_text(encoding="utf-8")
     except OSError:
         pass  # Not a valid path string, treat as raw JSON
 
-    schema_dict = json.loads(schema_payload)
+    schema_dict = json.loads(geometric_schema)
 
     # 2. Resolve fields
-    fields = resolve_json_schema_to_fields(schema_dict)
+    fields = resolve_epistemic_schema_to_ast_bindings(schema_dict)
 
     # 3. Read target file text
     source_code = target_file.read_text(encoding="utf-8")
 
     # 4. Parse AST and inject
     module = cst.parse_module(source_code)
-    transformer = ClassInjectTransformer(
-        name=model_name, fields=fields, action_space_id=action_space_id, base_class=base_class
+    transformer = StateInjectionFunctor(
+        state_name=state_name, geometric_schema=fields, action_space_id=action_space_id, base_class=base_class
     )
     new_module = module.visit(transformer)
 
@@ -66,13 +66,13 @@ def scaffold_ontology_model(
     target_file.write_text(new_module.code, encoding="utf-8")
 
     # 6. Return success message
-    return f"Successfully injected {model_name} into {target_file_path}"
+    return f"Successfully injected {state_name} into {target_file_path}"
 
 
 @mcp.tool()  # type: ignore[misc]
-def scaffold_mcp_tool(
-    tool_name: str,
-    schema_payload: str,
+def scaffold_logic_actuator(
+    actuator_name: str,
+    geometric_schema: str,
     target_file_path: str,
     action_space_id: str,
     return_type: str = "None",
@@ -81,36 +81,36 @@ def scaffold_mcp_tool(
     Scaffolds a new MCP tool function by parsing JSON schema and injecting it into the target Python file.
     """
     target_file = Path(target_file_path)
-    validate_action_space_urn(action_space_id)
+    verify_cryptographic_urn_boundary(action_space_id)
     if not target_file.exists() or not target_file.is_file():
         raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
 
     try:
-        payload_path = Path(schema_payload)
+        payload_path = Path(geometric_schema)
         if payload_path.is_file():
-            schema_payload = payload_path.read_text(encoding="utf-8")
+            geometric_schema = payload_path.read_text(encoding="utf-8")
     except OSError:
         pass
 
-    schema_dict = json.loads(schema_payload)
+    schema_dict = json.loads(geometric_schema)
 
     # Convert schema to parameters list
-    parameters = resolve_json_schema_to_fields(schema_dict)
+    parameters = resolve_epistemic_schema_to_ast_bindings(schema_dict)
 
     source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
-    transformer = FunctionInjectTransformer(
-        tool_name=tool_name, parameters=parameters, return_type=return_type, action_space_id=action_space_id
+    transformer = LogicInjectionFunctor(
+        actuator_name=actuator_name, geometric_schema=parameters, return_type=return_type, action_space_id=action_space_id
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
-    return f"Successfully injected {tool_name} into {target_file_path}"
+    return f"Successfully injected {actuator_name} into {target_file_path}"
 
 
 @mcp.tool()  # type: ignore[misc]
-def scaffold_agent_node(
-    agent_name: str,
-    role_description: str,
+def scaffold_epistemic_node(
+    node_name: str,
+    cognitive_boundary_directive: str,
     target_file_path: str,
     action_space_id: str,
     base_class: str = "CoReasonBaseAgent",
@@ -119,18 +119,21 @@ def scaffold_agent_node(
     Scaffolds a new Swarm Agent structure into the target Python file.
     """
     target_file = Path(target_file_path)
-    validate_action_space_urn(action_space_id)
+    verify_cryptographic_urn_boundary(action_space_id)
     if not target_file.exists() or not target_file.is_file():
         raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
 
     source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
-    transformer = AgentInjectTransformer(
-        agent_name=agent_name, role_description=role_description, action_space_id=action_space_id, base_class=base_class
+    transformer = EpistemicNodeInjectionFunctor(
+        node_name=node_name,
+        cognitive_boundary_directive=cognitive_boundary_directive,
+        action_space_id=action_space_id,
+        base_class=base_class,
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
-    return f"Successfully injected {agent_name} into {target_file_path}"
+    return f"Successfully injected {node_name} into {target_file_path}"
 
 
 def main() -> None:  # pragma: no cover

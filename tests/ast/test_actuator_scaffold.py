@@ -9,16 +9,18 @@
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
 import libcst as cst
-
-from coreason_meta_engineering.ast.tool_scaffold import FunctionInjectTransformer
+from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 
 
 def test_function_inject_transformer_basic() -> None:
     source = "def existing_function():\n    pass\n"
     module = cst.parse_module(source)
-    transformer = FunctionInjectTransformer(
-        tool_name="my_new_tool",
-        parameters=[{"name": "x", "type": "int"}, {"name": "y", "type": "Annotated[str, StringConstraints(max_length=200)]"}],
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_new_tool",
+        geometric_schema=[
+            {"name": "x", "type": "int"},
+            {"name": "y", "type": "Annotated[str, StringConstraints(max_length=200)]"},
+        ],
         return_type="str",
         action_space_id="urn:coreason:actionspace:my_tool:v1",
     )
@@ -38,9 +40,9 @@ def test_function_inject_transformer_basic() -> None:
 def test_function_inject_transformer_idempotency() -> None:
     source = "def my_new_tool():\n    pass\n"
     module = cst.parse_module(source)
-    transformer = FunctionInjectTransformer(
-        tool_name="my_new_tool",
-        parameters=[],
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_new_tool",
+        geometric_schema=[],
         return_type="None",
         action_space_id="urn:coreason:actionspace:my_tool:v1",
     )
@@ -55,8 +57,11 @@ def test_function_inject_transformer_idempotency() -> None:
 def test_function_inject_no_return_type() -> None:
     source = ""
     module = cst.parse_module(source)
-    transformer = FunctionInjectTransformer(
-        tool_name="no_return", parameters=[], return_type="", action_space_id="urn:coreason:actionspace:no_ret:v1"
+    transformer = LogicInjectionFunctor(
+        actuator_name="no_return",
+        geometric_schema=[],
+        return_type="",
+        action_space_id="urn:coreason:actionspace:no_ret:v1"
     )
     new_module = module.visit(transformer)
     code = new_module.code
@@ -66,9 +71,18 @@ def test_function_inject_no_return_type() -> None:
 
 
 def test_function_inject_with_existing_mcp_import() -> None:
-    source = "from pydantic import StringConstraints\nfrom typing import Any, Annotated\nfrom mcp.server.fastmcp import mcp\n"
+    source = (
+        "from pydantic import StringConstraints\n"
+        "from typing import Any, Annotated\n"
+        "from mcp.server.fastmcp import mcp\n"
+    )
     module = cst.parse_module(source)
-    transformer = FunctionInjectTransformer(tool_name="my_tool", parameters=[{"name": "a", "type": "Annotated[Any, StringConstraints()]"}], return_type="", action_space_id="urn:x")
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_tool",
+        geometric_schema=[{"name": "a", "type": "Annotated[Any, StringConstraints()]"}],
+        return_type="",
+        action_space_id="urn:x",
+    )
     new_module = module.visit(transformer)
     code = new_module.code
 
@@ -76,3 +90,16 @@ def test_function_inject_with_existing_mcp_import() -> None:
     assert code.count("from mcp.server.fastmcp import mcp") == 1
     assert code.count("StringConstraints") == 2
     assert code.count("from typing import Any, Annotated") == 1
+
+
+def test_function_inject_with_any_import() -> None:
+    source = "def x(): pass\n"
+    module = cst.parse_module(source)
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_tool",
+        geometric_schema=[{"name": "a", "type": "Any"}],
+        return_type="",
+        action_space_id="urn:x"
+    )
+    new_module = module.visit(transformer)
+    assert "from typing import Any" in new_module.code

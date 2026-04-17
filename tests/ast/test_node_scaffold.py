@@ -9,16 +9,15 @@
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
 import libcst as cst
-
-from coreason_meta_engineering.ast.agent_scaffold import AgentInjectTransformer
+from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
 
 
 def test_agent_inject_transformer_basic() -> None:
     source = "class ExistingAgent:\n    pass\n"
     module = cst.parse_module(source)
-    transformer = AgentInjectTransformer(
-        agent_name="MyNewAgent",
-        role_description="This is a test agent.",
+    transformer = EpistemicNodeInjectionFunctor(
+        node_name="MyNewAgent",
+        cognitive_boundary_directive="This is a test agent.",
         action_space_id="urn:coreason:actionspace:agent:v1",
         base_class="CoReasonBaseAgent",
     )
@@ -43,9 +42,9 @@ def test_agent_inject_transformer_basic() -> None:
 def test_agent_inject_transformer_idempotency() -> None:
     source = "class MyNewAgent:\n    pass\n"
     module = cst.parse_module(source)
-    transformer = AgentInjectTransformer(
-        agent_name="MyNewAgent",
-        role_description="Test",
+    transformer = EpistemicNodeInjectionFunctor(
+        node_name="MyNewAgent",
+        cognitive_boundary_directive="Test",
         action_space_id="urn:val",
     )
     new_module = module.visit(transformer)
@@ -58,9 +57,9 @@ def test_agent_inject_transformer_idempotency() -> None:
 def test_agent_inject_existing_import() -> None:
     source = "from typing import Any, Self\nfrom pydantic import model_validator\n"
     module = cst.parse_module(source)
-    transformer = AgentInjectTransformer(
-        agent_name="MyNewAgent",
-        role_description="Test",
+    transformer = EpistemicNodeInjectionFunctor(
+        node_name="MyNewAgent",
+        cognitive_boundary_directive="Test",
         action_space_id="urn:val",
     )
     new_module = module.visit(transformer)

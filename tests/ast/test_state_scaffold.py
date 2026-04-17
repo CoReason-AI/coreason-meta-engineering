@@ -11,8 +11,7 @@
 from typing import Any
 
 import libcst as cst
-
-from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
+from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
 
 TEST_URN = "urn:coreason:actionspace:test:v1"
 
@@ -21,7 +20,7 @@ def test_class_inject_basic_and_docstring() -> None:
     code = "import pydantic\n"
     module = cst.parse_module(code)
     fields = [{"name": "basic_field", "type": "int", "description": "basic int field"}]
-    transformer = ClassInjectTransformer("NewState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("NewState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -53,7 +52,7 @@ def test_class_inject_list_validator() -> None:
         {"name": "str_list", "type": "list[str]", "description": "a list of strings"},
         {"name": "int_field", "type": "int", "description": "just an int"},
     ]
-    transformer = ClassInjectTransformer("SortState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("SortState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -75,7 +74,7 @@ def test_class_inject_optional_list_validator() -> None:
         {"name": "opt_list", "type": "list[str] | None", "description": "optional list"},
         {"name": "ann_list", "type": "Annotated[list[int], Field()]", "description": "annotated list"},
     ]
-    transformer = ClassInjectTransformer("SortOptState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("SortOptState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -91,7 +90,7 @@ def test_class_inject_self_import_exists() -> None:
     code = "from typing import Self\nimport pydantic\n"
     module = cst.parse_module(code)
     fields = [{"name": "basic_field", "type": "list[int]", "description": "basic int field"}]
-    transformer = ClassInjectTransformer("NewState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("NewState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -103,7 +102,7 @@ def test_class_inject_before_existing_rebuild() -> None:
     code = "class Existing(CoreasonBaseState):\n    pass\nExisting.model_rebuild()\n"
     module = cst.parse_module(code)
     fields = [{"name": "f1", "type": "str", "description": "d1"}]
-    transformer = ClassInjectTransformer("InjectedClass", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("InjectedClass", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -133,7 +132,7 @@ def test_class_inject_auto_imports() -> None:
         {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
         {"name": "a_list", "type": "list[int]", "description": "a list"},
     ]
-    transformer = ClassInjectTransformer("AutoImportState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("AutoImportState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -154,7 +153,7 @@ def test_class_inject_auto_imports_existing() -> None:
         {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
         {"name": "a_list", "type": "list[int]", "description": "a list"},
     ]
-    transformer = ClassInjectTransformer("AutoImportState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("AutoImportState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -176,7 +175,7 @@ def test_class_inject_no_list_no_self_or_model_validator() -> None:
             "description": "basic",
         },
     ]
-    transformer = ClassInjectTransformer("NoListState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("NoListState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -189,7 +188,7 @@ def test_class_inject_idempotency() -> None:
     code = "class IdempotentState(CoreasonBaseState):\n    pass\nIdempotentState.model_rebuild()\n"
     module = cst.parse_module(code)
     fields = [{"name": "f1", "type": "int", "description": "a field"}]
-    transformer = ClassInjectTransformer("IdempotentState", fields, action_space_id=TEST_URN)
+    transformer = StateInjectionFunctor("IdempotentState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -208,7 +207,7 @@ def test_class_inject_custom_base() -> None:
     code = "import pydantic\n"
     module = cst.parse_module(code)
     fields = [{"name": "cohort_id", "type": "str", "description": "the cohort identifier"}]
-    transformer = ClassInjectTransformer(
+    transformer = StateInjectionFunctor(
         "CardiologyCohort",
         fields,
         action_space_id=TEST_URN,

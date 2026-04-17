@@ -38,7 +38,7 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "scaffold-model",
+            "scaffold-manifest-state",
             "Person",
             schema_payload,
             "--target-file",
@@ -81,7 +81,7 @@ def test_scaffold_model_cli_file_payload(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "scaffold-model",
+            "scaffold-manifest-state",
             "PersonFile",
             str(schema_file),
             "--target-file",
@@ -113,7 +113,7 @@ def test_scaffold_model_cli_invalid_file_fallback(tmp_path: Path) -> None:
         result3 = runner.invoke(
             app,
             [
-                "scaffold-model",
+                "scaffold-manifest-state",
                 "PersonFallbackClean",
                 schema_payload_fallback_clean,
                 "--target-file",
@@ -134,7 +134,7 @@ def test_scaffold_model_cli_invalid_urn(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "scaffold-model",
+            "scaffold-manifest-state",
             "BadModel",
             schema_payload,
             "--target-file",
@@ -152,14 +152,20 @@ def test_scaffold_mcp_tool_cli(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = (
-        '{"properties": {"name": {"type": "string"}, "age": '
-        '{"type": "integer"}, "is_active": {"type": "boolean"}}}'
+        '{"properties": {"name": {"type": "string"}, "age": {"type": "integer"}, "is_active": {"type": "boolean"}}}'
     )
-    result = runner.invoke(app, [
-        "scaffold-mcp-tool", "MyTool", schema_payload, 
-        "--target-file", str(target_file), 
-        "--action-space-id", "urn:coreason:actionspace:my_tool:v1"
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "scaffold-logic-actuator",
+            "MyTool",
+            schema_payload,
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "urn:coreason:actionspace:my_tool:v1",
+        ],
+    )
     assert result.exit_code == 0
     assert "Successfully injected MyTool" in result.output
     content = target_file.read_text()
@@ -170,41 +176,63 @@ def test_scaffold_mcp_tool_cli_invalid_urn(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = '{"properties": {"name": {"type": "string"}}}'
-    result = runner.invoke(app, [
-        "scaffold-mcp-tool", "MyTool", schema_payload, 
-        "--target-file", str(target_file), 
-        "--action-space-id", "invalid"
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "scaffold-logic-actuator",
+            "MyTool",
+            schema_payload,
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "invalid",
+        ],
+    )
     assert result.exit_code != 0
     assert "Invalid URN" in result.output
 
+
 def test_scaffold_mcp_tool_cli_fallback(tmp_path: Path) -> None:
     from unittest.mock import patch
+
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = '{"properties": {"name": {"type": "string"}}}'
     with patch("src.coreason_meta_engineering.main.Path.is_file") as mock_is_file:
         mock_is_file.side_effect = OSError("Mocked")
-        result = runner.invoke(app, [
-            "scaffold-mcp-tool", "MyTool", schema_payload, 
-            "--target-file", str(target_file), 
-            "--action-space-id", "urn:coreason:actionspace:v1"
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "scaffold-logic-actuator",
+                "MyTool",
+                schema_payload,
+                "--target-file",
+                str(target_file),
+                "--action-space-id",
+                "urn:coreason:actionspace:v1",
+            ],
+        )
         assert result.exit_code == 0
+
 
 def test_scaffold_mcp_tool_cli_file(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_file = tmp_path / "schema.json"
     schema_file.write_text('{"properties": {"name": {"type": "string"}}}')
-    result = runner.invoke(app, [
-        "scaffold-mcp-tool", "MyTool", str(schema_file), 
-        "--target-file", str(target_file), 
-        "--action-space-id", "urn:coreason:actionspace:my_tool:v1"
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "scaffold-logic-actuator",
+            "MyTool",
+            str(schema_file),
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "urn:coreason:actionspace:my_tool:v1",
+        ],
+    )
     assert result.exit_code == 0
-
-
 
 
 def test_scaffold_agent_node_cli(tmp_path: Path) -> None:
@@ -213,7 +241,7 @@ def test_scaffold_agent_node_cli(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
         [
-            "scaffold-agent-node",
+            "scaffold-epistemic-node",
             "MyAgent",
             "role",
             "--target-file",
@@ -231,10 +259,17 @@ def test_scaffold_agent_node_cli(tmp_path: Path) -> None:
 def test_scaffold_agent_node_cli_invalid_urn(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("class BaseAgent: pass\n")
-    result = runner.invoke(app, [
-        "scaffold-agent-node", "MyAgent", "role", 
-        "--target-file", str(target_file), 
-        "--action-space-id", "invalid"
-    ])
+    result = runner.invoke(
+        app,
+        [
+            "scaffold-epistemic-node",
+            "MyAgent",
+            "role",
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "invalid",
+        ],
+    )
     assert result.exit_code != 0
     assert "Invalid URN" in result.output

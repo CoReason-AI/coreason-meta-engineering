@@ -13,7 +13,7 @@ import textwrap
 import libcst as cst
 
 
-class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
+class EpistemicNodeInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
     """
     A decoupled libcst transformer that injects a newly defined Swarm Agent class
     into a given Python module AST.
@@ -21,14 +21,14 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
 
     def __init__(
         self,
-        agent_name: str,
-        role_description: str,
+        node_name: str,
+        cognitive_boundary_directive: str,
         action_space_id: str,
         base_class: str = "CoReasonBaseAgent",
     ):
         super().__init__()
-        self.agent_name = agent_name
-        self.role_description = role_description
+        self.node_name = node_name
+        self.cognitive_boundary_directive = cognitive_boundary_directive
         self.action_space_id = action_space_id
         self.base_class = base_class
 
@@ -64,7 +64,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                 cst.AnnAssign(
                     target=cst.Name(value="system_prompt"),
                     annotation=cst.Annotation(annotation=cst.Name(value="str")),
-                    value=cst.SimpleString(value=f'"""{self.role_description}"""'),
+                    value=cst.SimpleString(value=f'"""{self.cognitive_boundary_directive}"""'),
                 )
             ]
         )
@@ -96,8 +96,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                             cst.Expr(
                                 value=cst.Call(
                                     func=cst.Attribute(
-                                        value=cst.Name(value="object"),
-                                        attr=cst.Name(value="__setattr__")
+                                        value=cst.Name(value="object"), attr=cst.Name(value="__setattr__")
                                     ),
                                     args=[
                                         cst.Arg(value=cst.Name(value="self")),
@@ -109,20 +108,18 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                                                     cst.Arg(
                                                         value=cst.Attribute(
                                                             value=cst.Name(value="self"),
-                                                            attr=cst.Name(value="authorized_tools")
+                                                            attr=cst.Name(value="authorized_tools"),
                                                         )
                                                     )
-                                                ]
+                                                ],
                                             )
-                                        )
-                                    ]
+                                        ),
+                                    ],
                                 )
                             )
                         ]
                     ),
-                    cst.SimpleStatementLine(
-                        body=[cst.Return(value=cst.Name(value="self"))]
-                    )
+                    cst.SimpleStatementLine(body=[cst.Return(value=cst.Name(value="self"))]),
                 ]
             ),
             decorators=[
@@ -133,7 +130,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                             cst.Arg(
                                 value=cst.SimpleString(value='"after"'),
                                 keyword=cst.Name(value="mode"),
-                                equal=cst.AssignEqual()
+                                equal=cst.AssignEqual(),
                             )
                         ],
                     )
@@ -148,7 +145,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                 cst.Expr(
                     value=cst.Call(
                         func=cst.Attribute(
-                            value=cst.Name(value=self.agent_name),
+                            value=cst.Name(value=self.node_name),
                             attr=cst.Name(value="model_rebuild"),
                         ),
                         args=[],
@@ -166,7 +163,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
         body_elements.append(self._build_canonical_sort())
 
         return cst.ClassDef(
-            name=cst.Name(value=self.agent_name),
+            name=cst.Name(value=self.node_name),
             bases=[cst.Arg(value=cst.Name(value=self.base_class))],
             body=cst.IndentedBlock(body=body_elements),
         )
@@ -174,7 +171,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
     def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:  # noqa: N802, ARG002
         # Idempotency Axiom: If the class already exists, halt injection entirely.
         for stmt in updated_node.body:
-            if isinstance(stmt, cst.ClassDef) and stmt.name.value == self.agent_name:
+            if isinstance(stmt, cst.ClassDef) and stmt.name.value == self.node_name:
                 return updated_node
 
         new_class = self._build_class()
@@ -200,7 +197,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                                 has_any_import = True
                             if name_item.name.value == "Self":
                                 has_typing_self = True
-                                
+
                     if (
                         isinstance(node, cst.ImportFrom)
                         and getattr(node.module, "value", None) == "pydantic"
@@ -222,7 +219,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
             missing_typing.append("Any")
         if not has_typing_self:
             missing_typing.append("Self")
-        
+
         if missing_typing:
             typing_import = cst.SimpleStatementLine(
                 body=[
@@ -233,7 +230,7 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                 ]
             )
             new_body.insert(insert_import_idx, typing_import)
-            
+
         if not has_pydantic_validator:
             pydantic_import = cst.SimpleStatementLine(
                 body=[

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from coreason_meta_engineering.mcp_server import scaffold_ontology_model
+from coreason_meta_engineering.mcp_server import scaffold_manifest_state
 
 
 def test_scaffold_ontology_model_with_json_string(tmp_path: Path) -> None:
@@ -32,9 +32,9 @@ def test_scaffold_ontology_model_with_json_string(tmp_path: Path) -> None:
     schema_payload = json.dumps(schema)
 
     # Call the tool function
-    result = scaffold_ontology_model(
-        model_name="TestModel",
-        schema_payload=schema_payload,
+    result = scaffold_manifest_state(
+        state_name="TestModel",
+        geometric_schema=schema_payload,
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:test:v1",
     )
@@ -62,9 +62,9 @@ def test_scaffold_ontology_model_with_file_path(tmp_path: Path) -> None:
     schema_file.write_text(json.dumps(schema))
 
     # Call the tool function with file path as schema payload
-    result = scaffold_ontology_model(
-        model_name="AnotherModel",
-        schema_payload=str(schema_file),
+    result = scaffold_manifest_state(
+        state_name="AnotherModel",
+        geometric_schema=str(schema_file),
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:test:v1",
     )
@@ -80,9 +80,9 @@ def test_scaffold_ontology_model_target_not_found(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing.py"
 
     with pytest.raises(FileNotFoundError, match="does not exist or is not a file"):
-        scaffold_ontology_model(
-            model_name="FailModel",
-            schema_payload="{}",
+        scaffold_manifest_state(
+            state_name="FailModel",
+            geometric_schema="{}",
             target_file_path=str(missing_target),
             action_space_id="urn:coreason:actionspace:test:v1",
         )
@@ -105,9 +105,9 @@ def test_scaffold_ontology_model_invalid_file_fallback(tmp_path: Path) -> None:
         # Let's side_effect with a list to return True for target_file.is_file(),
         # and raise OSError for payload_path.is_file()
         mock_is_file.side_effect = [True, OSError("Mocked OS Error")]
-        result = scaffold_ontology_model(
-            model_name="PersonFallbackClean",
-            schema_payload=schema_payload_fallback_clean,
+        result = scaffold_manifest_state(
+            state_name="PersonFallbackClean",
+            geometric_schema=schema_payload_fallback_clean,
             target_file_path=str(target_file),
             action_space_id="urn:coreason:actionspace:test:v1",
         )
@@ -120,9 +120,9 @@ def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
     target_file.write_text("class CoreasonBaseState:\n    pass\n")
 
     with pytest.raises(ValueError, match="Invalid URN format"):
-        scaffold_ontology_model(
-            model_name="BadModel",
-            schema_payload='{"properties": {}}',
+        scaffold_manifest_state(
+            state_name="BadModel",
+            geometric_schema='{"properties": {}}',
             target_file_path=str(target_file),
             action_space_id="finance_ledger_v1",
         )
@@ -132,14 +132,13 @@ def test_scaffold_mcp_tool_success(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = (
-        '{"properties": {"name": {"type": "string"}, "age": '
-        '{"type": "integer"}, "is_active": {"type": "boolean"}}}'
+        '{"properties": {"name": {"type": "string"}, "age": {"type": "integer"}, "is_active": {"type": "boolean"}}}'
     )
-    from coreason_meta_engineering.mcp_server import scaffold_mcp_tool
+    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
 
-    result = scaffold_mcp_tool(
-        tool_name="MyTool",
-        schema_payload=schema_payload,
+    result = scaffold_logic_actuator(
+        actuator_name="MyTool",
+        geometric_schema=schema_payload,
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:my_tool:v1",
     )
@@ -153,25 +152,27 @@ def test_scaffold_mcp_tool_invalid_urn(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     schema_payload = '{"properties": {"name": {"type": "string"}}}'
-    from coreason_meta_engineering.mcp_server import scaffold_mcp_tool
+    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
 
     with pytest.raises(ValueError, match="Invalid URN format"):
-        scaffold_mcp_tool(
-            tool_name="MyTool",
-            schema_payload=schema_payload,
+        scaffold_logic_actuator(
+            actuator_name="MyTool",
+            geometric_schema=schema_payload,
             target_file_path=str(target_file),
-            action_space_id="invalid"
+            action_space_id="invalid",
         )
-        
+
+
 def test_scaffold_mcp_tool_target_not_found(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing.py"
-    from coreason_meta_engineering.mcp_server import scaffold_mcp_tool
+    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
+
     with pytest.raises(FileNotFoundError, match="does not exist or is not a file"):
-        scaffold_mcp_tool(
-            tool_name="MyTool",
-            schema_payload='{"properties": {}}',
+        scaffold_logic_actuator(
+            actuator_name="MyTool",
+            geometric_schema='{"properties": {}}',
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1"
+            action_space_id="urn:coreason:actionspace:test:v1",
         )
 
 
@@ -179,16 +180,17 @@ def test_scaffold_mcp_tool_fallback(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
     from unittest.mock import patch
+
     schema_payload = '{"properties": {"name": {"type": "string"}}}'
-    from coreason_meta_engineering.mcp_server import scaffold_mcp_tool
-    
+    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
+
     with patch("coreason_meta_engineering.mcp_server.Path.is_file") as mock_is_file:
         mock_is_file.side_effect = [True, OSError("Mocked OS Error")]
-        result = scaffold_mcp_tool(
-            tool_name="MyTool",
-            schema_payload=schema_payload,
+        result = scaffold_logic_actuator(
+            actuator_name="MyTool",
+            geometric_schema=schema_payload,
             target_file_path=str(target_file),
-            action_space_id="urn:coreason:actionspace:my_tool:v1"
+            action_space_id="urn:coreason:actionspace:my_tool:v1",
         )
         assert result == f"Successfully injected MyTool into {target_file}"
 
@@ -198,25 +200,25 @@ def test_scaffold_mcp_tool_file(tmp_path: Path) -> None:
     target_file.write_text("def x(): pass\n")
     schema_file = tmp_path / "schema.json"
     schema_file.write_text('{"properties": {"name": {"type": "string"}}}')
-    from coreason_meta_engineering.mcp_server import scaffold_mcp_tool
-    result = scaffold_mcp_tool(
-        tool_name="MyTool",
-        schema_payload=str(schema_file),
+    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
+
+    result = scaffold_logic_actuator(
+        actuator_name="MyTool",
+        geometric_schema=str(schema_file),
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:my_tool:v1"
+        action_space_id="urn:coreason:actionspace:my_tool:v1",
     )
     assert result == f"Successfully injected MyTool into {target_file}"
-
 
 
 def test_scaffold_agent_node_success(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("class CoreasonBaseAgent: pass\n")
-    from coreason_meta_engineering.mcp_server import scaffold_agent_node
+    from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
 
-    result = scaffold_agent_node(
-        agent_name="MyAgent",
-        role_description="role",
+    result = scaffold_epistemic_node(
+        node_name="MyAgent",
+        cognitive_boundary_directive="role",
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:my_agent:v1",
     )
@@ -229,23 +231,25 @@ def test_scaffold_agent_node_success(tmp_path: Path) -> None:
 def test_scaffold_agent_node_invalid_urn(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("class CoreasonBaseAgent: pass\n")
-    from coreason_meta_engineering.mcp_server import scaffold_agent_node
+    from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
 
     with pytest.raises(ValueError, match="Invalid URN format"):
-        scaffold_agent_node(
-            agent_name="MyAgent",
-            role_description="role",
+        scaffold_epistemic_node(
+            node_name="MyAgent",
+            cognitive_boundary_directive="role",
             target_file_path=str(target_file),
-            action_space_id="invalid"
+            action_space_id="invalid",
         )
+
 
 def test_scaffold_agent_node_target_not_found(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing.py"
-    from coreason_meta_engineering.mcp_server import scaffold_agent_node
+    from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
+
     with pytest.raises(FileNotFoundError, match="does not exist or is not a file"):
-        scaffold_agent_node(
-            agent_name="MyAgent",
-            role_description="role",
+        scaffold_epistemic_node(
+            node_name="MyAgent",
+            cognitive_boundary_directive="role",
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1"
+            action_space_id="urn:coreason:actionspace:test:v1",
         )

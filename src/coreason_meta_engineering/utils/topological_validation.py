@@ -8,7 +8,8 @@
 #
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
-def validate_action_space_urn(action_space_id: str) -> None:
+
+def verify_cryptographic_urn_boundary(action_space_id: str) -> None:
     """
     Validates that a globally unique URN follows the required 0-Trust prefix.
 
