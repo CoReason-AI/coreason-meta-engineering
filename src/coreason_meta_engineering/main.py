@@ -27,11 +27,16 @@ def scaffold_model(
     schema_payload: str,
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
     action_space_id: str = typer.Option(..., help="The globally unique URN for this capability"),
+    base_class: str = typer.Option("CoreasonBaseState", help="The base class to inherit from"),
 ) -> None:
     """
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
     logger.info(f"Scaffolding model {model_name} into {target_file}")
+    if not action_space_id.startswith("urn:coreason:actionspace:"):
+        raise typer.BadParameter(
+            f"action_space_id must start with 'urn:coreason:actionspace:'. Received: {action_space_id}"
+        )
 
     # 1. Parse schema payload
     try:
@@ -51,7 +56,9 @@ def scaffold_model(
 
     # 4. Parse AST and inject
     module = cst.parse_module(source_code)
-    transformer = ClassInjectTransformer(name=model_name, fields=fields, action_space_id=action_space_id)
+    transformer = ClassInjectTransformer(
+        name=model_name, fields=fields, action_space_id=action_space_id, base_class=base_class
+    )
     new_module = module.visit(transformer)
 
     # 5. Write modified code

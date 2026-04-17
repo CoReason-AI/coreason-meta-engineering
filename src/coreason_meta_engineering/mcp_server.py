@@ -26,11 +26,17 @@ def scaffold_ontology_model(
     schema_payload: str,
     target_file_path: str,
     action_space_id: str,
+    base_class: str = "CoreasonBaseState",
 ) -> str:
     """
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
     target_file = Path(target_file_path)
+    if not action_space_id.startswith("urn:coreason:actionspace:"):
+        raise ValueError(
+            f"Invalid URN format. action_space_id must start with 'urn:coreason:actionspace:'."
+            f" Received: {action_space_id}"
+        )
     if not target_file.exists() or not target_file.is_file():
         raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
 
@@ -52,7 +58,9 @@ def scaffold_ontology_model(
 
     # 4. Parse AST and inject
     module = cst.parse_module(source_code)
-    transformer = ClassInjectTransformer(name=model_name, fields=fields, action_space_id=action_space_id)
+    transformer = ClassInjectTransformer(
+        name=model_name, fields=fields, action_space_id=action_space_id, base_class=base_class
+    )
     new_module = module.visit(transformer)
 
     # 5. Write modified code

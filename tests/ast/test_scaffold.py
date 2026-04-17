@@ -201,3 +201,22 @@ def test_class_inject_idempotency() -> None:
 
     # The code should be returned unchanged
     assert modified_code == code
+
+
+def test_class_inject_custom_base() -> None:
+    """The Strict Inheritance Axiom: agents can scaffold classes inheriting from registered descendants."""
+    code = "import pydantic\n"
+    module = cst.parse_module(code)
+    fields = [{"name": "cohort_id", "type": "str", "description": "the cohort identifier"}]
+    transformer = ClassInjectTransformer(
+        "CardiologyCohort",
+        fields,
+        action_space_id=TEST_URN,
+        base_class="ClinicalCohortBase",
+    )
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    # Verify custom base class inheritance
+    assert "class CardiologyCohort(ClinicalCohortBase):" in modified_code
+    assert "CoreasonBaseState" not in modified_code

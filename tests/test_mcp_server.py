@@ -113,3 +113,16 @@ def test_scaffold_ontology_model_invalid_file_fallback(tmp_path: Path) -> None:
         )
         assert result == f"Successfully injected PersonFallbackClean into {target_file}"
         assert "class PersonFallbackClean(CoreasonBaseState):" in target_file.read_text(encoding="utf-8")
+
+
+def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
+    target_file = tmp_path / "ontology.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    with pytest.raises(ValueError, match="Invalid URN format"):
+        scaffold_ontology_model(
+            model_name="BadModel",
+            schema_payload='{"properties": {}}',
+            target_file_path=str(target_file),
+            action_space_id="finance_ledger_v1",
+        )

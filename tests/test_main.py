@@ -120,3 +120,25 @@ def test_scaffold_model_cli_invalid_file_fallback(tmp_path: Path) -> None:
             ],
         )
         assert result3.exit_code == 0
+
+
+def test_scaffold_model_cli_invalid_urn(tmp_path: Path) -> None:
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("import pydantic\n", encoding="utf-8")
+
+    schema_payload = '{"properties": {"name": {"type": "string"}}, "required": ["name"]}'
+
+    result = runner.invoke(
+        app,
+        [
+            "BadModel",
+            schema_payload,
+            "--target-file",
+            str(target_file),
+            "--action-space-id",
+            "finance_ledger_v1",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "urn:coreason:actionspace:" in result.output

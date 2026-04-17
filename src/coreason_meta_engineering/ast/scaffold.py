@@ -21,11 +21,18 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
     accompanying model_rebuild() call into a given Python module AST.
     """
 
-    def __init__(self, name: str, fields: list[dict[str, typing.Any]], action_space_id: str):
+    def __init__(
+        self,
+        name: str,
+        fields: list[dict[str, typing.Any]],
+        action_space_id: str,
+        base_class: str = "CoreasonBaseState",
+    ):
         super().__init__()
         self.name = name
         self.fields = fields
         self.action_space_id = action_space_id
+        self.base_class = base_class
 
         self.docstring = textwrap.dedent(
             f'''\
@@ -196,7 +203,7 @@ class ClassInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
 
         return cst.ClassDef(
             name=cst.Name(value=self.name),
-            bases=[cst.Arg(value=cst.Name(value="CoreasonBaseState"))],
+            bases=[cst.Arg(value=cst.Name(value=self.base_class))],
             body=cst.IndentedBlock(body=body_elements),
         )
 
