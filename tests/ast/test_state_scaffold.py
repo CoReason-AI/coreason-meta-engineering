@@ -12,14 +12,16 @@ from typing import Any
 
 import libcst as cst
 
-from coreason_meta_engineering.ast.scaffold import ClassInjectTransformer
+from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
+
+TEST_URN = "urn:coreason:actionspace:test:v1"
 
 
 def test_class_inject_basic_and_docstring() -> None:
     code = "import pydantic\n"
     module = cst.parse_module(code)
     fields = [{"name": "basic_field", "type": "int", "description": "basic int field"}]
-    transformer = ClassInjectTransformer("NewState", fields)
+    transformer = StateInjectionFunctor("NewState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -30,7 +32,12 @@ def test_class_inject_basic_and_docstring() -> None:
     assert "AGENT INSTRUCTION: [Define topological boundary]" in modified_code
     assert "CAUSAL AFFORDANCE: [Define graph mutation or tool execution]" in modified_code
     assert "EPISTEMIC BOUNDS: [Define mathematical/physical limits]" in modified_code
-    assert "MCP ROUTING TRIGGERS: [Comma-separated algorithmic tags]" in modified_code
+
+    # Verify URN Discovery Trigger in docstring
+    assert f"MCP ROUTING TRIGGERS: {TEST_URN}" in modified_code
+
+    # Verify URN class attribute
+    assert f'__action_space_urn__ = "{TEST_URN}"' in modified_code
 
     # Verify field
     assert 'basic_field: int = Field(description="basic int field")' in modified_code
@@ -46,7 +53,7 @@ def test_class_inject_list_validator() -> None:
         {"name": "str_list", "type": "list[str]", "description": "a list of strings"},
         {"name": "int_field", "type": "int", "description": "just an int"},
     ]
-    transformer = ClassInjectTransformer("SortState", fields)
+    transformer = StateInjectionFunctor("SortState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -68,7 +75,7 @@ def test_class_inject_optional_list_validator() -> None:
         {"name": "opt_list", "type": "list[str] | None", "description": "optional list"},
         {"name": "ann_list", "type": "Annotated[list[int], Field()]", "description": "annotated list"},
     ]
-    transformer = ClassInjectTransformer("SortOptState", fields)
+    transformer = StateInjectionFunctor("SortOptState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -84,7 +91,7 @@ def test_class_inject_self_import_exists() -> None:
     code = "from typing import Self\nimport pydantic\n"
     module = cst.parse_module(code)
     fields = [{"name": "basic_field", "type": "list[int]", "description": "basic int field"}]
-    transformer = ClassInjectTransformer("NewState", fields)
+    transformer = StateInjectionFunctor("NewState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -96,7 +103,7 @@ def test_class_inject_before_existing_rebuild() -> None:
     code = "class Existing(CoreasonBaseState):\n    pass\nExisting.model_rebuild()\n"
     module = cst.parse_module(code)
     fields = [{"name": "f1", "type": "str", "description": "d1"}]
-    transformer = ClassInjectTransformer("InjectedClass", fields)
+    transformer = StateInjectionFunctor("InjectedClass", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -126,7 +133,7 @@ def test_class_inject_auto_imports() -> None:
         {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
         {"name": "a_list", "type": "list[int]", "description": "a list"},
     ]
-    transformer = ClassInjectTransformer("AutoImportState", fields)
+    transformer = StateInjectionFunctor("AutoImportState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -147,7 +154,7 @@ def test_class_inject_auto_imports_existing() -> None:
         {"name": "metadata", "type": "dict[str, Any]", "description": "meta"},
         {"name": "a_list", "type": "list[int]", "description": "a list"},
     ]
-    transformer = ClassInjectTransformer("AutoImportState", fields)
+    transformer = StateInjectionFunctor("AutoImportState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
@@ -169,9 +176,47 @@ def test_class_inject_no_list_no_self_or_model_validator() -> None:
             "description": "basic",
         },
     ]
-    transformer = ClassInjectTransformer("NoListState", fields)
+    transformer = StateInjectionFunctor("NoListState", fields, action_space_id=TEST_URN)
     modified = module.visit(transformer)
     modified_code = modified.code
 
     assert "Self" not in modified_code
     assert "model_validator" not in modified_code
+
+
+def test_class_inject_idempotency() -> None:
+    """The Idempotency Axiom: injecting the same class twice must not duplicate."""
+    code = "class IdempotentState(CoreasonBaseState):\n    pass\nIdempotentState.model_rebuild()\n"
+    module = cst.parse_module(code)
+    fields = [{"name": "f1", "type": "int", "description": "a field"}]
+    transformer = StateInjectionFunctor("IdempotentState", fields, action_space_id=TEST_URN)
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    # The class must not be duplicated
+    assert modified_code.count("class IdempotentState") == 1
+
+    # model_rebuild must not be duplicated
+    assert modified_code.count("IdempotentState.model_rebuild()") == 1
+
+    # The code should be returned unchanged
+    assert modified_code == code
+
+
+def test_class_inject_custom_base() -> None:
+    """The Strict Inheritance Axiom: agents can scaffold classes inheriting from registered descendants."""
+    code = "import pydantic\n"
+    module = cst.parse_module(code)
+    fields = [{"name": "cohort_id", "type": "str", "description": "the cohort identifier"}]
+    transformer = StateInjectionFunctor(
+        "CardiologyCohort",
+        fields,
+        action_space_id=TEST_URN,
+        base_class="ClinicalCohortBase",
+    )
+    modified = module.visit(transformer)
+    modified_code = modified.code
+
+    # Verify custom base class inheritance
+    assert "class CardiologyCohort(ClinicalCohortBase):" in modified_code
+    assert "CoreasonBaseState" not in modified_code

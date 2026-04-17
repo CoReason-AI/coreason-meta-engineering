@@ -10,10 +10,10 @@
 
 from typing import Any
 
-from coreason_meta_engineering.schema import resolve_json_schema_to_fields
+from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 
 
-def test_resolve_json_schema_to_fields_basic() -> None:
+def test_resolve_epistemic_schema_to_ast_bindings_basic() -> None:
     schema: dict[str, Any] = {
         "properties": {
             "name": {"type": "string", "description": "Name of the person"},
@@ -26,7 +26,7 @@ def test_resolve_json_schema_to_fields_basic() -> None:
         "required": ["name", "age"],
     }
 
-    fields = resolve_json_schema_to_fields(schema)
+    fields = resolve_epistemic_schema_to_ast_bindings(schema)
 
     assert len(fields) == 6
 
@@ -61,7 +61,7 @@ def test_resolve_json_schema_to_fields_basic() -> None:
     assert metadata_field["optional"] is True
 
 
-def test_resolve_json_schema_to_fields_unknown_type() -> None:
+def test_resolve_epistemic_schema_to_ast_bindings_unknown_type() -> None:
     schema: dict[str, Any] = {
         "properties": {
             "unknown_field": {"type": "unknown_type"},
@@ -69,12 +69,12 @@ def test_resolve_json_schema_to_fields_unknown_type() -> None:
         "required": ["unknown_field"],
     }
 
-    fields = resolve_json_schema_to_fields(schema)
+    fields = resolve_epistemic_schema_to_ast_bindings(schema)
     assert len(fields) == 1
     assert fields[0]["type"] == "Any"
     assert fields[0]["optional"] is False
 
 
-def test_resolve_json_schema_to_fields_empty() -> None:
-    fields = resolve_json_schema_to_fields({})
+def test_resolve_epistemic_schema_to_ast_bindings_empty() -> None:
+    fields = resolve_epistemic_schema_to_ast_bindings({})
     assert fields == []

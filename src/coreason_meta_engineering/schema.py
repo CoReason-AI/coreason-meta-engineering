@@ -11,7 +11,7 @@
 from typing import Any
 
 
-def resolve_json_schema_to_fields(schema: dict[str, Any]) -> list[dict[str, Any]]:
+def resolve_epistemic_schema_to_ast_bindings(schema: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Translates standard JSON Schema properties into coreason-manifest's highly bounded Pydantic types.
     """
