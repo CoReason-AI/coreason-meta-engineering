@@ -11,6 +11,7 @@
 from typing import Any
 
 import libcst as cst
+
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
 
 TEST_URN = "urn:coreason:actionspace:test:v1"

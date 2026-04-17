@@ -9,6 +9,7 @@
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
 import libcst as cst
+
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 
 
@@ -61,7 +62,7 @@ def test_function_inject_no_return_type() -> None:
         actuator_name="no_return",
         geometric_schema=[],
         return_type="",
-        action_space_id="urn:coreason:actionspace:no_ret:v1"
+        action_space_id="urn:coreason:actionspace:no_ret:v1",
     )
     new_module = module.visit(transformer)
     code = new_module.code
@@ -99,7 +100,7 @@ def test_function_inject_with_any_import() -> None:
         actuator_name="my_actuator",
         geometric_schema=[{"name": "a", "type": "Any"}],
         return_type="",
-        action_space_id="urn:x"
+        action_space_id="urn:x",
     )
     new_module = module.visit(transformer)
     assert "from typing import Any" in new_module.code

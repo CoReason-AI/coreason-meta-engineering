@@ -100,7 +100,10 @@ def scaffold_logic_actuator(
     source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
     transformer = LogicInjectionFunctor(
-        actuator_name=actuator_name, geometric_schema=parameters, return_type=return_type, action_space_id=action_space_id
+        actuator_name=actuator_name,
+        geometric_schema=parameters,
+        return_type=return_type,
+        action_space_id=action_space_id,
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
