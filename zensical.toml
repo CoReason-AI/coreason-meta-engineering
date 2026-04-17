@@ -5,6 +5,11 @@ repo_url = "https://github.com/CoReason-AI/coreason_meta_engineering"
 docs_dir = "docs"
 site_dir = "site"
 
+[project.nav]
+Home = "index.md"
+Agents = "AGENTS.md"
+Changelog = "CHANGELOG.md"
+
 [project.theme]
 features = [
     "navigation.instant",

@@ -16,6 +16,10 @@ The Agentic Forge & AST Manipulation Layer
 [![GitHub Issues](https://img.shields.io/github/issues/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/issues)
 [![GitHub PRs](https://img.shields.io/github/issues-pr/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/pulls)
 
+## Executive Summary
+
+Air-gapped Electronic Design Automation (EDA) toolchain for the CoReason ecosystem.
+
 ## Getting Started
 
 ### Prerequisites
