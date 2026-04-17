@@ -99,8 +99,8 @@ To expose the Forge to a local swarm or AI runtime, launch the FastMCP server. T
 
 ## Documentation & AI Directives
 
-  * **Human Architects:** Read the full documentation and architectural methodology at [https://CoReason-AI.github.io/coreason-meta-engineering/](https://www.google.com/search?q=https://CoReason-AI.github.io/coreason-meta-engineering/).
-  * **Autonomous Agents:** You MUST read and adhere to the physical laws defined in [`AGENTS.md`](https://www.google.com/search?q=./AGENTS.md) before interacting with this repository.
+  * **Human Architects:** Read the full documentation and architectural methodology at [https://CoReason-AI.github.io/coreason-meta-engineering/](https://CoReason-AI.github.io/coreason-meta-engineering/).
+  * **Autonomous Agents:** You MUST read and adhere to the physical laws defined in [`AGENTS.md`](./AGENTS.md) before interacting with this repository.
 
 -----
 

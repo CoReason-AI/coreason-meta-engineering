@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 [project]
 site_name = "coreason-meta-engineering"
+=======
+[site]
+name = "coreason-meta-engineering"
+>>>>>>> 8b94763e4b61551d133bd33115d608c51d9b1d08
 description = "The Universal Asset Forge and AST Manipulation Layer for CoReason."
 repo_url = "https://github.com/CoReason-AI/coreason-meta-engineering"
 repo_name = "CoReason-AI/coreason-meta-engineering"
