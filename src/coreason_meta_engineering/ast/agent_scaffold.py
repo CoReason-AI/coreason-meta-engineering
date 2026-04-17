@@ -93,22 +93,26 @@ class AgentInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
                 body=[
                     cst.SimpleStatementLine(
                         body=[
-                            cst.Assign(
-                                targets=[
-                                    cst.AssignTarget(
-                                        target=cst.Attribute(
-                                            value=cst.Name(value="self"),
-                                            attr=cst.Name(value="authorized_tools")
-                                        )
-                                    )
-                                ],
+                            cst.Expr(
                                 value=cst.Call(
-                                    func=cst.Name(value="sorted"),
+                                    func=cst.Attribute(
+                                        value=cst.Name(value="object"),
+                                        attr=cst.Name(value="__setattr__")
+                                    ),
                                     args=[
+                                        cst.Arg(value=cst.Name(value="self")),
+                                        cst.Arg(value=cst.SimpleString(value='"authorized_tools"')),
                                         cst.Arg(
-                                            value=cst.Attribute(
-                                                value=cst.Name(value="self"),
-                                                attr=cst.Name(value="authorized_tools")
+                                            value=cst.Call(
+                                                func=cst.Name(value="sorted"),
+                                                args=[
+                                                    cst.Arg(
+                                                        value=cst.Attribute(
+                                                            value=cst.Name(value="self"),
+                                                            attr=cst.Name(value="authorized_tools")
+                                                        )
+                                                    )
+                                                ]
                                             )
                                         )
                                     ]

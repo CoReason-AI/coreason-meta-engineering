@@ -103,33 +103,73 @@ class FunctionInjectTransformer(cst.CSTTransformer):  # type: ignore[misc]
 
         new_function = self._build_function()
 
+        needs_any = any("Any" in p.get("type", "") for p in self.parameters)
+        needs_annotated = any("Annotated" in p.get("type", "") for p in self.parameters)
+        needs_stringconfig = any("StringConstraints" in p.get("type", "") for p in self.parameters)
+
         has_mcp_import = False
+        has_any_import = False
+        has_annotated_import = False
+        has_stringconstraints_import = False
+
         insert_import_idx = 0
 
         new_body = list(updated_node.body)
 
-        # Proper check
         for stmt in new_body:
             if isinstance(stmt, cst.SimpleStatementLine):
                 for node in stmt.body:
-                    if isinstance(node, cst.ImportFrom):
-                        # Construct fully qualified path
-                        pass
-
-        # Since it's easier to just string-match the import logic for idempotency inside leave_Module if CST gets hairy:
-        for stmt in updated_node.body:
-            if isinstance(stmt, cst.SimpleStatementLine):
-                for node in stmt.body:
                     if isinstance(node, cst.ImportFrom) and isinstance(node.names, (tuple, list)):
+                        mod_name = ""
+                        if getattr(node, "module", None) is not None and isinstance(node.module, cst.Name):
+                            mod_name = node.module.value
+                        
                         for name_item in node.names:
-                            if name_item.name.value == "mcp":
+                            val = name_item.name.value
+                            if val == "mcp":
                                 has_mcp_import = True
+                            if val == "Any" and mod_name == "typing":
+                                has_any_import = True
+                            if val == "Annotated" and mod_name == "typing":
+                                has_annotated_import = True
+                            if val == "StringConstraints" and mod_name == "pydantic":
+                                has_stringconstraints_import = True
 
         for i, stmt in enumerate(new_body):
             if isinstance(stmt, cst.SimpleStatementLine) and any(
                 isinstance(n, (cst.Import, cst.ImportFrom)) for n in stmt.body
             ):
                 insert_import_idx = i + 1
+
+        missing_typing = []
+        if needs_any and not has_any_import:
+            missing_typing.append("Any")
+        if needs_annotated and not has_annotated_import:
+            missing_typing.append("Annotated")
+        
+        if missing_typing:
+            typing_import = cst.SimpleStatementLine(
+                body=[
+                    cst.ImportFrom(
+                        module=cst.Name(value="typing"),
+                        names=[cst.ImportAlias(name=cst.Name(value=m)) for m in missing_typing],
+                    )
+                ]
+            )
+            new_body.insert(insert_import_idx, typing_import)
+            insert_import_idx += 1
+            
+        if needs_stringconfig and not has_stringconstraints_import:
+            pydantic_import = cst.SimpleStatementLine(
+                body=[
+                    cst.ImportFrom(
+                        module=cst.Name(value="pydantic"),
+                        names=[cst.ImportAlias(name=cst.Name(value="StringConstraints"))],
+                    )
+                ]
+            )
+            new_body.insert(insert_import_idx, pydantic_import)
+            insert_import_idx += 1
 
         if not has_mcp_import:
             # We want: from mcp.server.fastmcp import mcp

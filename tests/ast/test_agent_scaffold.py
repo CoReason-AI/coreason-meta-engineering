@@ -34,7 +34,7 @@ def test_agent_inject_transformer_basic() -> None:
     assert "from typing import Any, Self" in code
     assert "from pydantic import model_validator" in code
     assert "def _enforce_canonical_sort(self) -> Self:" in code
-    assert "self.authorized_tools = sorted(self.authorized_tools)" in code
+    assert 'object.__setattr__(self, "authorized_tools", sorted(self.authorized_tools))' in code
     assert '@model_validator(mode = "after")' in code
     assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:agent:v1" in code
     assert "MyNewAgent.model_rebuild()" in code
