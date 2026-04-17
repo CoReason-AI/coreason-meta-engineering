@@ -1,30 +1,25 @@
 [project]
 site_name = "coreason-meta-engineering"
-site_url = "https://CoReason-AI.github.io/coreason_meta_engineering/"
-repo_url = "https://github.com/CoReason-AI/coreason_meta_engineering"
-docs_dir = "docs"
-site_dir = "site"
+description = "The Universal Asset Forge and AST Manipulation Layer for CoReason."
+repo_url = "https://github.com/CoReason-AI/coreason-meta-engineering"
+repo_name = "CoReason-AI/coreason-meta-engineering"
 
-[project.nav]
+[theme]
+name = "material"
+palette = { scheme = "slate", primary = "black", accent = "deep-purple" }
+
+[nav]
 Home = "index.md"
-Agents = "AGENTS.md"
-Changelog = "CHANGELOG.md"
+Architecture = "architecture.md"
+"Fabrication Lines" = "fabrication_lines.md"
+"Security & Zero-Trust" = "security_and_zero_trust.md"
+Development = "development.md"
+"AI Directives (AGENTS.md)" = "agents.md"
 
-[project.theme]
-features = [
-    "navigation.instant",
-    "navigation.tracking",
-    "navigation.tabs",
-    "toc.integrate",
-    "search.suggest",
-    "search.highlight"
-]
+[[nav."API Reference"]]
+"MCP Server" = "api/mcp_server.md"
+"CLI" = "api/cli.md"
+"AST Functors" = "api/ast_functors.md"
 
-[project.plugins.mkdocstrings.handlers.python]
-paths = ["src"]
-
-[project.plugins.mkdocstrings.handlers.python.options]
-docstring_style = "google"
-show_root_heading = true
-show_bases = true
-show_signature_annotations = true
+[plugins]
+mkdocstrings = { default_handler = "python" }
