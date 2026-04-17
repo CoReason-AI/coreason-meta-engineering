@@ -57,7 +57,12 @@ You must understand the physics of the repository you are targeting. Because the
 * Injections must append `[ClassName].model_rebuild()` to the end of the target module.
 * Injections must utilize the rigid 4-part epistemic docstring schema (`AGENT INSTRUCTION`, `CAUSAL AFFORDANCE`, `EPISTEMIC BOUNDS`, `MCP ROUTING TRIGGERS`) to ensure downstream agents know how to interface with the new module.
 
-### **Law 4: The Model Context Protocol (MCP) Projection**
+### **Law 4: The "Borrow, Don't Build" (Zero-Waste) Mandate**
+Do not reinvent the wheel. The CoReason ecosystem minimizes its proprietary surface area by maximizing its reliance on battle-tested, open-source infrastructure. If a robust, open-source capability exists within our authorized stack (`libcst`, `pydantic`, `mcp`, `typer`) that accomplishes a task, you MUST bind to that native API rather than building custom logic.
+* **Forbidden:** Writing custom topological sorting algorithms, custom schema parsers, or custom AST traversal loops if the standard libraries or authorized packages already expose a method for it.
+* **Required:** Always defer to the open-source ecosystem's native implementations to ensure our compiler layer remains lightweight, secure, and maintainable.
+
+### **Law 5: The Model Context Protocol (MCP) Projection**
 To allow autonomous agents to discover and use these meta-engineering tools zero-shot, you must project them via the Model Context Protocol (MCP).
 * The core logic should be written as pure Python functions in `src/coreason_meta_engineering/`.
 * You must expose these functions as an active MCP Server using the official Python MCP SDK, allowing downstream agents to mount this repository as a tool capability.
