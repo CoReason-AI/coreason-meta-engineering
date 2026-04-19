@@ -52,19 +52,19 @@ Unlike passive libraries, this repository is **Active by Design**. It performs h
 * **The Idempotency Axiom:** Your AST transformers MUST be mathematically idempotent. Your `libcst` visitor MUST scan for existing nodes with the target name. **IF** the node already exists, you MUST return the AST unchanged to prevent duplication or corruption.
 
 ### **Law 3: The Anti-DRY & Cryptographic Determinism Enforcer**
-Because the mesh relies on secure distributed consensus, unordered data destroys cryptographic determinism. 
+Because the mesh relies on secure distributed consensus, unordered data destroys cryptographic determinism.
 * **The Sorting Axiom:** Injections MUST include strict `@model_validator` sorting blocks (`_enforce_canonical_sort`) for any arrays/lists to ensure RFC-8785 canonical hashing.
 * Injections MUST append `[ClassName].model_rebuild()` to the end of the target module.
 * Injections MUST utilize the rigid 4-part epistemic docstring schema (`AGENT INSTRUCTION`, `CAUSAL AFFORDANCE`, `EPISTEMIC BOUNDS`, `MCP ROUTING TRIGGERS`).
 
 ### **Law 4: The "Borrow, Don't Build" (Zero-Waste) Mandate**
-Do not reinvent the wheel. 
+Do not reinvent the wheel.
 * **Forbidden:** Writing custom topological sorting algorithms, custom schema parsers, or custom AST traversal loops if the authorized stack (`libcst`, `pydantic`, `mcp`, `typer`) already provides them.
 * **Required:** You MUST bind to native APIs within the authorized open-source stack to ensure the compiler layer remains lightweight and secure.
 
 ### **Law 5: The Universal Asset Fabrication & URN Axiom**
 When scaffolding a new asset requested by the `coreason-runtime`, you MUST route it through a specific "Fab Line" and format it for autonomous discovery:
-* **The Strict Inheritance Axiom (Nesting):** You MUST NOT generate isolated classes (e.g., standard `BaseModel` inheritance is forbidden). 
+* **The Strict Inheritance Axiom (Nesting):** You MUST NOT generate isolated classes (e.g., standard `BaseModel` inheritance is forbidden).
     * *IF Passive Data Fab (Manifests):* Class MUST inherit from `CoreasonBaseState` (or a registered descendant) to inherit cryptographic canonicalization.
     * *IF Active Logic Fab (MCP Tools):* Function MUST be bounded by authorized decorators (e.g., `@mcp.tool()`) and typed with registered manifest schemas.
     * *IF Autonomous Entity Fab (Agents):* Class MUST inherit from foundational swarm/agent primitives to enforce epistemic lifecycle bounds.

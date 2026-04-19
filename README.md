@@ -16,6 +16,12 @@ The Agentic Forge & AST Manipulation Layer
 [![GitHub Issues](https://img.shields.io/github/issues/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/issues)
 [![GitHub PRs](https://img.shields.io/github/issues-pr/CoReason-AI/coreason-meta-engineering.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/pulls)
 
+## The Universal Asset Forge
+`coreason-meta-engineering` acts as the deterministic mathematical toolchain (EDA) for expanding the CoReason ecosystem. It is an active engineering service rather than a passive library—it strictly parses Python as a Concrete Syntax Tree (`libcst`), rigidly enforces cryptographic URN discovery bounds, and strictly avoids probabilistic AI logic execution when generating code.
+
+For complete architectural rules, agent mandates, and SDK documentation, visit our formal documentation:
+**[Read the Docs →](https://CoReason-AI.github.io/coreason_meta_engineering/)**
+
 ## Getting Started
 
 ### Prerequisites
