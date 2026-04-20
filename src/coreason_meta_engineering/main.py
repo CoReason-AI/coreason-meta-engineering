@@ -7,7 +7,7 @@
 # Commercial use beyond a 30-day trial requires a separate license.
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
-import json
+import typing
 from pathlib import Path
 
 import libcst as cst
@@ -26,7 +26,7 @@ app = typer.Typer()
 @app.command(name="scaffold-manifest-state")  # type: ignore[misc]
 def scaffold_manifest_state(
     state_name: str,
-    geometric_schema: str,
+    geometric_schema: dict[str, typing.Any],
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
     action_space_id: str = typer.Option(..., help="The globally unique URN for this capability"),
     base_class: str = typer.Option("CoreasonBaseState", help="The base class to inherit from"),
@@ -40,18 +40,8 @@ def scaffold_manifest_state(
     except ValueError as e:
         raise typer.BadParameter(str(e)) from e
 
-    # 1. Parse schema payload
-    try:
-        payload_path = Path(geometric_schema)
-        if payload_path.is_file():
-            geometric_schema = payload_path.read_text(encoding="utf-8")
-    except OSError:
-        pass  # Not a valid path string, treat as raw JSON
-
-    schema_dict = json.loads(geometric_schema)
-
     # 2. Resolve fields
-    fields = resolve_epistemic_schema_to_ast_bindings(schema_dict)
+    fields = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
 
     # 3. Read target file text
     source_code = target_file.read_text(encoding="utf-8")
@@ -73,7 +63,7 @@ def scaffold_manifest_state(
 @app.command(name="scaffold-logic-actuator")  # type: ignore[misc]
 def scaffold_logic_actuator(
     actuator_name: str,
-    geometric_schema: str,
+    geometric_schema: dict[str, typing.Any],
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
     action_space_id: str = typer.Option(..., help="The globally unique URN for this actuator"),
     return_type: str = typer.Option("None", help="Return type of the function"),
@@ -87,16 +77,7 @@ def scaffold_logic_actuator(
     except ValueError as e:
         raise typer.BadParameter(str(e)) from e
 
-    try:
-        payload_path = Path(geometric_schema)
-        if payload_path.is_file():
-            geometric_schema = payload_path.read_text(encoding="utf-8")
-    except OSError:
-        pass
-
-    schema_dict = json.loads(geometric_schema)
-
-    parameters = resolve_epistemic_schema_to_ast_bindings(schema_dict)
+    parameters = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
 
     source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
