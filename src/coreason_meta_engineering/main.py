@@ -7,6 +7,7 @@
 # Commercial use beyond a 30-day trial requires a separate license.
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
+import json
 import typing
 from pathlib import Path
 
@@ -23,10 +24,20 @@ from coreason_meta_engineering.utils.topological_validation import verify_crypto
 app = typer.Typer()
 
 
+def parse_geometric_schema(val: str) -> dict[str, typing.Any]:
+    try:
+        path = Path(val)
+        if path.is_file():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except OSError:
+        pass
+    return json.loads(val)
+
+
 @app.command(name="scaffold-manifest-state")  # type: ignore[misc]
 def scaffold_manifest_state(
     state_name: str,
-    geometric_schema: dict[str, typing.Any],
+    geometric_schema: typing.Annotated[dict[str, typing.Any], typer.Argument(parser=parse_geometric_schema)],
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
     action_space_id: str = typer.Option(..., help="The globally unique URN for this capability"),
     base_class: str = typer.Option("CoreasonBaseState", help="The base class to inherit from"),
@@ -63,7 +74,7 @@ def scaffold_manifest_state(
 @app.command(name="scaffold-logic-actuator")  # type: ignore[misc]
 def scaffold_logic_actuator(
     actuator_name: str,
-    geometric_schema: dict[str, typing.Any],
+    geometric_schema: typing.Annotated[dict[str, typing.Any], typer.Argument(parser=parse_geometric_schema)],
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
     action_space_id: str = typer.Option(..., help="The globally unique URN for this actuator"),
     return_type: str = typer.Option("None", help="Return type of the function"),

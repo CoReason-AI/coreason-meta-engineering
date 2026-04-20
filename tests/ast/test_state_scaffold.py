@@ -98,7 +98,7 @@ def test_class_inject_self_import_exists() -> None:
     assert modified_code.count("from typing import Self") == 1
 
 
-def test_class_inject_before_existing_rebuild() -> None:
+def test_class_inject_model_rebuild_at_end() -> None:
     code = "class Existing(CoreasonBaseState):\n    pass\nExisting.model_rebuild()\n"
     module = cst.parse_module(code)
     fields = [{"name": "f1", "type": "str", "description": "d1"}]
@@ -106,13 +106,13 @@ def test_class_inject_before_existing_rebuild() -> None:
     modified = module.visit(transformer)
     modified_code = modified.code
 
-    # Verify InjectedClass model_rebuild is placed before Existing.model_rebuild
+    # Verify InjectedClass model_rebuild is placed after Existing.model_rebuild at the end of module
     injected_idx = modified_code.find("InjectedClass.model_rebuild()")
     existing_idx = modified_code.find("Existing.model_rebuild()")
 
     assert injected_idx != -1
     assert existing_idx != -1
-    assert injected_idx < existing_idx
+    assert injected_idx > existing_idx
 
     # Verify the class is inserted before Existing model rebuild
     class_idx = modified_code.find("class InjectedClass")
