@@ -301,25 +301,8 @@ class StateInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
             )
             insert_import_idx += 1
 
-        # We need to insert before the first .model_rebuild() call.
-        # If none exists, we append to the end.
-        insert_idx = len(new_body)
-
-        for i, stmt in enumerate(new_body):
-            if isinstance(stmt, cst.SimpleStatementLine):
-                for expr in stmt.body:
-                    if (
-                        isinstance(expr, cst.Expr)
-                        and isinstance(expr.value, cst.Call)
-                        and isinstance(expr.value.func, cst.Attribute)
-                        and expr.value.func.attr.value == "model_rebuild"
-                    ):
-                        insert_idx = i
-                        break
-                if insert_idx != len(new_body):
-                    break
-
-        new_body.insert(insert_idx, new_class)
-        new_body.insert(insert_idx + 1, new_rebuild)
+        # Agent Instruction: Law 3 demands .model_rebuild() goes at the end.
+        new_body.append(new_class)
+        new_body.append(new_rebuild)
 
         return updated_node.with_changes(body=new_body)
