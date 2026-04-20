@@ -7,7 +7,6 @@
 # Commercial use beyond a 30-day trial requires a separate license.
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
-import json
 from pathlib import Path
 
 import pytest
@@ -44,9 +43,6 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
     assert "TestModel.model_rebuild()" in content
 
 
-
-
-
 def test_scaffold_ontology_model_target_not_found(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing.py"
 
@@ -57,9 +53,6 @@ def test_scaffold_ontology_model_target_not_found(tmp_path: Path) -> None:
             target_file_path=str(missing_target),
             action_space_id="urn:coreason:actionspace:test:v1",
         )
-
-
-
 
 
 def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
@@ -78,7 +71,9 @@ def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
 def test_scaffold_actuator_success(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
     target_file.write_text("def x(): pass\n")
-    schema_payload = {"properties": {"name": {"type": "string"}, "age": {"type": "integer"}, "is_active": {"type": "boolean"}}}
+    schema_payload = {
+        "properties": {"name": {"type": "string"}, "age": {"type": "integer"}, "is_active": {"type": "boolean"}}
+    }
     from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
 
     result = scaffold_logic_actuator(
@@ -119,9 +114,6 @@ def test_scaffold_actuator_target_not_found(tmp_path: Path) -> None:
             target_file_path=str(missing_target),
             action_space_id="urn:coreason:actionspace:test:v1",
         )
-
-
-
 
 
 def test_scaffold_agent_node_success(tmp_path: Path) -> None:

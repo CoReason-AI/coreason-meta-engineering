@@ -28,10 +28,10 @@ def parse_geometric_schema(val: str) -> dict[str, typing.Any]:
     try:
         path = Path(val)
         if path.is_file():
-            return json.loads(path.read_text(encoding="utf-8"))
+            return typing.cast(dict[str, typing.Any], json.loads(path.read_text(encoding="utf-8")))
     except OSError:
         pass
-    return json.loads(val)
+    return typing.cast(dict[str, typing.Any], json.loads(val))
 
 
 @app.command(name="scaffold-manifest-state")  # type: ignore[misc]
