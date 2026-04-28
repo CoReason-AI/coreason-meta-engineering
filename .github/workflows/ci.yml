@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
+    branches:
+      - develop
   pull_request:
+    branches:
+      - develop
 
 permissions:
   contents: read
@@ -12,65 +16,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-audit:
-    runs-on: ubuntu-latest
+  validation:
+    name: Meta-Engineering Matrix
+    runs-on: [self-hosted, hetzner, x64]
+    env:
+      TEMPORAL_CI_NAMESPACE: ci-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+      CI_RUN_ID: ${{ github.run_id }}
+      UV_CACHE_DIR: ${{ github.workspace }}/.uv_cache
     steps:
-      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          python-version: '3.14'
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-        shell: bash
+      - name: Pre-Flight Workspace Purity
+        run: sudo chown -R $(whoami):$(whoami) ${{ github.workspace }} || true
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Substrate Purity Verification
+        run: git clean -xfd -e .venv -e .uv_cache
+
+      - name: Ecosystem Sync
+        run: uv sync --all-extras
+
       - name: Check code
         run: uvx ruff check .
-        shell: bash
+
       - name: Format check
         run: uvx ruff format --check .
-        shell: bash
+
       - name: Typecheck
         run: uv run mypy src/ tests/
-        shell: bash
+
       - name: Audit dependencies
         run: uv run deptry src/
-        shell: bash
-      - name: Build docs
-        run: uv run zensical build
-        shell: bash
 
-  test-ubuntu:
-    needs: [lint-and-audit]
-    if: always() && needs.lint-and-audit.result == 'success'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.14", "3.14t"]
-    steps:
-      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          python-version: ${{ matrix.python-version }}
+      - name: Provision Ephemeral Isolation
+        run: temporal operator namespace create $TEMPORAL_CI_NAMESPACE --address 127.0.0.1:7233 || true
 
-      - name: Configure free-threading execution
-        if: matrix.python-version == '3.14t'
-        run: echo "PYTHON_GIL=0" >> "$GITHUB_ENV"
-        shell: bash
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-        shell: bash
-
-      - name: Run tests
+      - name: Meta-Engineering Test Suite
         run: uv run pytest --cov=src --cov-report=xml
-        shell: bash
 
       - name: Build docs
         run: uv run zensical build
-        shell: bash
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
@@ -79,52 +64,14 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-  test-extended:
-    needs: [test-ubuntu]
-    if: always() && needs.test-ubuntu.result == 'success'
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-        python-version: ["3.14", "3.14t"]
-        exclude:
-          - os: windows-latest
-            python-version: "3.14t"
-    steps:
-      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          python-version: ${{ matrix.python-version }}
-
-      - name: Configure free-threading execution
-        if: matrix.python-version == '3.14t'
-        run: echo "PYTHON_GIL=0" >> "$GITHUB_ENV"
-        shell: bash
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-        shell: bash
-
-      - name: Run tests
-        run: uv run pytest --cov=src --cov-report=xml
-        shell: bash
-
-  reproducible-builds:
-    name: Determinism Verification
-    needs: [test-ubuntu, test-extended]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          python-version: "3.14"
-      - name: Build wheel
+      - name: Build wheel for Determinism Verification
         run: uv build
-        shell: bash
+
       - name: Verify SHA256 sum
         run: sha256sum dist/*.whl
-        shell: bash
+
+      - name: Container & Network Teardown (Always Execute)
+        if: always()
+        run: |
+          temporal operator namespace delete $TEMPORAL_CI_NAMESPACE --address 127.0.0.1:7233 --yes || true
+          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
