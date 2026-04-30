@@ -18,6 +18,7 @@ from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFu
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
+from coreason_meta_engineering.ast.urn_packager import package_urn_bundle
 
 mcp = FastMCP("CoReason Agentic Forge")
 
@@ -117,6 +118,18 @@ def scaffold_epistemic_node(
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
     return f"Successfully injected {node_name} into {target_file_path}"
+
+
+@mcp.tool()  # type: ignore[misc]
+def promote_to_urn_authority(
+    source_file_path: str,
+    target_urn: str,
+    urn_authority_dir: str,
+) -> str:
+    """
+    Automates the packaging, migration, and local cleanup of URNs into the coreason-urn-authority.
+    """
+    return package_urn_bundle(source_file_path, target_urn, urn_authority_dir)
 
 
 def main() -> None:  # pragma: no cover
