@@ -53,8 +53,12 @@ def generate_schema_code(import_codes: list[str], class_codes: list[str]) -> str
             imports += imp + "\n"
     return imports + "\n\n".join(class_codes)
 
-def generate_server_code(func_name: str, func_code: str, class_nodes: list) -> str:
+def generate_server_code(func_name: str, func_code: str, class_nodes: list, import_codes: list[str]) -> str:
     imports = "from mcp.server.fastmcp import FastMCP\n"
+    for imp in import_codes:
+        if "fastmcp" not in imp:
+            imports += imp + "\n"
+            
     if class_nodes:
         class_names = [c.name.value for c in class_nodes]
         imports += f"from schema import {', '.join(class_names)}\n"
@@ -145,7 +149,7 @@ def package_urn_bundle(source_file_path: str, target_urn: str, urn_authority_dir
         (bundle_dir / "schema.py").write_text(schema_code, encoding="utf-8")
 
     # 6. Write server.py
-    server_code = generate_server_code(func_name, func_code, extractor.class_nodes)
+    server_code = generate_server_code(func_name, func_code, extractor.class_nodes, import_codes)
     # Inject correct URN into docstring/annotations by replacing the LLM's hallucinated one
     if extractor.urn_value:
         server_code = server_code.replace(extractor.urn_value, target_urn)

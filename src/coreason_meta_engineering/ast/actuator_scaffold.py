@@ -25,12 +25,14 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
         geometric_schema: list[dict[str, typing.Any]],
         return_type: str,
         action_space_id: str,
+        required_imports: list[str] | None = None,
     ):
         super().__init__()
         self.actuator_name = actuator_name
         self.geometric_schema = geometric_schema
         self.return_type = return_type
         self.action_space_id = action_space_id
+        self.required_imports = required_imports or []
 
         self.docstring = textwrap.dedent(
             f'''\
@@ -102,15 +104,14 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
 
         new_function = self._build_function()
 
-        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema)
-        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema)
+        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema) or (self.return_type and "Any" in self.return_type)
+        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema) or (self.return_type and "Annotated" in self.return_type)
         needs_stringconfig = any("StringConstraints" in p.get("type", "") for p in self.geometric_schema)
 
         has_mcp_import = False
         has_any_import = False
         has_annotated_import = False
         has_stringconstraints_import = False
-
         insert_import_idx = 0
 
         new_body = list(updated_node.body)
@@ -169,6 +170,14 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
             )
             new_body.insert(insert_import_idx, pydantic_import)
             insert_import_idx += 1
+
+        for imp_str in self.required_imports:
+            try:
+                parsed_stmt = cst.parse_statement(imp_str)
+                new_body.insert(insert_import_idx, parsed_stmt)
+                insert_import_idx += 1
+            except cst.ParserSyntaxError:
+                pass
 
         if not has_mcp_import:
             # We want: from mcp.server.fastmcp import mcp
