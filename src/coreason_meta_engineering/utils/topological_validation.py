@@ -18,9 +18,7 @@ _URN_PATTERN = re.compile(
     r"^urn:[a-z0-9_]+:actionspace:(oracle|solver|effector|substrate|sensory|node):[a-z0-9_]+:v[0-9]+$"
 )
 
-_VALID_CATEGORIES = frozenset(
-    {"oracle", "solver", "effector", "substrate", "sensory", "node"}
-)
+_VALID_CATEGORIES = frozenset({"oracle", "solver", "effector", "substrate", "sensory", "node"})
 
 
 def verify_cryptographic_urn_boundary(action_space_id: str) -> None:
