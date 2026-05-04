@@ -20,7 +20,7 @@ Because the mesh relies on secure distributed consensus, unordered data destroys
 ## Law 4: The Universal Asset Fabrication & URN Axiom
 When scaffolding a new asset requested by the `coreason-runtime`, it must be explicitly configured for autonomous discovery:
 * **The Strict Inheritance Axiom:** You MUST NOT generate isolated classes. Manifests must inherit from `CoreasonBaseState`, and Agents must inherit from foundational swarm primitives to enforce epistemic lifecycle bounds.
-* **The Publishing Axiom (`actionSpaceId`):** You MUST embed a globally unique Uniform Resource Name (URN) into the AST of EVERY generated asset (e.g., `__action_space_urn__ = "urn:coreason:actionspace:{domain}:{capability}:v1"`).
+* **The Publishing Axiom (`actionSpaceCId`):** You MUST embed a globally unique Uniform Resource Name (URN) into the AST of EVERY generated asset (e.g., `__action_space_urn__ = "urn:coreason:actionspace:{domain}:{capability}:v1"`).
 * **The Discovery Trigger:** This exact URN MUST be explicitly listed in the `MCP ROUTING TRIGGERS` section of the 4-part docstring.
 
 ## The Air-Gapped Interface
