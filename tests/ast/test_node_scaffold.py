@@ -19,14 +19,14 @@ def test_agent_inject_transformer_basic() -> None:
         node_name="MyNewAgent",
         cognitive_boundary_directive="This is a test agent.",
         action_space_id="urn:coreason:actionspace:agent:v1",
-        base_class="CoReasonBaseAgent",
+        base_class="CoreasonBaseAgent",
     )
     new_module = module.visit(transformer)
     code = new_module.code
     print("CODE OUTPUT:")
     print(code)
 
-    assert "class MyNewAgent(CoReasonBaseAgent):" in code
+    assert "class MyNewAgent(CoreasonBaseAgent):" in code
     assert '__action_space_urn__ = "urn:coreason:actionspace:agent:v1"' in code
     assert 'system_prompt: str = """This is a test agent."""' in code
     assert "authorized_tools: list[Any] = []" in code

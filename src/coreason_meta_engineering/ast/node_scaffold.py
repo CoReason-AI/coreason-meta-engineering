@@ -23,7 +23,7 @@ class EpistemicNodeInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
         node_name: str,
         cognitive_boundary_directive: str,
         action_space_id: str,
-        base_class: str = "CoReasonBaseAgent",
+        base_class: str = "CoreasonBaseAgent",
     ):
         super().__init__()
         self.node_name = node_name

@@ -110,7 +110,7 @@ def scaffold_epistemic_node(
     cognitive_boundary_directive: str,
     target_file: Path = typer.Option(..., exists=True, dir_okay=False, writable=True),  # noqa: B008
     action_space_id: str = typer.Option(..., help="The globally unique URN for this capability"),
-    base_class: str = typer.Option("CoReasonBaseAgent", help="The base class to inherit from"),
+    base_class: str = typer.Option("CoreasonBaseAgent", help="The base class to inherit from"),
 ) -> None:
     """
     Scaffolds a new Swarm Agent structure into the target Python file.
