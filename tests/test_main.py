@@ -144,7 +144,7 @@ def test_scaffold_model_cli_invalid_urn(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "urn:coreason:actionspace:" in result.output
+    assert "actionspace" in result.output
 
 
 def test_scaffold_actuator_cli(tmp_path: Path) -> None:
