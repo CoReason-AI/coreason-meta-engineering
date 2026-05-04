@@ -68,7 +68,7 @@ When scaffolding a new asset requested by the `coreason-runtime`, you MUST route
     * *IF Passive Data Fab (Manifests):* Class MUST inherit from `CoreasonBaseState` (or a registered descendant) to inherit cryptographic canonicalization.
     * *IF Active Logic Fab (MCP Tools):* Function MUST be bounded by authorized decorators (e.g., `@mcp.tool()`) and typed with registered manifest schemas.
     * *IF Autonomous Entity Fab (Agents):* Class MUST inherit from foundational swarm/agent primitives to enforce epistemic lifecycle bounds.
-* **The Publishing Axiom (`actionSpaceId`):** You MUST embed a globally unique Uniform Resource Name (URN) into the AST of EVERY generated asset (e.g., `__action_space_urn__ = "urn:coreason:actionspace:{domain}:{capability}:v1"`).
+* **The Publishing Axiom (`actionSpaceCId`):** You MUST embed a globally unique Uniform Resource Name (URN) into the AST of EVERY generated asset (e.g., `__action_space_urn__ = "urn:coreason:actionspace:{domain}:{capability}:v1"`).
 * **The Discovery Trigger:** This exact URN MUST be explicitly listed in the `MCP ROUTING TRIGGERS` section of the 4-part docstring.
 
 ### **Law 6: The Air-Gapped MCP Projection**
@@ -107,6 +107,6 @@ Before you finalize a capability or commit code, you MUST clear these verificati
 3. **Discoverability:** Am I exposing this capability as an MCP tool so other agents can find it?
 4. **Code Quality:** Did I run the formatting, linting, and typing commands locally?
 5. **AST MUTATION CHECK (CRITICAL):** Did I use `str.replace()`, regex, or f-strings to inject code logic? (IF YES: You have violated Law 2. You MUST rewrite the logic using strict `libcst` node insertion).
-6. **URN PUBLISHING CHECK (CRITICAL):** If scaffolding ANY new URN-addressable asset (Manifest, Tool, or Agent), did I embed a valid `actionSpaceId` URN in both the class/function attributes AND the `MCP ROUTING TRIGGERS` docstring? (IF NO: Inject the URN to prevent the module from becoming undiscoverable dark matter).
+6. **URN PUBLISHING CHECK (CRITICAL):** If scaffolding ANY new URN-addressable asset (Manifest, Tool, or Agent), did I embed a valid `actionSpaceCId` URN in both the class/function attributes AND the `MCP ROUTING TRIGGERS` docstring? (IF NO: Inject the URN to prevent the module from becoming undiscoverable dark matter).
 
 **By executing code in this repository, you confirm you are the Master Builder of the CoReason ecosystem. You forge the instruments that shape the cybernetic manifold.**

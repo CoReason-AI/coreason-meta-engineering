@@ -33,7 +33,7 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
         state_name="TestModel",
         geometric_schema=schema,
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:test:v1",
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
     )
 
     # Assertions
@@ -51,7 +51,7 @@ def test_scaffold_ontology_model_target_not_found(tmp_path: Path) -> None:
             state_name="FailModel",
             geometric_schema={},
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1",
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
         )
 
 
@@ -80,7 +80,7 @@ def test_scaffold_actuator_success(tmp_path: Path) -> None:
         actuator_name="MyActuator",
         geometric_schema=schema_payload,
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:my_actuator:v1",
+        action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
     )
     assert result == f"Successfully injected MyActuator into {target_file}"
     content = target_file.read_text()
@@ -112,7 +112,7 @@ def test_scaffold_actuator_target_not_found(tmp_path: Path) -> None:
             actuator_name="MyActuator",
             geometric_schema={},
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1",
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
         )
 
 
@@ -125,7 +125,7 @@ def test_scaffold_agent_node_success(tmp_path: Path) -> None:
         node_name="MyAgent",
         cognitive_boundary_directive="role",
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:my_agent:v1",
+        action_space_id="urn:coreason:actionspace:node:my_agent:v1",
     )
     assert result == f"Successfully injected MyAgent into {target_file}"
     content = target_file.read_text()
@@ -156,5 +156,5 @@ def test_scaffold_agent_node_target_not_found(tmp_path: Path) -> None:
             node_name="MyAgent",
             cognitive_boundary_directive="role",
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1",
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
         )
