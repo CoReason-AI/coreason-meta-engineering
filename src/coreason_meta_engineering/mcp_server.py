@@ -96,7 +96,7 @@ def scaffold_epistemic_node(
     cognitive_boundary_directive: str,
     target_file_path: str,
     action_space_id: str,
-    base_class: str = "CoReasonBaseAgent",
+    base_class: str = "CoreasonBaseAgent",
 ) -> str:
     """
     Scaffolds a new Swarm Agent structure into the target Python file.
