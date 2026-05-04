@@ -20,6 +20,8 @@ from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bin
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
 from coreason_meta_engineering.ast.urn_packager import package_urn_bundle
 
+__action_space_urn__ = "urn:coreason:actionspace:effector:meta_engineering:v1"
+
 mcp = FastMCP("CoReason Agentic Forge")
 
 
