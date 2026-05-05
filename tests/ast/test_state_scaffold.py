@@ -13,7 +13,7 @@ import libcst as cst
 
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
 
-TEST_URN = "urn:coreason:actionspace:test:v1"
+TEST_URN = "urn:coreason:actionspace:solver:test:v1"
 
 
 def test_class_inject_basic_and_docstring() -> None:
