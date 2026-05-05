@@ -80,7 +80,7 @@ def package_urn_bundle(source_file_path: str, target_urn: str, urn_authority_dir
     
     authority_path = Path(urn_authority_dir)
     if not authority_path.exists():
-        raise FileNotFoundError(f"URN Authority dir {urn_authority_dir} not found.")
+        authority_path.mkdir(parents=True, exist_ok=True)
 
     # 1. Parse source code
     source_code = source_path.read_text(encoding="utf-8")
@@ -155,7 +155,30 @@ def package_urn_bundle(source_file_path: str, target_urn: str, urn_authority_dir
         server_code = server_code.replace(extractor.urn_value, target_urn)
     (bundle_dir / "server.py").write_text(server_code, encoding="utf-8")
 
-    # 7. Keep sandbox copy (do not remove source file)
-    # os.remove(source_path)
+    # 7. Update compiled_matrix.json
+    import json
+    registry_file = authority_path / "registry" / "compiled_matrix.json"
+    if registry_file.exists():
+        try:
+            with open(registry_file, "r", encoding="utf-8") as f:
+                matrix_data = json.load(f)
+        except json.JSONDecodeError:
+            matrix_data = {}
+    else:
+        registry_file.parent.mkdir(parents=True, exist_ok=True)
+        matrix_data = {}
+
+    relative_path = bundle_dir.relative_to(authority_path).as_posix()
+    matrix_data[target_urn] = {
+        "path": relative_path,
+        "clearance": "PUBLIC",
+        "epistemic_status": "DRAFT"
+    }
+
+    with open(registry_file, "w", encoding="utf-8") as f:
+        json.dump(matrix_data, f, indent=2)
+
+    # 8.Remove sandbox copy
+    os.remove(source_path)
 
     return f"Successfully packaged {func_name} into {bundle_dir} and cleaned up local sandbox."

@@ -30,23 +30,24 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
 
     # Call the actuator function
     result = scaffold_manifest_state(
-        state_name="TestModel",
+        state_name="Test Model Class",
         geometric_schema=schema,
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:test:v1",
     )
 
     # Assertions
-    assert result == f"Successfully injected TestModel into {target_file}"
+    assert result == f"Successfully injected TestModelClass into {target_file}"
     content = target_file.read_text()
-    assert "class TestModel(CoreasonBaseState):" in content
-    assert "TestModel.model_rebuild()" in content
+    assert "class TestModelClass(CoreasonBaseState):" in content
+    assert "TestModelClass.model_rebuild()" in content
 
 
-def test_scaffold_ontology_model_target_not_found(tmp_path: Path) -> None:
-    missing_target = tmp_path / "missing.py"
+def test_scaffold_ontology_model_target_not_a_file(tmp_path: Path) -> None:
+    missing_target = tmp_path / "missing_dir"
+    missing_target.mkdir()
 
-    with pytest.raises(FileNotFoundError, match="does not exist or is not a file"):
+    with pytest.raises(FileNotFoundError, match="exists but is not a file"):
         scaffold_manifest_state(
             state_name="FailModel",
             geometric_schema={},
@@ -77,14 +78,17 @@ def test_scaffold_actuator_success(tmp_path: Path) -> None:
     from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
 
     result = scaffold_logic_actuator(
-        actuator_name="MyActuator",
+        actuator_name="My Actuator Func",
         geometric_schema=schema_payload,
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:my_actuator:v1",
+        agent_instruction="Test instruction",
+        causal_affordance="Test affordance",
+        epistemic_bounds="Test bounds",
     )
-    assert result == f"Successfully injected MyActuator into {target_file}"
+    assert result == f"Successfully injected my_actuator_func into {target_file}"
     content = target_file.read_text()
-    assert "def MyActuator" in content
+    assert "def my_actuator_func(" in content
     assert "@mcp.tool()" in content
 
 
@@ -100,19 +104,26 @@ def test_scaffold_actuator_invalid_urn(tmp_path: Path) -> None:
             geometric_schema=schema_payload,
             target_file_path=str(target_file),
             action_space_id="invalid",
+            agent_instruction="Test instruction",
+            causal_affordance="Test affordance",
+            epistemic_bounds="Test bounds",
         )
 
 
-def test_scaffold_actuator_target_not_found(tmp_path: Path) -> None:
-    missing_target = tmp_path / "missing.py"
+def test_scaffold_actuator_target_not_a_file(tmp_path: Path) -> None:
+    missing_target = tmp_path / "missing_dir"
+    missing_target.mkdir()
     from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
 
-    with pytest.raises(FileNotFoundError, match="does not exist or is not a file"):
+    with pytest.raises(FileNotFoundError, match="exists but is not a file"):
         scaffold_logic_actuator(
             actuator_name="MyActuator",
             geometric_schema={},
             target_file_path=str(missing_target),
             action_space_id="urn:coreason:actionspace:test:v1",
+            agent_instruction="Test instruction",
+            causal_affordance="Test affordance",
+            epistemic_bounds="Test bounds",
         )
 
 
@@ -122,15 +133,15 @@ def test_scaffold_agent_node_success(tmp_path: Path) -> None:
     from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
 
     result = scaffold_epistemic_node(
-        node_name="MyAgent",
+        node_name="My Agent Class",
         cognitive_boundary_directive="role",
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:my_agent:v1",
     )
-    assert result == f"Successfully injected MyAgent into {target_file}"
+    assert result == f"Successfully injected MyAgentClass into {target_file}"
     content = target_file.read_text()
-    assert "class MyAgent(CoReasonBaseAgent):" in content
-    assert "system_prompt" in content
+    assert "class MyAgentClass(CoReasonBaseAgent):" in content
+    assert "MyAgentClass.model_rebuild()" in content
 
 
 def test_scaffold_agent_node_invalid_urn(tmp_path: Path) -> None:
@@ -147,11 +158,12 @@ def test_scaffold_agent_node_invalid_urn(tmp_path: Path) -> None:
         )
 
 
-def test_scaffold_agent_node_target_not_found(tmp_path: Path) -> None:
-    missing_target = tmp_path / "missing.py"
+def test_scaffold_agent_node_target_not_a_file(tmp_path: Path) -> None:
+    missing_target = tmp_path / "missing_dir"
+    missing_target.mkdir()
     from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
 
-    with pytest.raises(FileNotFoundError, match="does not exist or is not a file"):
+    with pytest.raises(FileNotFoundError, match="exists but is not a file"):
         scaffold_epistemic_node(
             node_name="MyAgent",
             cognitive_boundary_directive="role",

@@ -7,6 +7,7 @@
 # Commercial use beyond a 30-day trial requires a separate license.
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
+import re
 import typing
 from pathlib import Path
 
@@ -22,6 +23,25 @@ from coreason_meta_engineering.ast.urn_packager import package_urn_bundle
 
 __action_space_urn__ = "urn:coreason:actionspace:effector:meta_engineering:v1"
 
+def _sanitize_python_identifier(name: str) -> str:
+    safe_name = name.lower()
+    safe_name = re.sub(r'[^a-z0-9_]', '_', safe_name)
+    safe_name = re.sub(r'_+', '_', safe_name)
+    safe_name = safe_name.strip('_')
+    if safe_name and safe_name[0].isdigit():
+        safe_name = f"tool_{safe_name}"
+    if not safe_name:
+        safe_name = "generated_identifier"
+    return safe_name
+
+def _sanitize_python_class_name(name: str) -> str:
+    safe_name = re.sub(r'[^a-zA-Z0-9]', ' ', name).title().replace(' ', '')
+    if safe_name and safe_name[0].isdigit():
+        safe_name = f"Class{safe_name}"
+    if not safe_name:
+        safe_name = "GeneratedClass"
+    return safe_name
+
 mcp = FastMCP("CoReason Agentic Forge")
 
 
@@ -36,10 +56,14 @@ def scaffold_manifest_state(
     """
     Scaffolds a new model by parsing JSON schema and injecting it into the target Python file.
     """
+    state_name = _sanitize_python_class_name(state_name)
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)
-    if not target_file.exists() or not target_file.is_file():
-        raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
+    if not target_file.exists():
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        target_file.touch()
+    elif not target_file.is_file():
+        raise FileNotFoundError(f"Target path {target_file_path} exists but is not a file.")
 
     # 2. Resolve fields
     fields = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
@@ -77,10 +101,14 @@ def scaffold_logic_actuator(
     """
     Scaffolds a new logic actuator function by parsing JSON schema and injecting it into the target Python file.
     """
+    actuator_name = _sanitize_python_identifier(actuator_name)
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)
-    if not target_file.exists() or not target_file.is_file():
-        raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
+    if not target_file.exists():
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        target_file.touch()
+    elif not target_file.is_file():
+        raise FileNotFoundError(f"Target path {target_file_path} exists but is not a file.")
 
     # Convert schema to parameters list
     parameters = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
@@ -114,10 +142,14 @@ def scaffold_epistemic_node(
     """
     Scaffolds a new Swarm Agent structure into the target Python file.
     """
+    node_name = _sanitize_python_class_name(node_name)
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)
-    if not target_file.exists() or not target_file.is_file():
-        raise FileNotFoundError(f"Target file {target_file_path} does not exist or is not a file.")
+    if not target_file.exists():
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        target_file.touch()
+    elif not target_file.is_file():
+        raise FileNotFoundError(f"Target path {target_file_path} exists but is not a file.")
 
     source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
