@@ -170,3 +170,60 @@ def test_scaffold_agent_node_target_not_a_file(tmp_path: Path) -> None:
             target_file_path=str(missing_target),
             action_space_id="urn:coreason:actionspace:solver:test:v1",
         )
+
+def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import (
+        scaffold_epistemic_node,
+        scaffold_logic_actuator,
+        scaffold_manifest_state,
+    )
+
+    # Test creating a new file from scratch & valid sanitization with digit prefix
+    target1 = tmp_path / "new_state.py"
+    scaffold_manifest_state(
+        state_name="1_invalid_class_start",
+        geometric_schema={"properties": {}},
+        target_file_path=str(target1),
+        action_space_id="urn:coreason:actionspace:solver:test:v1"
+    )
+    assert target1.exists()
+    assert "Class1InvalidClassStart" in target1.read_text()
+
+    # Test creating a new file from scratch & fallback class name
+    target2 = tmp_path / "new_node.py"
+    scaffold_epistemic_node(
+        node_name="___",
+        cognitive_boundary_directive="role",
+        target_file_path=str(target2),
+        action_space_id="urn:coreason:actionspace:node:test:v1"
+    )
+    assert target2.exists()
+    assert "GeneratedClass" in target2.read_text()
+
+    # Test creating a new file from scratch & valid sanitization with digit prefix for identifier
+    target3 = tmp_path / "new_actuator1.py"
+    scaffold_logic_actuator(
+        actuator_name="1_actuator",
+        geometric_schema={"properties": {}},
+        target_file_path=str(target3),
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+        agent_instruction="i",
+        causal_affordance="a",
+        epistemic_bounds="b"
+    )
+    assert target3.exists()
+    assert "def tool_1_actuator(" in target3.read_text()
+
+    # Test fallback identifier for empty string
+    target4 = tmp_path / "new_actuator2.py"
+    scaffold_logic_actuator(
+        actuator_name="___",
+        geometric_schema={"properties": {}},
+        target_file_path=str(target4),
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+        agent_instruction="i",
+        causal_affordance="a",
+        epistemic_bounds="b"
+    )
+    assert target4.exists()
+    assert "def generated_identifier(" in target4.read_text()

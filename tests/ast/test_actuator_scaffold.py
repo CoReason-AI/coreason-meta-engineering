@@ -103,3 +103,60 @@ def test_function_inject_with_any_import() -> None:
     )
     new_module = module.visit(transformer)
     assert "from typing import Any" in new_module.code
+
+
+def test_logic_body_function() -> None:
+    source = "def existing_function():\n    pass\n"
+    module = cst.parse_module(source)
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_new_actuator",
+        geometric_schema=[],
+        return_type="int",
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+        logic_body="def internal_impl(a: int):\n    return a + 1\n",
+    )
+    new_module = module.visit(transformer)
+    assert "return a + 1" in new_module.code
+
+
+def test_logic_body_raw() -> None:
+    source = "def existing_function():\n    pass\n"
+    module = cst.parse_module(source)
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_new_actuator",
+        geometric_schema=[],
+        return_type="int",
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+        logic_body="print('hello')\nreturn True\n",
+    )
+    new_module = module.visit(transformer)
+    assert "print('hello')" in new_module.code
+
+
+def test_logic_body_syntax_error() -> None:
+    source = "def existing_function():\n    pass\n"
+    module = cst.parse_module(source)
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_new_actuator",
+        geometric_schema=[],
+        return_type="int",
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+        logic_body="def foo(::::",
+    )
+    new_module = module.visit(transformer)
+    assert "pass" in new_module.code
+
+
+def test_required_imports_success_and_fail() -> None:
+    source = "def existing_function():\n    pass\n"
+    module = cst.parse_module(source)
+    transformer = LogicInjectionFunctor(
+        actuator_name="my_new_actuator",
+        geometric_schema=[],
+        return_type="int",
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+        required_imports=["import os", "import math", "invalid python syntax:::"],
+    )
+    new_module = module.visit(transformer)
+    assert "import os" in new_module.code
+    assert "import math" in new_module.code
