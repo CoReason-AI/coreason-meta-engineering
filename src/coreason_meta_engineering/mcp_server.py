@@ -17,7 +17,6 @@ from mcp.server.fastmcp import FastMCP
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
-
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
 
@@ -165,7 +164,6 @@ def scaffold_epistemic_node(
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
     return f"Successfully injected {node_name} into {target_file_path}"
-
 
 
 def main() -> None:  # pragma: no cover
