@@ -184,7 +184,7 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         state_name="1_invalid_class_start",
         geometric_schema={"properties": {}},
         target_file_path=str(target1),
-        action_space_id="urn:coreason:actionspace:solver:test:v1"
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
     )
     assert target1.exists()
     assert "Class1InvalidClassStart" in target1.read_text()
@@ -195,7 +195,7 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         node_name="___",
         cognitive_boundary_directive="role",
         target_file_path=str(target2),
-        action_space_id="urn:coreason:actionspace:node:test:v1"
+        action_space_id="urn:coreason:actionspace:node:test:v1",
     )
     assert target2.exists()
     assert "GeneratedClass" in target2.read_text()
@@ -209,7 +209,7 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         action_space_id="urn:coreason:actionspace:solver:test:v1",
         agent_instruction="i",
         causal_affordance="a",
-        epistemic_bounds="b"
+        epistemic_bounds="b",
     )
     assert target3.exists()
     assert "def tool_1_actuator(" in target3.read_text()
@@ -223,7 +223,7 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         action_space_id="urn:coreason:actionspace:solver:test:v1",
         agent_instruction="i",
         causal_affordance="a",
-        epistemic_bounds="b"
+        epistemic_bounds="b",
     )
     assert target4.exists()
     assert "def generated_identifier(" in target4.read_text()
