@@ -67,8 +67,12 @@ def scaffold_logic_actuator(
     geometric_schema: dict[str, typing.Any],
     target_file_path: str,
     action_space_id: str,
+    agent_instruction: str,
+    causal_affordance: str,
+    epistemic_bounds: str,
     return_type: str = "None",
     required_imports: typing.Optional[list[str]] = None,
+    logic_body: typing.Optional[str] = None,
 ) -> str:
     """
     Scaffolds a new logic actuator function by parsing JSON schema and injecting it into the target Python file.
@@ -89,6 +93,10 @@ def scaffold_logic_actuator(
         return_type=return_type,
         action_space_id=action_space_id,
         required_imports=required_imports or [],
+        logic_body=logic_body,
+        agent_instruction=agent_instruction,
+        causal_affordance=causal_affordance,
+        epistemic_bounds=epistemic_bounds,
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")

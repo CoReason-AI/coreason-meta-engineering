@@ -155,7 +155,7 @@ def package_urn_bundle(source_file_path: str, target_urn: str, urn_authority_dir
         server_code = server_code.replace(extractor.urn_value, target_urn)
     (bundle_dir / "server.py").write_text(server_code, encoding="utf-8")
 
-    # 7. Cleanup Sandbox
-    os.remove(source_path)
+    # 7. Keep sandbox copy (do not remove source file)
+    # os.remove(source_path)
 
     return f"Successfully packaged {func_name} into {bundle_dir} and cleaned up local sandbox."
