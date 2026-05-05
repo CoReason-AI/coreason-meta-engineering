@@ -140,7 +140,7 @@ def test_scaffold_agent_node_success(tmp_path: Path) -> None:
     )
     assert result == f"Successfully injected MyAgentClass into {target_file}"
     content = target_file.read_text()
-    assert "class MyAgentClass(CoReasonBaseAgent):" in content
+    assert "class MyAgentClass(CoreasonBaseAgent):" in content
     assert "MyAgentClass.model_rebuild()" in content
 
 
