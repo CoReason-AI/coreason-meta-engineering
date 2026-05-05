@@ -23,24 +23,27 @@ from coreason_meta_engineering.utils.topological_validation import verify_crypto
 
 __action_space_urn__ = "urn:coreason:actionspace:effector:meta_engineering:v1"
 
+
 def _sanitize_python_identifier(name: str) -> str:
     safe_name = name.lower()
-    safe_name = re.sub(r'[^a-z0-9_]', '_', safe_name)
-    safe_name = re.sub(r'_+', '_', safe_name)
-    safe_name = safe_name.strip('_')
+    safe_name = re.sub(r"[^a-z0-9_]", "_", safe_name)
+    safe_name = re.sub(r"_+", "_", safe_name)
+    safe_name = safe_name.strip("_")
     if safe_name and safe_name[0].isdigit():
         safe_name = f"tool_{safe_name}"
     if not safe_name:
         safe_name = "generated_identifier"
     return safe_name
 
+
 def _sanitize_python_class_name(name: str) -> str:
-    safe_name = re.sub(r'[^a-zA-Z0-9]', ' ', name).title().replace(' ', '')
+    safe_name = re.sub(r"[^a-zA-Z0-9]", " ", name).title().replace(" ", "")
     if safe_name and safe_name[0].isdigit():
         safe_name = f"Class{safe_name}"
     if not safe_name:
         safe_name = "GeneratedClass"
     return safe_name
+
 
 mcp = FastMCP("CoReason Agentic Forge")
 

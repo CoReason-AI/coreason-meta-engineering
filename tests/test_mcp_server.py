@@ -81,10 +81,10 @@ def test_scaffold_actuator_success(tmp_path: Path) -> None:
         actuator_name="My Actuator Func",
         geometric_schema=schema_payload,
         target_file_path=str(target_file),
-      action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
+        action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
         agent_instruction="Test instruction",
         causal_affordance="Test affordance",
-        epistemic_bounds="Test bounds"
+        epistemic_bounds="Test bounds",
     )
     assert result == f"Successfully injected my_actuator_func into {target_file}"
     content = target_file.read_text()
@@ -125,6 +125,7 @@ def test_scaffold_actuator_target_not_a_file(tmp_path: Path) -> None:
             causal_affordance="Test affordance",
             epistemic_bounds="Test bounds",
         )
+
 
 def test_scaffold_agent_node_success(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
