@@ -156,8 +156,12 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
 
         new_function = self._build_function()
 
-        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema) or (self.return_type and "Any" in self.return_type)
-        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema) or (self.return_type and "Annotated" in self.return_type)
+        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema) or (
+            self.return_type and "Any" in self.return_type
+        )
+        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema) or (
+            self.return_type and "Annotated" in self.return_type
+        )
         needs_stringconfig = any("StringConstraints" in p.get("type", "") for p in self.geometric_schema)
 
         has_mcp_import = False

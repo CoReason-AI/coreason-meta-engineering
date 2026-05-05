@@ -17,9 +17,9 @@ from mcp.server.fastmcp import FastMCP
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
+from coreason_meta_engineering.ast.urn_packager import package_urn_bundle
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
-from coreason_meta_engineering.ast.urn_packager import package_urn_bundle
 
 __action_space_urn__ = "urn:coreason:actionspace:effector:meta_engineering:v1"
 
@@ -95,8 +95,8 @@ def scaffold_logic_actuator(
     causal_affordance: str,
     epistemic_bounds: str,
     return_type: str = "None",
-    required_imports: typing.Optional[list[str]] = None,
-    logic_body: typing.Optional[str] = None,
+    required_imports: list[str] | None = None,
+    logic_body: str | None = None,
 ) -> str:
     """
     Scaffolds a new logic actuator function by parsing JSON schema and injecting it into the target Python file.
