@@ -25,21 +25,32 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
         geometric_schema: list[dict[str, typing.Any]],
         return_type: str,
         action_space_id: str,
+        required_imports: list[str] | None = None,
+        logic_body: str | None = None,
+        agent_instruction: str | None = None,
+        causal_affordance: str | None = None,
+        epistemic_bounds: str | None = None,
     ):
         super().__init__()
         self.actuator_name = actuator_name
         self.geometric_schema = geometric_schema
         self.return_type = return_type
         self.action_space_id = action_space_id
+        self.required_imports = required_imports or []
+        self.logic_body = logic_body
+
+        ai = agent_instruction or "[Define topological boundary]"
+        ca = causal_affordance or "[Define graph mutation or tool execution]"
+        eb = epistemic_bounds or "[Define mathematical/physical limits]"
 
         self.docstring = textwrap.dedent(
             f'''\
             """
-            AGENT INSTRUCTION: [Define topological boundary]
+            AGENT INSTRUCTION: {ai}
 
-            CAUSAL AFFORDANCE: [Define graph mutation or tool execution]
+            CAUSAL AFFORDANCE: {ca}
 
-            EPISTEMIC BOUNDS: [Define mathematical/physical limits]
+            EPISTEMIC BOUNDS: {eb}
 
             MCP ROUTING TRIGGERS: {self.action_space_id}
             """'''
@@ -72,12 +83,56 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
             ]
         )
 
+    def _extract_logic_body_parts(self) -> tuple[list[cst.BaseStatement], list[cst.Param] | None]:
+        """Parse logic_body and extract inlined statements + function params.
+
+        Returns a tuple of (body_statements, params_or_none).
+        If logic_body contains a function def, extracts its body and params.
+        If logic_body is raw statements, returns them directly with no params.
+        """
+        if not self.logic_body:
+            return [], None
+
+        try:
+            parsed = cst.parse_module(textwrap.dedent(self.logic_body))
+        except Exception:
+            return [], None
+
+        for stmt in parsed.body:
+            if isinstance(stmt, cst.FunctionDef):
+                # Extract body statements from the inner function (inline them)
+                # FIX: Added quotes around the type expression for typing.cast
+                inner_body = typing.cast("list[cst.BaseStatement]", list(stmt.body.body))
+                # Extract params from the inner function signature
+                inner_params = list(stmt.params.params)
+                return inner_body, inner_params
+
+        # logic_body is raw statements, not a function def
+        return list(parsed.body), None
+
     def _build_function(self) -> cst.FunctionDef:
         body_elements: list[cst.BaseStatement] = []
         body_elements.append(self._build_docstring())
-        body_elements.append(cst.SimpleStatementLine(body=[cst.Pass()]))
 
-        params = [self._build_parameter(p) for p in self.geometric_schema]
+        # Cascading priority for function body:
+        # 1. logic_body statements (inlined, not nested)
+        # 2. Pass() fallback
+        logic_stmts, logic_params = self._extract_logic_body_parts()
+        if logic_stmts:
+            body_elements.extend(logic_stmts)
+        else:
+            body_elements.append(cst.SimpleStatementLine(body=[cst.Pass()]))
+
+        # Cascading priority for parameters:
+        # 1. logic_body function signature (ground truth from LLM code)
+        # 2. geometric_schema (JSON Schema properties)
+        # 3. empty params
+        if logic_params is not None:
+            params = logic_params
+        elif self.geometric_schema:
+            params = [self._build_parameter(p) for p in self.geometric_schema]
+        else:
+            params = []
 
         return cst.FunctionDef(
             name=cst.Name(value=self.actuator_name),
@@ -102,15 +157,18 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
 
         new_function = self._build_function()
 
-        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema)
-        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema)
+        needs_any = any("Any" in p.get("type", "") for p in self.geometric_schema) or (
+            self.return_type and "Any" in self.return_type
+        )
+        needs_annotated = any("Annotated" in p.get("type", "") for p in self.geometric_schema) or (
+            self.return_type and "Annotated" in self.return_type
+        )
         needs_stringconfig = any("StringConstraints" in p.get("type", "") for p in self.geometric_schema)
 
         has_mcp_import = False
         has_any_import = False
         has_annotated_import = False
         has_stringconstraints_import = False
-
         insert_import_idx = 0
 
         new_body = list(updated_node.body)
@@ -169,6 +227,14 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
             )
             new_body.insert(insert_import_idx, pydantic_import)
             insert_import_idx += 1
+
+        for imp_str in self.required_imports:
+            try:
+                parsed_stmt = cst.parse_statement(imp_str)
+                new_body.insert(insert_import_idx, parsed_stmt)
+                insert_import_idx += 1
+            except cst.ParserSyntaxError:
+                pass
 
         if not has_mcp_import:
             # We want: from mcp.server.fastmcp import mcp
