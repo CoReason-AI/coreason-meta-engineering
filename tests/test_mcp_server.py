@@ -171,6 +171,7 @@ def test_scaffold_agent_node_target_not_a_file(tmp_path: Path) -> None:
             action_space_id="urn:coreason:actionspace:solver:test:v1",
         )
 
+
 def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     from coreason_meta_engineering.mcp_server import (
         scaffold_epistemic_node,
