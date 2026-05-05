@@ -101,7 +101,8 @@ class LogicInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]
         for stmt in parsed.body:
             if isinstance(stmt, cst.FunctionDef):
                 # Extract body statements from the inner function (inline them)
-                inner_body = typing.cast(list[cst.BaseStatement], list(stmt.body.body))
+                # FIX: Added quotes around the type expression for typing.cast
+                inner_body = typing.cast("list[cst.BaseStatement]", list(stmt.body.body))
                 # Extract params from the inner function signature
                 inner_params = list(stmt.params.params)
                 return inner_body, inner_params
