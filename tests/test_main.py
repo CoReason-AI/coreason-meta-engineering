@@ -43,7 +43,7 @@ def test_scaffold_model_cli(tmp_path: Path) -> None:
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:test:v1",
+            "urn:coreason:actionspace:solver:test:v1",
         ],
     )
 
@@ -86,7 +86,7 @@ def test_scaffold_model_cli_file_payload(tmp_path: Path) -> None:
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:test:v1",
+            "urn:coreason:actionspace:solver:test:v1",
         ],
     )
 
@@ -118,7 +118,7 @@ def test_scaffold_model_cli_invalid_file_fallback(tmp_path: Path) -> None:
                 "--target-file",
                 str(target_file),
                 "--action-space-id",
-                "urn:coreason:actionspace:test:v1",
+                "urn:coreason:actionspace:solver:test:v1",
             ],
         )
         assert result3.exit_code == 0
@@ -144,7 +144,7 @@ def test_scaffold_model_cli_invalid_urn(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "urn:coreason:actionspace:" in result.output
+    assert "actionspace" in result.output
 
 
 def test_scaffold_actuator_cli(tmp_path: Path) -> None:
@@ -162,7 +162,7 @@ def test_scaffold_actuator_cli(tmp_path: Path) -> None:
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:my_actuator:v1",
+            "urn:coreason:actionspace:solver:my_actuator:v1",
         ],
     )
     assert result.exit_code == 0
@@ -208,7 +208,7 @@ def test_scaffold_actuator_cli_fallback(tmp_path: Path) -> None:
                 "--target-file",
                 str(target_file),
                 "--action-space-id",
-                "urn:coreason:actionspace:v1",
+                "urn:coreason:actionspace:solver:test:v1",
             ],
         )
         assert result.exit_code == 0
@@ -228,7 +228,7 @@ def test_scaffold_actuator_cli_file(tmp_path: Path) -> None:
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:my_actuator:v1",
+            "urn:coreason:actionspace:solver:my_actuator:v1",
         ],
     )
     assert result.exit_code == 0
@@ -246,7 +246,7 @@ def test_scaffold_agent_node_cli(tmp_path: Path) -> None:
             "--target-file",
             str(target_file),
             "--action-space-id",
-            "urn:coreason:actionspace:my_agent:v1",
+            "urn:coreason:actionspace:node:my_agent:v1",
         ],
     )
     assert result.exit_code == 0

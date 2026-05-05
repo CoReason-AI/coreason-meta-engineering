@@ -33,7 +33,7 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
         state_name="Test Model Class",
         geometric_schema=schema,
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:test:v1",
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
     )
 
     # Assertions
@@ -52,7 +52,7 @@ def test_scaffold_ontology_model_target_not_a_file(tmp_path: Path) -> None:
             state_name="FailModel",
             geometric_schema={},
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1",
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
         )
 
 
@@ -81,10 +81,10 @@ def test_scaffold_actuator_success(tmp_path: Path) -> None:
         actuator_name="My Actuator Func",
         geometric_schema=schema_payload,
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:my_actuator:v1",
+      action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
         agent_instruction="Test instruction",
         causal_affordance="Test affordance",
-        epistemic_bounds="Test bounds",
+        epistemic_bounds="Test bounds"
     )
     assert result == f"Successfully injected my_actuator_func into {target_file}"
     content = target_file.read_text()
@@ -120,12 +120,11 @@ def test_scaffold_actuator_target_not_a_file(tmp_path: Path) -> None:
             actuator_name="MyActuator",
             geometric_schema={},
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1",
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
             agent_instruction="Test instruction",
             causal_affordance="Test affordance",
             epistemic_bounds="Test bounds",
         )
-
 
 def test_scaffold_agent_node_success(tmp_path: Path) -> None:
     target_file = tmp_path / "dummy.py"
@@ -136,7 +135,7 @@ def test_scaffold_agent_node_success(tmp_path: Path) -> None:
         node_name="My Agent Class",
         cognitive_boundary_directive="role",
         target_file_path=str(target_file),
-        action_space_id="urn:coreason:actionspace:my_agent:v1",
+        action_space_id="urn:coreason:actionspace:node:my_agent:v1",
     )
     assert result == f"Successfully injected MyAgentClass into {target_file}"
     content = target_file.read_text()
@@ -168,5 +167,5 @@ def test_scaffold_agent_node_target_not_a_file(tmp_path: Path) -> None:
             node_name="MyAgent",
             cognitive_boundary_directive="role",
             target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:test:v1",
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
         )

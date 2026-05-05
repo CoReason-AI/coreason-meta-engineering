@@ -22,15 +22,15 @@ def test_function_inject_transformer_basic() -> None:
             {"name": "y", "type": "Annotated[str, StringConstraints(max_length=200)]"},
         ],
         return_type="str",
-        action_space_id="urn:coreason:actionspace:my_actuator:v1",
+        action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
     )
     new_module = module.visit(transformer)
     code = new_module.code
 
     assert "def my_new_actuator(x: int, y: Annotated[str, StringConstraints(max_length=200)]) -> str:" in code
     assert "@mcp.tool()" in code
-    assert 'my_new_actuator.__action_space_urn__ = "urn:coreason:actionspace:my_actuator:v1"' in code
-    assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:my_actuator:v1" in code
+    assert 'my_new_actuator.__action_space_urn__ = "urn:coreason:actionspace:solver:my_actuator:v1"' in code
+    assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:solver:my_actuator:v1" in code
     assert "from mcp.server.fastmcp import mcp" in code
     assert "from typing import Annotated" in code
     assert "from pydantic import StringConstraints" in code
@@ -44,7 +44,7 @@ def test_function_inject_transformer_idempotency() -> None:
         actuator_name="my_new_actuator",
         geometric_schema=[],
         return_type="None",
-        action_space_id="urn:coreason:actionspace:my_actuator:v1",
+        action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
     )
     new_module = module.visit(transformer)
     code = new_module.code
@@ -61,7 +61,7 @@ def test_function_inject_no_return_type() -> None:
         actuator_name="no_return",
         geometric_schema=[],
         return_type="",
-        action_space_id="urn:coreason:actionspace:no_ret:v1",
+        action_space_id="urn:coreason:actionspace:solver:no_ret:v1",
     )
     new_module = module.visit(transformer)
     code = new_module.code
