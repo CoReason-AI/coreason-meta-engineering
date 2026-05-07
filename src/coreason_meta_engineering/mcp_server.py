@@ -19,6 +19,12 @@ from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFu
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
+from coreason_meta_engineering.pvv import (
+    post_scaffold_cid_injection,
+    broadcast_urn_to_mesh as pvv_broadcast,
+    accumulate_pvv_signatures as pvv_accumulate,
+    ValidationReceiptEvent
+)
 
 __action_space_urn__ = "urn:coreason:actionspace:effector:meta_engineering:v1"
 
@@ -83,6 +89,9 @@ def scaffold_manifest_state(
     # 5. Write modified code
     target_file.write_text(new_module.code, encoding="utf-8")
 
+    # Hook: Inject CID
+    post_scaffold_cid_injection(target_file)
+
     # 6. Return success message
     return f"Successfully injected {state_name} into {target_file_path}"
 
@@ -130,6 +139,7 @@ def scaffold_logic_actuator(
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
+    post_scaffold_cid_injection(target_file)
     return f"Successfully injected {actuator_name} into {target_file_path}"
 
 
@@ -163,7 +173,25 @@ def scaffold_epistemic_node(
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
+    post_scaffold_cid_injection(target_file)
     return f"Successfully injected {node_name} into {target_file_path}"
+
+@mcp.tool()  # type: ignore[misc]
+def broadcast_urn_to_mesh(urn_directory_path: str) -> str:
+    """
+    Compiles WASM and broadcasts FederatedDiscoveryIntent to the P2P Mesh.
+    """
+    return pvv_broadcast(urn_directory_path)
+
+@mcp.tool()  # type: ignore[misc]
+def accumulate_pvv_signatures(urn_directory_path: str, receipts: list[dict[str, typing.Any]]) -> str:
+    """
+    Accumulates PVV signatures and promotes DRAFT to PUBLISHED if consensus met.
+    """
+    # Deserialize list of dicts to ValidationReceiptEvent models
+    receipt_models = [ValidationReceiptEvent(**r) for r in receipts]
+    return pvv_accumulate(urn_directory_path, receipt_models)
+
 
 
 def main() -> None:  # pragma: no cover

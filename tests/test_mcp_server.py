@@ -228,3 +228,31 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert target4.exists()
     assert "def generated_identifier(" in target4.read_text()
+
+
+def test_mcp_broadcast_urn_to_mesh(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import broadcast_urn_to_mesh
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
+    
+    result = broadcast_urn_to_mesh(str(tmp_path))
+    assert "Successfully broadcasted" in result
+
+
+def test_mcp_accumulate_pvv_signatures(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import accumulate_pvv_signatures
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text('epistemic_status: "DRAFT"\nconsensus_signatures: []', encoding="utf-8")
+    
+    receipts = [
+        {
+            "urn": "urn:test",
+            "cid": "sha256:abc",
+            "node_id": "genesis_node_1",
+            "signature_jwt": "genesis_jwt_abc",
+            "is_approved": True
+        }
+    ]
+    
+    result = accumulate_pvv_signatures(str(tmp_path), receipts)
+    assert "Status -> PUBLISHED" in result
