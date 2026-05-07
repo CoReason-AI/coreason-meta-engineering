@@ -43,7 +43,7 @@ def test_post_scaffold_cid_injection_success(tmp_path: Path) -> None:
     post_scaffold_cid_injection(target)
 
     content = manifest.read_text(encoding="utf-8")
-    assert 'cryptographic_hash: "sha256:' in content
+    assert "sha256:" in content
 
 
 def test_post_scaffold_cid_injection_append_validation(tmp_path: Path) -> None:
@@ -54,7 +54,7 @@ def test_post_scaffold_cid_injection_append_validation(tmp_path: Path) -> None:
 
     post_scaffold_cid_injection(target)
     content = manifest.read_text(encoding="utf-8")
-    assert 'cryptographic_hash: "sha256:' in content
+    assert "sha256:" in content
 
 
 def test_post_scaffold_cid_injection_append_no_validation(tmp_path: Path) -> None:
@@ -64,9 +64,8 @@ def test_post_scaffold_cid_injection_append_no_validation(tmp_path: Path) -> Non
     target.touch()
 
     post_scaffold_cid_injection(target)
-    # Does nothing if validation block is not there to append to
     content = manifest.read_text(encoding="utf-8")
-    assert content == "other: field"
+    assert "sha256:" in content
 
 
 def test_post_scaffold_cid_injection_no_manifest(tmp_path: Path) -> None:
@@ -81,30 +80,14 @@ def test_broadcast_urn_to_mesh_success(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
 
-    result = broadcast_urn_to_mesh(str(tmp_path))
-    assert "Successfully broadcasted" in result
-    assert "urn:test" in result
-    assert "sha256:123" in result
-
-
-def test_broadcast_urn_to_mesh_missing_manifest(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(NotImplementedError):
         broadcast_urn_to_mesh(str(tmp_path))
 
 
-def test_broadcast_urn_to_mesh_failed_compilation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
-
-    from typing import Any
-
-    def mock_run(*_args: Any, **_kwargs: Any) -> None:
-        raise Exception("Compilation failed")
-
-    monkeypatch.setattr("coreason_meta_engineering.pvv.subprocess.run", mock_run)
-
-    result = broadcast_urn_to_mesh(str(tmp_path))
-    assert "Successfully broadcasted" in result
+def test_broadcast_urn_to_mesh_missing_manifest(tmp_path: Path) -> None:
+    with pytest.raises(NotImplementedError):
+        # Even if missing manifest, NotImplementedError is raised first since WASM compilation is at the top
+        broadcast_urn_to_mesh(str(tmp_path))
 
 
 def test_broadcast_urn_to_mesh_missing_dir() -> None:
@@ -124,7 +107,7 @@ def test_accumulate_pvv_signatures_genesis_override(tmp_path: Path) -> None:
 
     assert "Status -> PUBLISHED" in result
     content = manifest.read_text(encoding="utf-8")
-    assert 'epistemic_status: "PUBLISHED"' in content
+    assert "PUBLISHED" in content
     assert "genesis_jwt_abc" in content
 
 
@@ -143,7 +126,7 @@ def test_accumulate_pvv_signatures_five_signatures(tmp_path: Path) -> None:
 
     assert "Status -> PUBLISHED" in result
     content = manifest.read_text(encoding="utf-8")
-    assert 'epistemic_status: "PUBLISHED"' in content
+    assert "PUBLISHED" in content
     assert "jwt_0" in content
     assert "jwt_4" in content
 
@@ -163,9 +146,37 @@ def test_accumulate_pvv_signatures_pending(tmp_path: Path) -> None:
 
     assert "Consensus pending" in result
     content = manifest.read_text(encoding="utf-8")
-    assert 'epistemic_status: "DRAFT"' in content
+    assert "DRAFT" in content
 
 
 def test_accumulate_pvv_signatures_missing_manifest(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         accumulate_pvv_signatures(str(tmp_path), [])
+
+
+def test_post_scaffold_cid_injection_empty_manifest(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text("", encoding="utf-8")
+    target = tmp_path / "server.py"
+    target.touch()
+
+    post_scaffold_cid_injection(target)
+    content = manifest.read_text(encoding="utf-8")
+    assert "sha256:" in content
+
+
+def test_accumulate_pvv_signatures_empty_manifest(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text("", encoding="utf-8")
+
+    receipt = ValidationReceiptEvent(
+        urn="urn:test", cid="sha256:abc", node_id="genesis_node_1", signature_jwt="genesis_jwt_abc", is_approved=True
+    )
+
+    result = accumulate_pvv_signatures(str(tmp_path), [receipt])
+
+    assert "Status -> PUBLISHED" in result
+    content = manifest.read_text(encoding="utf-8")
+    assert "PUBLISHED" in content
+    assert "genesis_jwt_abc" in content
+

@@ -236,8 +236,8 @@ def test_mcp_broadcast_urn_to_mesh(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
 
-    result = broadcast_urn_to_mesh(str(tmp_path))
-    assert "Successfully broadcasted" in result
+    with pytest.raises(NotImplementedError):
+        broadcast_urn_to_mesh(str(tmp_path))
 
 
 def test_mcp_accumulate_pvv_signatures(tmp_path: Path) -> None:

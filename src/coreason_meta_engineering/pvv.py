@@ -9,11 +9,13 @@
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
 import hashlib
-import subprocess
-import sys
 from pathlib import Path
 
 from pydantic import BaseModel, Field
+from ruamel.yaml import YAML
+
+yaml = YAML()
+yaml.preserve_quotes = True
 
 
 class FederatedDiscoveryIntent(BaseModel):
@@ -71,19 +73,19 @@ def post_scaffold_cid_injection(target_file_path: Path) -> None:
 
     cid = compute_merkle_directory_cid(urn_dir)
 
-    # Simple YAML injection for cryptographic_hash
-    content = manifest_path.read_text(encoding="utf-8")
-    if "cryptographic_hash:" in content:
-        import re
+    with open(manifest_path, encoding="utf-8") as f:
+        data = yaml.load(f)
 
-        content = re.sub(r'cryptographic_hash:\s*".*"', f'cryptographic_hash: "{cid}"', content)
-        content = re.sub(r"cryptographic_hash:\s*null", f'cryptographic_hash: "{cid}"', content)
-    else:
-        # Append if validation block is not fully structured
-        if "validation:" in content:
-            content = content.replace("validation:", f'validation:\n  cryptographic_hash: "{cid}"')
+    if data is None:
+        data = {}
 
-    manifest_path.write_text(content, encoding="utf-8")
+    if "validation" not in data or not isinstance(data["validation"], dict):
+        data["validation"] = {}
+
+    data["validation"]["cryptographic_hash"] = cid
+
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        yaml.dump(data, f)
 
 
 def broadcast_urn_to_mesh(urn_directory_path: str) -> str:
@@ -94,33 +96,8 @@ def broadcast_urn_to_mesh(urn_directory_path: str) -> str:
     if not urn_dir.exists():
         raise FileNotFoundError(f"URN Directory {urn_directory_path} not found.")
 
-    # 1. Compile WASM Target (Mock subprocess call for testing)
-    try:
-        # Assuming extism-py or cargo build is used, we mock it via subprocess
-        subprocess.run([sys.executable, "-c", "print('Compiling WASM target...')"], check=True)
-        wasm_hex = "mock_wasm_hex_payload"
-    except Exception:
-        wasm_hex = "failed_compilation"
-
-    # 2. Extract URN and CID
-    manifest_path = urn_dir / "manifest.yaml"
-    if not manifest_path.exists():
-        raise FileNotFoundError("manifest.yaml missing in URN directory.")
-
-    content = manifest_path.read_text(encoding="utf-8")
-    import re
-
-    urn_match = re.search(r'urn:\s*"?([^"\n]+)"?', content)
-    cid_match = re.search(r'cryptographic_hash:\s*"?([^"\n]+)"?', content)
-
-    urn = urn_match.group(1) if urn_match else "unknown:urn"
-    cid = cid_match.group(1) if cid_match else "unknown:cid"
-
-    # 3. Create Intent
-    _intent = FederatedDiscoveryIntent(urn=urn, cid=cid, wasm_payload_hex=wasm_hex)
-
-    # 4. Route to Ecosystem (Mocked Egress)
-    return f"Successfully broadcasted {urn} (CID: {cid}) to Macroscopic Mesh."
+    # 1. Compile WASM Target
+    raise NotImplementedError("Physical WASM compilation (extism/cargo) is deferred to the Kinetic Execution Plane.")
 
 
 def accumulate_pvv_signatures(urn_directory_path: str, receipts: list[ValidationReceiptEvent]) -> str:
@@ -143,20 +120,22 @@ def accumulate_pvv_signatures(urn_directory_path: str, receipts: list[Validation
 
     if has_genesis_override or len(valid_signatures) >= 5:
         # Promote to PUBLISHED
-        content = manifest_path.read_text(encoding="utf-8")
-        content = content.replace('epistemic_status: "DRAFT"', 'epistemic_status: "PUBLISHED"')
-        content = content.replace("epistemic_status: DRAFT", 'epistemic_status: "PUBLISHED"')
+        with open(manifest_path, encoding="utf-8") as f:
+            data = yaml.load(f)
 
-        # Inject signatures
-        sigs_yaml = "\n  - ".join(["", *valid_signatures])
-        if "consensus_signatures:" in content:
-            import re
+        if data is None:
+            data = {}
 
-            content = re.sub(r"consensus_signatures:\s*\[\]", f"consensus_signatures:{sigs_yaml}", content)
-        else:
-            content += f"\nconsensus_signatures:{sigs_yaml}\n"
+        data["epistemic_status"] = "PUBLISHED"
 
-        manifest_path.write_text(content, encoding="utf-8")
+        if "consensus_signatures" not in data or not isinstance(data["consensus_signatures"], list):
+            data["consensus_signatures"] = []
+
+        data["consensus_signatures"].extend(valid_signatures)
+
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            yaml.dump(data, f)
+
         return f"Consensus reached. {len(valid_signatures)} signatures applied. Status -> PUBLISHED."
 
     return f"Consensus pending. Only {len(valid_signatures)}/5 valid signatures collected."
