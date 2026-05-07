@@ -179,4 +179,3 @@ def test_accumulate_pvv_signatures_empty_manifest(tmp_path: Path) -> None:
     content = manifest.read_text(encoding="utf-8")
     assert "PUBLISHED" in content
     assert "genesis_jwt_abc" in content
-
