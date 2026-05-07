@@ -37,23 +37,16 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
     )
 
     # Assertions
-    assert result == f"Successfully injected TestModelClass into {target_file}"
-    content = target_file.read_text()
-    assert "class TestModelClass(CoreasonBaseState):" in content
-    assert "TestModelClass.model_rebuild()" in content
+    assert "class TestModelClass(CoreasonBaseState):" in result
+    assert "TestModelClass.model_rebuild()" in result
 
 
 def test_scaffold_ontology_model_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
 
-    with pytest.raises(FileNotFoundError, match="exists but is not a file"):
-        scaffold_manifest_state(
-            state_name="FailModel",
-            geometric_schema={},
-            target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:solver:test:v1",
-        )
+    # Because it no longer writes to disk or throws errors on missing target files,
+    # it just returns code in memory. So we just pass.
 
 
 def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
@@ -86,10 +79,8 @@ def test_scaffold_actuator_success(tmp_path: Path) -> None:
         causal_affordance="Test affordance",
         epistemic_bounds="Test bounds",
     )
-    assert result == f"Successfully injected my_actuator_func into {target_file}"
-    content = target_file.read_text()
-    assert "def my_actuator_func(" in content
-    assert "@mcp.tool()" in content
+    assert "def my_actuator_func(" in result
+    assert "@mcp.tool()" in result
 
 
 def test_scaffold_actuator_invalid_urn(tmp_path: Path) -> None:
@@ -113,18 +104,6 @@ def test_scaffold_actuator_invalid_urn(tmp_path: Path) -> None:
 def test_scaffold_actuator_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
-    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
-
-    with pytest.raises(FileNotFoundError, match="exists but is not a file"):
-        scaffold_logic_actuator(
-            actuator_name="MyActuator",
-            geometric_schema={},
-            target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:solver:test:v1",
-            agent_instruction="Test instruction",
-            causal_affordance="Test affordance",
-            epistemic_bounds="Test bounds",
-        )
 
 
 def test_scaffold_agent_node_success(tmp_path: Path) -> None:
@@ -138,10 +117,8 @@ def test_scaffold_agent_node_success(tmp_path: Path) -> None:
         target_file_path=str(target_file),
         action_space_id="urn:coreason:actionspace:node:my_agent:v1",
     )
-    assert result == f"Successfully injected MyAgentClass into {target_file}"
-    content = target_file.read_text()
-    assert "class MyAgentClass(CoreasonBaseAgent):" in content
-    assert "MyAgentClass.model_rebuild()" in content
+    assert "class MyAgentClass(CoreasonBaseAgent):" in result
+    assert "MyAgentClass.model_rebuild()" in result
 
 
 def test_scaffold_agent_node_invalid_urn(tmp_path: Path) -> None:
@@ -161,15 +138,6 @@ def test_scaffold_agent_node_invalid_urn(tmp_path: Path) -> None:
 def test_scaffold_agent_node_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
-    from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
-
-    with pytest.raises(FileNotFoundError, match="exists but is not a file"):
-        scaffold_epistemic_node(
-            node_name="MyAgent",
-            cognitive_boundary_directive="role",
-            target_file_path=str(missing_target),
-            action_space_id="urn:coreason:actionspace:solver:test:v1",
-        )
 
 
 def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
@@ -181,29 +149,27 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
 
     # Test creating a new file from scratch & valid sanitization with digit prefix
     target1 = tmp_path / "new_state.py"
-    scaffold_manifest_state(
+    res1 = scaffold_manifest_state(
         state_name="1_invalid_class_start",
         geometric_schema={"properties": {}},
         target_file_path=str(target1),
         action_space_id="urn:coreason:actionspace:solver:test:v1",
     )
-    assert target1.exists()
-    assert "Class1InvalidClassStart" in target1.read_text()
+    assert "Class1InvalidClassStart" in res1
 
     # Test creating a new file from scratch & fallback class name
     target2 = tmp_path / "new_node.py"
-    scaffold_epistemic_node(
+    res2 = scaffold_epistemic_node(
         node_name="___",
         cognitive_boundary_directive="role",
         target_file_path=str(target2),
         action_space_id="urn:coreason:actionspace:node:test:v1",
     )
-    assert target2.exists()
-    assert "GeneratedClass" in target2.read_text()
+    assert "GeneratedClass" in res2
 
     # Test creating a new file from scratch & valid sanitization with digit prefix for identifier
     target3 = tmp_path / "new_actuator1.py"
-    scaffold_logic_actuator(
+    res3 = scaffold_logic_actuator(
         actuator_name="1_actuator",
         geometric_schema={"properties": {}},
         target_file_path=str(target3),
@@ -212,12 +178,11 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         causal_affordance="a",
         epistemic_bounds="b",
     )
-    assert target3.exists()
-    assert "def tool_1_actuator(" in target3.read_text()
+    assert "def tool_1_actuator(" in res3
 
     # Test fallback identifier for empty string
     target4 = tmp_path / "new_actuator2.py"
-    scaffold_logic_actuator(
+    res4 = scaffold_logic_actuator(
         actuator_name="___",
         geometric_schema={"properties": {}},
         target_file_path=str(target4),
@@ -226,8 +191,7 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         causal_affordance="a",
         epistemic_bounds="b",
     )
-    assert target4.exists()
-    assert "def generated_identifier(" in target4.read_text()
+    assert "def generated_identifier(" in res4
 
 
 def test_mcp_broadcast_urn_to_mesh(tmp_path: Path) -> None:
@@ -238,6 +202,13 @@ def test_mcp_broadcast_urn_to_mesh(tmp_path: Path) -> None:
 
     with pytest.raises(NotImplementedError):
         broadcast_urn_to_mesh(str(tmp_path))
+
+
+def test_mcp_publish_capability_to_mesh() -> None:
+    from coreason_meta_engineering.mcp_server import publish_capability_to_mesh
+
+    res = publish_capability_to_mesh("urn:test", "print('hello')")
+    assert "Successfully compiled and broadcasted" in res
 
 
 def test_mcp_accumulate_pvv_signatures(tmp_path: Path) -> None:

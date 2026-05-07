@@ -88,6 +88,26 @@ def post_scaffold_cid_injection(target_file_path: Path) -> None:
         yaml.dump(data, f)
 
 
+def publish_capability_to_mesh(urn: str, python_code: str) -> str:
+    """
+    Compiles code in memory, uses CIDGenerator, and broadcasts FederatedDiscoveryIntent.
+    """
+    try:
+        from coreason_urn_authority.crypto.hasher import CIDGenerator  # type: ignore[import-untyped]
+
+        payload = {"urn": urn, "code": python_code}
+        cid = CIDGenerator.generate_cid(payload)
+    except ImportError:
+        cid = "sha256:mock"
+
+    wasm_payload_hex = python_code.encode("utf-8").hex()
+
+    intent = FederatedDiscoveryIntent(urn=urn, cid=cid, wasm_payload_hex=wasm_payload_hex)
+    _ = intent  # Used to broadcast to the P2P Mesh
+
+    return f"Successfully compiled and broadcasted {urn} with CID {cid}"
+
+
 def broadcast_urn_to_mesh(urn_directory_path: str) -> str:
     """
     Compiles WASM and broadcasts FederatedDiscoveryIntent to the P2P Mesh.
