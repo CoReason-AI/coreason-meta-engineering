@@ -88,7 +88,7 @@ asyncio_mode = "auto"
 omit = ["tests/*"]
 
 [tool.uv.sources]
-coreason-urn-authority = { path = "../coreason-urn-authority" }
+coreason-urn-authority = { git = "https://github.com/CoReason-AI/coreason-urn-authority.git", rev = "20260507-pypi-typeb" }
 
 [tool.hatch.version]
 source = "vcs"

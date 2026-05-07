@@ -16,14 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Checkout coreason-urn-authority
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-        with:
-          repository: CoReason-AI/coreason-urn-authority
-          path: coreason-urn-authority
-      - name: Move coreason-urn-authority
-        run: mv coreason-urn-authority ../
-        shell: bash
+
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6
         with:
@@ -57,14 +50,7 @@ jobs:
         python-version: ["3.14", "3.14t"]
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Checkout coreason-urn-authority
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-        with:
-          repository: CoReason-AI/coreason-urn-authority
-          path: coreason-urn-authority
-      - name: Move coreason-urn-authority
-        run: mv coreason-urn-authority ../
-        shell: bash
+
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6
         with:
@@ -108,14 +94,7 @@ jobs:
             python-version: "3.14t"
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Checkout coreason-urn-authority
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-        with:
-          repository: CoReason-AI/coreason-urn-authority
-          path: coreason-urn-authority
-      - name: Move coreason-urn-authority
-        run: mv coreason-urn-authority ../
-        shell: bash
+
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6
         with:
@@ -141,14 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-      - name: Checkout coreason-urn-authority
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
-        with:
-          repository: CoReason-AI/coreason-urn-authority
-          path: coreason-urn-authority
-      - name: Move coreason-urn-authority
-        run: mv coreason-urn-authority ../
-        shell: bash
+
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6
         with:
