@@ -8,15 +8,16 @@
 #
 # Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
 
-import pytest
 from pathlib import Path
 
+import pytest
+
 from coreason_meta_engineering.pvv import (
+    ValidationReceiptEvent,
+    accumulate_pvv_signatures,
+    broadcast_urn_to_mesh,
     compute_merkle_directory_cid,
     post_scaffold_cid_injection,
-    broadcast_urn_to_mesh,
-    accumulate_pvv_signatures,
-    ValidationReceiptEvent
 )
 
 
@@ -34,15 +35,16 @@ def test_compute_merkle_directory_cid(tmp_path: Path) -> None:
 def test_post_scaffold_cid_injection_success(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text("validation:\n  cryptographic_hash: null", encoding="utf-8")
-    
+
     # Create a target file to pretend it was just scaffolded
     target = tmp_path / "server.py"
     target.touch()
 
     post_scaffold_cid_injection(target)
-    
+
     content = manifest.read_text(encoding="utf-8")
     assert 'cryptographic_hash: "sha256:' in content
+
 
 def test_post_scaffold_cid_injection_append_validation(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.yaml"
@@ -53,7 +55,8 @@ def test_post_scaffold_cid_injection_append_validation(tmp_path: Path) -> None:
     post_scaffold_cid_injection(target)
     content = manifest.read_text(encoding="utf-8")
     assert 'cryptographic_hash: "sha256:' in content
-    
+
+
 def test_post_scaffold_cid_injection_append_no_validation(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text("other: field", encoding="utf-8")
@@ -63,8 +66,7 @@ def test_post_scaffold_cid_injection_append_no_validation(tmp_path: Path) -> Non
     post_scaffold_cid_injection(target)
     # Does nothing if validation block is not there to append to
     content = manifest.read_text(encoding="utf-8")
-    assert "other: field" == content
-
+    assert content == "other: field"
 
 
 def test_post_scaffold_cid_injection_no_manifest(tmp_path: Path) -> None:
@@ -89,19 +91,20 @@ def test_broadcast_urn_to_mesh_missing_manifest(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         broadcast_urn_to_mesh(str(tmp_path))
 
-def test_broadcast_urn_to_mesh_failed_compilation(tmp_path: Path, monkeypatch) -> None:
+
+def test_broadcast_urn_to_mesh_failed_compilation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
 
-    def mock_run(*args, **kwargs):
+    from typing import Any
+
+    def mock_run(*_args: Any, **_kwargs: Any) -> None:
         raise Exception("Compilation failed")
-    
-    import coreason_meta_engineering.pvv as pvv_module
-    monkeypatch.setattr(pvv_module.subprocess, "run", mock_run)
+
+    monkeypatch.setattr("coreason_meta_engineering.pvv.subprocess.run", mock_run)
 
     result = broadcast_urn_to_mesh(str(tmp_path))
     assert "Successfully broadcasted" in result
-
 
 
 def test_broadcast_urn_to_mesh_missing_dir() -> None:
@@ -114,15 +117,11 @@ def test_accumulate_pvv_signatures_genesis_override(tmp_path: Path) -> None:
     manifest.write_text('epistemic_status: "DRAFT"\nconsensus_signatures: []', encoding="utf-8")
 
     receipt = ValidationReceiptEvent(
-        urn="urn:test",
-        cid="sha256:abc",
-        node_id="genesis_node_1",
-        signature_jwt="genesis_jwt_abc",
-        is_approved=True
+        urn="urn:test", cid="sha256:abc", node_id="genesis_node_1", signature_jwt="genesis_jwt_abc", is_approved=True
     )
 
     result = accumulate_pvv_signatures(str(tmp_path), [receipt])
-    
+
     assert "Status -> PUBLISHED" in result
     content = manifest.read_text(encoding="utf-8")
     assert 'epistemic_status: "PUBLISHED"' in content
@@ -135,13 +134,13 @@ def test_accumulate_pvv_signatures_five_signatures(tmp_path: Path) -> None:
 
     receipts = [
         ValidationReceiptEvent(
-            urn="urn:test", cid="sha256:abc", node_id=f"node_{i}",
-            signature_jwt=f"jwt_{i}", is_approved=True
-        ) for i in range(5)
+            urn="urn:test", cid="sha256:abc", node_id=f"node_{i}", signature_jwt=f"jwt_{i}", is_approved=True
+        )
+        for i in range(5)
     ]
 
     result = accumulate_pvv_signatures(str(tmp_path), receipts)
-    
+
     assert "Status -> PUBLISHED" in result
     content = manifest.read_text(encoding="utf-8")
     assert 'epistemic_status: "PUBLISHED"' in content
@@ -155,13 +154,13 @@ def test_accumulate_pvv_signatures_pending(tmp_path: Path) -> None:
 
     receipts = [
         ValidationReceiptEvent(
-            urn="urn:test", cid="sha256:abc", node_id=f"node_{i}",
-            signature_jwt=f"jwt_{i}", is_approved=True
-        ) for i in range(3)
+            urn="urn:test", cid="sha256:abc", node_id=f"node_{i}", signature_jwt=f"jwt_{i}", is_approved=True
+        )
+        for i in range(3)
     ]
 
     result = accumulate_pvv_signatures(str(tmp_path), receipts)
-    
+
     assert "Consensus pending" in result
     content = manifest.read_text(encoding="utf-8")
     assert 'epistemic_status: "DRAFT"' in content
