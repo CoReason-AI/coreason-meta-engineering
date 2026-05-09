@@ -229,3 +229,20 @@ def test_mcp_accumulate_pvv_signatures(tmp_path: Path) -> None:
 
     result = accumulate_pvv_signatures(str(tmp_path), receipts)
     assert "Status -> PUBLISHED" in result
+
+
+def test_reconcile_manifest_state(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import reconcile_manifest_state
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class DummyState:\n    pass\n")
+    schema_payload = {"properties": {"name": {"type": "string"}}}
+
+    result = reconcile_manifest_state(
+        state_name="DummyState",
+        geometric_schema=schema_payload,
+        target_file_path=str(target_file),
+        action_space_id="urn:coreason:actionspace:solver:test:v1",
+    )
+    assert "class DummyState" in result
+    assert "name: Annotated[str" in result
