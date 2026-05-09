@@ -20,7 +20,7 @@ The Agentic Forge & AST Manipulation Layer
 `coreason-meta-engineering` acts as the deterministic mathematical toolchain (EDA) for expanding the CoReason ecosystem. It is an active engineering service rather than a passive library—it strictly parses Python as a Concrete Syntax Tree (`libcst`), rigidly enforces cryptographic URN discovery bounds, and strictly avoids probabilistic AI logic execution when generating code.
 
 For complete architectural rules, agent mandates, and SDK documentation, visit our formal documentation:
-**[Read the Docs →](https://CoReason-AI.github.io/coreason_meta_engineering/)**
+**[Read the Docs →](https://CoReason-AI.github.io/coreason-meta-engineering/)**
 
 ## Getting Started
 

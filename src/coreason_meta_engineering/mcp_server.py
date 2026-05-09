@@ -16,7 +16,12 @@ from mcp.server.fastmcp import FastMCP
 
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
+from coreason_meta_engineering.ast.state_reconciliation import StateReconciliationFunctor
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
+from coreason_meta_engineering.pvv import ValidationReceiptEvent
+from coreason_meta_engineering.pvv import accumulate_pvv_signatures as pvv_accumulate
+from coreason_meta_engineering.pvv import broadcast_urn_to_mesh as pvv_broadcast
+from coreason_meta_engineering.pvv import publish_capability_to_mesh as pvv_publish
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
 
@@ -61,17 +66,9 @@ def scaffold_manifest_state(
     state_name = _sanitize_python_class_name(state_name)
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)
-    if not target_file.exists():
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        target_file.touch()
-    elif not target_file.is_file():
-        raise FileNotFoundError(f"Target path {target_file_path} exists but is not a file.")
+    source_code = target_file.read_text(encoding="utf-8") if target_file.exists() and target_file.is_file() else ""
 
-    # 2. Resolve fields
     fields = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
-
-    # 3. Read target file text
-    source_code = target_file.read_text(encoding="utf-8")
 
     # 4. Parse AST and inject
     module = cst.parse_module(source_code)
@@ -80,11 +77,35 @@ def scaffold_manifest_state(
     )
     new_module = module.visit(transformer)
 
-    # 5. Write modified code
-    target_file.write_text(new_module.code, encoding="utf-8")
+    # 5. Return success code string
+    return new_module.code
 
-    # 6. Return success message
-    return f"Successfully injected {state_name} into {target_file_path}"
+
+@mcp.tool()  # type: ignore[misc]
+def reconcile_manifest_state(
+    state_name: str,
+    geometric_schema: dict[str, typing.Any],
+    target_file_path: str,
+    action_space_id: str,
+    base_class: str = "CoreasonBaseState",
+) -> str:
+    """
+    Reconciles an existing model by parsing JSON schema and updating it in the target Python file.
+    """
+    state_name = _sanitize_python_class_name(state_name)
+    target_file = Path(target_file_path)
+    verify_cryptographic_urn_boundary(action_space_id)
+    source_code = target_file.read_text(encoding="utf-8") if target_file.exists() and target_file.is_file() else ""
+
+    fields = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
+
+    module = cst.parse_module(source_code)
+    transformer = StateReconciliationFunctor(
+        state_name=state_name, geometric_schema=fields, action_space_id=action_space_id, base_class=base_class
+    )
+    new_module = module.visit(transformer)
+
+    return new_module.code
 
 
 @mcp.tool()  # type: ignore[misc]
@@ -106,16 +127,10 @@ def scaffold_logic_actuator(
     actuator_name = _sanitize_python_identifier(actuator_name)
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)
-    if not target_file.exists():
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        target_file.touch()
-    elif not target_file.is_file():
-        raise FileNotFoundError(f"Target path {target_file_path} exists but is not a file.")
+    source_code = target_file.read_text(encoding="utf-8") if target_file.exists() and target_file.is_file() else ""
 
-    # Convert schema to parameters list
     parameters = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
 
-    source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
     transformer = LogicInjectionFunctor(
         actuator_name=actuator_name,
@@ -129,8 +144,7 @@ def scaffold_logic_actuator(
         epistemic_bounds=epistemic_bounds,
     )
     new_module = module.visit(transformer)
-    target_file.write_text(new_module.code, encoding="utf-8")
-    return f"Successfully injected {actuator_name} into {target_file_path}"
+    return new_module.code
 
 
 @mcp.tool()  # type: ignore[misc]
@@ -147,13 +161,8 @@ def scaffold_epistemic_node(
     node_name = _sanitize_python_class_name(node_name)
     target_file = Path(target_file_path)
     verify_cryptographic_urn_boundary(action_space_id)
-    if not target_file.exists():
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        target_file.touch()
-    elif not target_file.is_file():
-        raise FileNotFoundError(f"Target path {target_file_path} exists but is not a file.")
+    source_code = target_file.read_text(encoding="utf-8") if target_file.exists() and target_file.is_file() else ""
 
-    source_code = target_file.read_text(encoding="utf-8")
     module = cst.parse_module(source_code)
     transformer = EpistemicNodeInjectionFunctor(
         node_name=node_name,
@@ -162,8 +171,33 @@ def scaffold_epistemic_node(
         base_class=base_class,
     )
     new_module = module.visit(transformer)
-    target_file.write_text(new_module.code, encoding="utf-8")
-    return f"Successfully injected {node_name} into {target_file_path}"
+    return new_module.code
+
+
+@mcp.tool()  # type: ignore[misc]
+def publish_capability_to_mesh(urn: str, python_code_str: str) -> str:
+    """
+    Compiles code in memory, uses CIDGenerator, and broadcasts FederatedDiscoveryIntent.
+    """
+    return pvv_publish(urn, python_code_str)
+
+
+@mcp.tool()  # type: ignore[misc]
+def broadcast_urn_to_mesh(urn_directory_path: str) -> str:
+    """
+    Compiles WASM and broadcasts FederatedDiscoveryIntent to the P2P Mesh.
+    """
+    return pvv_broadcast(urn_directory_path)
+
+
+@mcp.tool()  # type: ignore[misc]
+def accumulate_pvv_signatures(urn_directory_path: str, receipts: list[dict[str, typing.Any]]) -> str:
+    """
+    Accumulates PVV signatures and promotes DRAFT to PUBLISHED if consensus met.
+    """
+    # Deserialize list of dicts to ValidationReceiptEvent models
+    receipt_models = [ValidationReceiptEvent(**r) for r in receipts]
+    return pvv_accumulate(urn_directory_path, receipt_models)
 
 
 def main() -> None:  # pragma: no cover
