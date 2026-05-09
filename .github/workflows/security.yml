@@ -19,11 +19,11 @@ jobs:
     name: Secret Scanning
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.1.1
         with:
           fetch-depth: 0
       - name: Trufflehog Secret Scan
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@06c04f9f257a098c48a1c97a7d4f9547d7c66914 # v3.63.1
         with:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.4.1
         with:
           egress-policy: audit
 
@@ -71,13 +71,13 @@ jobs:
         shell: bash
 
       - name: Upload SARIF Reports to GitHub Advanced Security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@13f283282b01cc1e95f6f4c56895316317b6a48d # v3.24.5
         with:
           sarif_file: .
         continue-on-error: true
 
       - name: Upload Compliance Reports as Artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@60532e13199e21bd220ed0692d9bb4d7088d070b # v7.0.0
         with:
           name: security-audit-reports
           path: |

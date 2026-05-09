@@ -13,7 +13,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: google-github-actions/release-please-action@1d303e32407a4a8342433120173f4e1563f69024 # v4.0.0
         with:
           release-type: python
           package-name: coreason_meta_engineering

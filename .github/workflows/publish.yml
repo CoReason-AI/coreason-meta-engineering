@@ -19,16 +19,16 @@ jobs:
     environment: pypi
     steps:
       - name: Harden Runner (Endpoint Network Security)
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.4.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.1.1
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6
         with:
           enable-cache: true
           python-version: "3.14"
@@ -40,26 +40,26 @@ jobs:
         run: uv build
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@ab73386edf5a16606f3455b85a3c631e8c7c9451 # v0.14.3
         with:
           format: spdx-json
           output-file: sbom.spdx.json
           upload-release-assets: false
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@639206354f997637841549419b48c6600c0f4547 # v1.8.10
         with:
           attestations: false  # Requires Enterprise Cloud or public repo
 
       - name: Sign Wheel
-        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        uses: sigstore/gh-action-sigstore-python@94a1d636ca2b6e15905d6255018610360a0f443b # v3.0.0
         with:
           inputs: >-
             dist/*.whl
             dist/*.tar.gz
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef2670ad # v2.0.4
         with:
           files: |
             dist/*.whl
@@ -71,7 +71,7 @@ jobs:
         run: uv run zensical build --clean
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dee462962283 # v5.0.0
         with:
           path: site
 
@@ -86,10 +86,10 @@ jobs:
       id-token: write
     steps:
       - name: Harden Runner (Endpoint Network Security)
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.4.1
         with:
           egress-policy: audit
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v5.0.0
