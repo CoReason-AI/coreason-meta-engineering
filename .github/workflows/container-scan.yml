@@ -19,7 +19,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner in fs mode
         if: hashFiles('Dockerfile') != ''
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # master
         with:
           scan-type: 'fs'
           ignore-unfixed: true
@@ -29,7 +29,7 @@ jobs:
 
       - name: Upload Trivy scan results to GitHub Security tab
         if: hashFiles('Dockerfile') != ''
-        uses: github/codeql-action/upload-sarif@3f135f3a928cf93b5749d98d169a49e1d7cf7048 # v3.24.5
+        uses: github/codeql-action/upload-sarif@5e316336eb4f107009e477d4bfbfff13d7250fae # v4
         with:
           sarif_file: 'trivy-results.sarif'
         continue-on-error: true
