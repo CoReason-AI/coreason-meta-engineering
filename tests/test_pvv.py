@@ -18,6 +18,7 @@ from coreason_meta_engineering.pvv import (
     broadcast_urn_to_mesh,
     compute_merkle_directory_cid,
     post_scaffold_cid_injection,
+    publish_capability_to_mesh,
 )
 
 
@@ -179,3 +180,21 @@ def test_accumulate_pvv_signatures_empty_manifest(tmp_path: Path) -> None:
     content = manifest.read_text(encoding="utf-8")
     assert "PUBLISHED" in content
     assert "genesis_jwt_abc" in content
+
+
+def test_publish_capability_to_mesh() -> None:
+    code = "def hello(): pass"
+    res = publish_capability_to_mesh("urn:test", code)
+    assert "Successfully compiled and broadcasted urn:test" in res
+    assert "CID" in res
+
+
+def test_publish_capability_to_mesh_import_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+
+    # Simulate missing coreason_urn_authority to hit the except block
+    monkeypatch.setitem(sys.modules, "coreason_urn_authority.crypto.hasher", None)  # type: ignore
+
+    code = "def hello(): pass"
+    res = publish_capability_to_mesh("urn:test", code)
+    assert "sha256:mock" in res
