@@ -15,7 +15,6 @@ authors = [
     { name = "Gowtham A Rao", email = "gowtham.rao@coreason.ai" },
 ]
 dependencies = [
-    "coreason-urn-authority",
     "libcst>=1.8.6",
     "loguru>=0.7.2",
     "mcp>=1.3.0",
@@ -88,9 +87,6 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 omit = ["tests/*"]
-
-[tool.uv.sources]
-coreason-urn-authority = { path = "wheels/coreason_urn_authority-0.2.3.dev10+gcb5905f9c-py3-none-any.whl" }
 
 [tool.hatch.version]
 source = "vcs"
