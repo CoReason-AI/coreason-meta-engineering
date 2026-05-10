@@ -124,10 +124,10 @@ def _generate_receipt(
     tokens_burned: int,
 ) -> OracleExecutionReceipt:
     """Phase 4 — Hash the verified AST payload and produce the receipt."""
-    
+
     # Extract the deterministically formatted code (stripping LLM variations)
     canonical_code = module.code
-    
+
     # Hash using the authoritative ledger crypto
     execution_hash = compute_canonical_hash(canonical_code)
 

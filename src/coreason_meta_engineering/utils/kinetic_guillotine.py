@@ -44,7 +44,6 @@ _FORBIDDEN_IMPORT_MODULES: frozenset[str] = frozenset(
         "builtins",
         "importlib",
         "imp",
-
         # System Execution
         "os",
         "subprocess",
@@ -86,7 +85,6 @@ _FORBIDDEN_ATTR_CALLS: frozenset[tuple[str, str]] = frozenset(
         ("builtins", "open"),
         ("builtins", "__import__"),
         ("importlib", "import_module"),
-
         ("os", "system"),
         ("os", "popen"),
         ("os", "exec"),
