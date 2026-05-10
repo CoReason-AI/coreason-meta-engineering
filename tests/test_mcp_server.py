@@ -1,12 +1,15 @@
-# Copyright (c) 2026 CoReason, Inc.
+# Copyright (c) 2026 CoReason, Inc
 #
-# This software is proprietary and dual-licensed.
-# Licensed under the Prosperity Public License 3.0 (the "License").
-# A copy of the license is available at [https://prosperitylicense.com/versions/3.0.0](https://prosperitylicense.com/versions/3.0.0)
-# For details, see the LICENSE file.
-# Commercial use beyond a 30-day trial requires a separate license.
+# This software is proprietary and dual-licensed
+# Licensed under the Prosperity Public License 3.0 (the "License")
+# A copy of the license is available at <https://prosperitylicense.com/versions/3.0.0>
+# For details, see the LICENSE file
+# Commercial use beyond a 30-day trial requires a separate license
 #
-# Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
+# Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
+
+"""Tests for mcp_server.py."""
+
 from pathlib import Path
 
 import pytest
@@ -15,11 +18,9 @@ from coreason_meta_engineering.mcp_server import scaffold_manifest_state
 
 
 def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
-    # Setup dummy target file
     target_file = tmp_path / "ontology.py"
     target_file.write_text("class CoreasonBaseState:\n    pass\n")
 
-    # Define schema payload as dict
     schema = {
         "properties": {
             "name": {"type": "string", "description": "The name"},
@@ -28,7 +29,6 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
         "required": ["name"],
     }
 
-    # Call the actuator function
     result = scaffold_manifest_state(
         state_name="Test Model Class",
         geometric_schema=schema,
@@ -36,7 +36,6 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
         action_space_id="urn:coreason:actionspace:solver:test:v1",
     )
 
-    # Assertions
     assert "class TestModelClass(CoreasonBaseState):" in result
     assert "TestModelClass.model_rebuild()" in result
 
@@ -44,9 +43,6 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
 def test_scaffold_ontology_model_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
-
-    # Because it no longer writes to disk or throws errors on missing target files,
-    # it just returns code in memory. So we just pass.
 
 
 def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
@@ -147,7 +143,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         scaffold_manifest_state,
     )
 
-    # Test creating a new file from scratch & valid sanitization with digit prefix
     target1 = tmp_path / "new_state.py"
     res1 = scaffold_manifest_state(
         state_name="1_invalid_class_start",
@@ -157,7 +152,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert "Class1InvalidClassStart" in res1
 
-    # Test creating a new file from scratch & fallback class name
     target2 = tmp_path / "new_node.py"
     res2 = scaffold_epistemic_node(
         node_name="___",
@@ -167,7 +161,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert "GeneratedClass" in res2
 
-    # Test creating a new file from scratch & valid sanitization with digit prefix for identifier
     target3 = tmp_path / "new_actuator1.py"
     res3 = scaffold_logic_actuator(
         actuator_name="1_actuator",
@@ -180,7 +173,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert "def tool_1_actuator(" in res3
 
-    # Test fallback identifier for empty string
     target4 = tmp_path / "new_actuator2.py"
     res4 = scaffold_logic_actuator(
         actuator_name="___",
@@ -192,43 +184,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         epistemic_bounds="b",
     )
     assert "def generated_identifier(" in res4
-
-
-def test_mcp_broadcast_urn_to_mesh(tmp_path: Path) -> None:
-    from coreason_meta_engineering.mcp_server import broadcast_urn_to_mesh
-
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
-
-    with pytest.raises(NotImplementedError):
-        broadcast_urn_to_mesh(str(tmp_path))
-
-
-def test_mcp_publish_capability_to_mesh() -> None:
-    from coreason_meta_engineering.mcp_server import publish_capability_to_mesh
-
-    res = publish_capability_to_mesh("urn:test", "print('hello')")
-    assert "Successfully compiled and broadcasted" in res
-
-
-def test_mcp_accumulate_pvv_signatures(tmp_path: Path) -> None:
-    from coreason_meta_engineering.mcp_server import accumulate_pvv_signatures
-
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('epistemic_status: "DRAFT"\nconsensus_signatures: []', encoding="utf-8")
-
-    receipts = [
-        {
-            "urn": "urn:test",
-            "cid": "sha256:abc",
-            "node_id": "genesis_node_1",
-            "signature_jwt": "genesis_jwt_abc",
-            "is_approved": True,
-        }
-    ]
-
-    result = accumulate_pvv_signatures(str(tmp_path), receipts)
-    assert "Status -> PUBLISHED" in result
 
 
 def test_reconcile_manifest_state(tmp_path: Path) -> None:
@@ -246,3 +201,53 @@ def test_reconcile_manifest_state(tmp_path: Path) -> None:
     )
     assert "class DummyState" in result
     assert "name: Annotated[str" in result
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# verify_solver_diff (PVV Pipeline MCP Tool)
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+class TestVerifySolverDiff:
+    """Tests for the verify_solver_diff MCP tool."""
+
+    def test_valid_code_returns_receipt(self) -> None:
+        from coreason_meta_engineering.mcp_server import verify_solver_diff
+
+        result = verify_solver_diff(
+            deliberation_trace="Thinking hard...",
+            payload="x = 42\n",
+            solver_urn="urn:coreason:solver:claw_developer:v1",
+            tokens_burned=500,
+        )
+        assert isinstance(result, dict)
+        assert "execution_hash" in result
+        assert len(result["execution_hash"]) == 64
+        assert result["solver_urn"] == "urn:coreason:solver:claw_developer:v1"
+        assert result["tokens_burned"] == 500
+
+    def test_malicious_code_raises(self) -> None:
+        from coreason_meta_engineering.mcp_server import verify_solver_diff
+        from coreason_meta_engineering.utils.kinetic_guillotine import (
+            TopologicalBoundaryViolation,
+        )
+
+        with pytest.raises(TopologicalBoundaryViolation, match="FORBIDDEN_IMPORT"):
+            verify_solver_diff(
+                deliberation_trace="Let me import os...",
+                payload="import os\nos.system('rm -rf /')\n",
+                solver_urn="urn:coreason:solver:claw_developer:v1",
+                tokens_burned=100,
+            )
+
+    def test_receipt_dict_structure(self) -> None:
+        from coreason_meta_engineering.mcp_server import verify_solver_diff
+
+        result = verify_solver_diff(
+            deliberation_trace="Careful analysis...",
+            payload="def add(a: int, b: int) -> int:\n    return a + b\n",
+            solver_urn="urn:coreason:solver:test:v1",
+            tokens_burned=0,
+        )
+        assert result["topology_class"] == "oracle_execution_receipt"
+        assert result["human_attestation_signature"] is None

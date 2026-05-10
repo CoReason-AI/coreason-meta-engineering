@@ -1,27 +1,25 @@
-# Copyright (c) 2026 CoReason, Inc.
+# Copyright (c) 2026 CoReason, Inc
 #
-# This software is proprietary and dual-licensed.
-# Licensed under the Prosperity Public License 3.0 (the "License").
-# A copy of the license is available at [https://prosperitylicense.com/versions/3.0.0](https://prosperitylicense.com/versions/3.0.0)
-# For details, see the LICENSE file.
-# Commercial use beyond a 30-day trial requires a separate license.
+# This software is proprietary and dual-licensed
+# Licensed under the Prosperity Public License 3.0 (the "License")
+# A copy of the license is available at <https://prosperitylicense.com/versions/3.0.0>
+# For details, see the LICENSE file
+# Commercial use beyond a 30-day trial requires a separate license
 #
-# Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
+# Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 import re
 import typing
 from pathlib import Path
 
 import libcst as cst
+from coreason_manifest.spec import DeliberativeEnvelope
 from mcp.server.fastmcp import FastMCP
 
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
 from coreason_meta_engineering.ast.state_reconciliation import StateReconciliationFunctor
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
-from coreason_meta_engineering.pvv import ValidationReceiptEvent
-from coreason_meta_engineering.pvv import accumulate_pvv_signatures as pvv_accumulate
-from coreason_meta_engineering.pvv import broadcast_urn_to_mesh as pvv_broadcast
-from coreason_meta_engineering.pvv import publish_capability_to_mesh as pvv_publish
+from coreason_meta_engineering.pvv import execute_pvv_pipeline
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
 
@@ -70,14 +68,12 @@ def scaffold_manifest_state(
 
     fields = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
 
-    # 4. Parse AST and inject
     module = cst.parse_module(source_code)
     transformer = StateInjectionFunctor(
         state_name=state_name, geometric_schema=fields, action_space_id=action_space_id, base_class=base_class
     )
     new_module = module.visit(transformer)
 
-    # 5. Return success code string
     return new_module.code
 
 
@@ -175,29 +171,30 @@ def scaffold_epistemic_node(
 
 
 @mcp.tool()  # type: ignore[misc]
-def publish_capability_to_mesh(urn: str, python_code_str: str) -> str:
-    """
-    Compiles code in memory, uses CIDGenerator, and broadcasts FederatedDiscoveryIntent.
-    """
-    return pvv_publish(urn, python_code_str)
+def verify_solver_diff(
+    deliberation_trace: str,
+    payload: str,
+    solver_urn: str,
+    tokens_burned: int,
+) -> dict[str, typing.Any]:
+    """Verify a high-entropy solver diff through the PVV pipeline.
 
+    Accepts raw envelope components, constructs a ``DeliberativeEnvelope``,
+    and runs the full Epistemic Strip → Syntax Integrity → Kinetic Guillotine
+    → Receipt Generation pipeline.
 
-@mcp.tool()  # type: ignore[misc]
-def broadcast_urn_to_mesh(urn_directory_path: str) -> str:
+    Returns the ``OracleExecutionReceipt`` as a dictionary.
     """
-    Compiles WASM and broadcasts FederatedDiscoveryIntent to the P2P Mesh.
-    """
-    return pvv_broadcast(urn_directory_path)
-
-
-@mcp.tool()  # type: ignore[misc]
-def accumulate_pvv_signatures(urn_directory_path: str, receipts: list[dict[str, typing.Any]]) -> str:
-    """
-    Accumulates PVV signatures and promotes DRAFT to PUBLISHED if consensus met.
-    """
-    # Deserialize list of dicts to ValidationReceiptEvent models
-    receipt_models = [ValidationReceiptEvent(**r) for r in receipts]
-    return pvv_accumulate(urn_directory_path, receipt_models)
+    envelope = DeliberativeEnvelope[str](
+        deliberation_trace=deliberation_trace,
+        payload=payload,
+    )
+    receipt = execute_pvv_pipeline(
+        envelope=envelope,
+        solver_urn=solver_urn,
+        tokens_burned=tokens_burned,
+    )
+    return receipt.model_dump()
 
 
 def main() -> None:  # pragma: no cover
