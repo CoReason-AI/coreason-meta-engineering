@@ -16,6 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout coreason-urn-authority
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-urn-authority
+          path: ../coreason-urn-authority
+      - name: Checkout coreason-manifest
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-manifest
+          path: ../coreason-manifest
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
@@ -50,6 +60,16 @@ jobs:
         python-version: ["3.14", "3.14t"]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout coreason-urn-authority
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-urn-authority
+          path: ../coreason-urn-authority
+      - name: Checkout coreason-manifest
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-manifest
+          path: ../coreason-manifest
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
@@ -94,6 +114,16 @@ jobs:
             python-version: "3.14t"
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout coreason-urn-authority
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-urn-authority
+          path: ../coreason-urn-authority
+      - name: Checkout coreason-manifest
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-manifest
+          path: ../coreason-manifest
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
@@ -120,6 +150,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout coreason-urn-authority
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-urn-authority
+          path: ../coreason-urn-authority
+      - name: Checkout coreason-manifest
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: CoReason-AI/coreason-manifest
+          path: ../coreason-manifest
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0

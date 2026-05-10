@@ -98,3 +98,7 @@ omit = ["tests/*"]
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.uv.sources]
+coreason-urn-authority = { path = "../coreason-urn-authority", editable = true }
+coreason-manifest = { path = "../coreason-manifest", editable = true }
