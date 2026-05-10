@@ -40,6 +40,11 @@ __all__ = [
 
 _FORBIDDEN_IMPORT_MODULES: frozenset[str] = frozenset(
     {
+        # Reflection & Dynamic Loading (The Bypass Fix)
+        "builtins",
+        "importlib",
+        "imp",
+
         # System Execution
         "os",
         "subprocess",
@@ -75,6 +80,13 @@ _FORBIDDEN_CALL_NAMES: frozenset[str] = frozenset(
 
 _FORBIDDEN_ATTR_CALLS: frozenset[tuple[str, str]] = frozenset(
     {
+        # Reflection Blockers
+        ("builtins", "eval"),
+        ("builtins", "exec"),
+        ("builtins", "open"),
+        ("builtins", "__import__"),
+        ("importlib", "import_module"),
+
         ("os", "system"),
         ("os", "popen"),
         ("os", "exec"),
