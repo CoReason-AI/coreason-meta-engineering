@@ -1,4 +1,6 @@
 # Copyright (c) 2026 CoReason, Inc.
+from typing import Any
+
 import pytest
 
 from coreason_meta_engineering.utils.topological_validation import (
@@ -63,8 +65,8 @@ def test_check_semantic_ambiguity() -> None:
 
 def test_topological_ambiguity_zero_norm() -> None:
     # Test norm zero branch
-    embeddings = {"instruction": [0.0]*384, "affordance": [0.0]*384, "bounds": [0.0]*384, "routing": [0.0]*384}
-    registry = {"urn:existing": {"embedding_instruction": [1.0]*384}}
+    embeddings = {"instruction": [0.0] * 384, "affordance": [0.0] * 384, "bounds": [0.0] * 384, "routing": [0.0] * 384}
+    registry = {"urn:existing": {"embedding_instruction": [1.0] * 384}}
     assert check_semantic_ambiguity(embeddings, registry) is True
 
 
@@ -74,6 +76,7 @@ def test_extract_semantic_wells_empty() -> None:
 
 def test_generate_multi_well_embeddings_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
     import builtins
+
     real_import = builtins.__import__
 
     def mock_import(name: str, *args: Any, **kwargs: Any) -> Any:

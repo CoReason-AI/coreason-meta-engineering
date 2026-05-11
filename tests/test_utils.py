@@ -10,8 +10,6 @@
 
 """Tests for topological_validation.py and kinetic_guillotine.py."""
 
-from unittest.mock import MagicMock
-
 import libcst as cst
 import pytest
 
