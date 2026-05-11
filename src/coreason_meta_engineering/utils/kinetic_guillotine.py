@@ -15,9 +15,7 @@ class TopologicalBoundaryViolation(Exception):  # noqa: N818
     def __init__(self, violation_type: str, node_description: str) -> None:
         self.violation_type = violation_type
         self.node_description = node_description
-        super().__init__(
-            f"TOPOLOGICAL BOUNDARY VIOLATION: {violation_type} detected at '{node_description}'"
-        )
+        super().__init__(f"TOPOLOGICAL BOUNDARY VIOLATION: {violation_type} detected at '{node_description}'")
 
 
 class HighEntropySolverDiffVisitor(cst.CSTVisitor):

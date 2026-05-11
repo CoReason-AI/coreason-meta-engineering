@@ -47,7 +47,6 @@ def verify_cryptographic_urn_boundary(action_space_id: str) -> None:
         )
 
 
-
 class SemanticAmbiguityError(Exception):
     pass
 
@@ -99,9 +98,7 @@ def generate_multi_well_embeddings(docstring: str) -> dict[str, list[float]]:
     return embeddings
 
 
-def check_semantic_ambiguity(
-    embeddings: dict[str, list[float]], local_registry_matrix: dict[str, Any]
-) -> bool:
+def check_semantic_ambiguity(embeddings: dict[str, list[float]], local_registry_matrix: dict[str, Any]) -> bool:
     """Computes cosine similarity against existing capabilities in the matrix."""
     import numpy as np
 
