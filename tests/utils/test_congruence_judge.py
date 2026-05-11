@@ -46,7 +46,7 @@ def test_evaluate_congruence_faults(monkeypatch: pytest.MonkeyPatch) -> None:
         def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
             pass
 
-    def mock_urlopen(_req: Any, _timeout: float = 15.0) -> MockResponse:
+    def mock_urlopen(_req: Any, timeout: float = 15.0) -> MockResponse:  # noqa: ARG001
         return MockResponse()
 
     monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
@@ -82,7 +82,7 @@ def test_evaluate_congruence_individual_fault(monkeypatch: pytest.MonkeyPatch) -
         def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
             pass
 
-    def mock_urlopen(_req: Any, _timeout: float = 15.0) -> MockResponse:
+    def mock_urlopen(_req: Any, timeout: float = 15.0) -> MockResponse:  # noqa: ARG001
         return MockResponse()
 
     monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
