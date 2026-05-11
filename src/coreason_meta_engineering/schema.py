@@ -7,10 +7,10 @@
 # Commercial use beyond a 30-day trial requires a separate license.
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
-from typing import Any
-
 import datetime
 import hashlib
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 _PROSPERITY_HEADER = f"""# Copyright (c) {datetime.datetime.now().year} CoReason, Inc.. All Rights Reserved
@@ -25,6 +25,7 @@ _PROSPERITY_HEADER = f"""# Copyright (c) {datetime.datetime.now().year} CoReason
 # For a commercial version of this software, please contact us at license@coreason.ai."""
 
 DEFAULT_PROSPERITY_HASH = "sha256-" + hashlib.sha256(_PROSPERITY_HEADER.encode("utf-8")).hexdigest()
+
 
 class ToolManifest(BaseModel):
     name: str
