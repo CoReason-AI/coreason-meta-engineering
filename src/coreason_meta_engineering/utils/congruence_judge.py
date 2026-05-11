@@ -12,7 +12,7 @@ import json
 import os
 import urllib.error
 import urllib.request
-from typing import Any
+from typing import Any, cast
 
 
 class CongruenceFaultError(Exception):
@@ -82,4 +82,4 @@ def evaluate_congruence(manifest: dict[str, Any], ast_skeleton: dict[str, Any]) 
                 f"Congruence Fault ({key}): Score {response_json.get(key)}. Reasoning: {response_json.get('reasoning')}"
             )
 
-    return response_json
+    return cast("dict[str, Any]", response_json)

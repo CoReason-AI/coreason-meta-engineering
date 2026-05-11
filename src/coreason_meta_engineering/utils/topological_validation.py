@@ -9,6 +9,7 @@
 # Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 
 import re
+from typing import Any
 
 # Canonical URN regex — must stay synchronized with ActionSpaceURNState
 # in coreason_manifest.spec.ontology.  Supports multiple namespace authorities
@@ -44,6 +45,7 @@ def verify_cryptographic_urn_boundary(action_space_id: str) -> None:
             f"where category is one of {sorted(_VALID_CATEGORIES)}. "
             f"Received: {action_space_id}"
         )
+
 
 
 class SemanticAmbiguityError(Exception):
@@ -97,7 +99,9 @@ def generate_multi_well_embeddings(docstring: str) -> dict[str, list[float]]:
     return embeddings
 
 
-def check_semantic_ambiguity(embeddings: dict[str, list[float]], local_registry_matrix: dict) -> bool:
+def check_semantic_ambiguity(
+    embeddings: dict[str, list[float]], local_registry_matrix: dict[str, Any]
+) -> bool:
     """Computes cosine similarity against existing capabilities in the matrix."""
     import numpy as np
 

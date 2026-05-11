@@ -6,7 +6,6 @@
 # For details, see the LICENSE file.
 # Commercial use beyond a 30-day trial requires a separate license.
 #
-# Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import datetime
 import textwrap
 
@@ -78,7 +77,7 @@ def apply_prosperity_headers(code: str) -> str:
         ),
     ]
 
-    return module.with_changes(header=tuple(new_header) + module.header).code
+    return module.with_changes(header=tuple(new_header) + tuple(module.header)).code
 
 
 class EpistemicNodeInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]

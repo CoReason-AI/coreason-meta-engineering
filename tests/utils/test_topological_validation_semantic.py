@@ -9,7 +9,7 @@ from coreason_meta_engineering.utils.topological_validation import (
 )
 
 
-def test_extract_semantic_wells():
+def test_extract_semantic_wells() -> None:
     docstring = """
     AGENT INSTRUCTION: Mathematically prove the absence of kinetic execution bleed before instantiating this class.
     CAUSAL AFFORDANCE: Mutates the graph by injecting a compliance edge.
@@ -23,7 +23,7 @@ def test_extract_semantic_wells():
     assert "compliance, AST" in wells["routing"]
 
 
-def test_generate_multi_well_embeddings():
+def test_generate_multi_well_embeddings() -> None:
     # Will use fallback if sentence_transformers isn't available
     docstring = """
     AGENT INSTRUCTION: Test
@@ -36,7 +36,7 @@ def test_generate_multi_well_embeddings():
     assert len(embeddings["affordance"]) == 384
 
 
-def test_check_semantic_ambiguity():
+def test_check_semantic_ambiguity() -> None:
     embeddings = {
         "instruction": [1.0, 0.0] + [0.0] * 382,
         "affordance": [1.0, 0.0] + [0.0] * 382,

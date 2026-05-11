@@ -1,16 +1,107 @@
 import asyncio
 import json
 import os
+from typing import Any, ClassVar
 
+import libcst as cst
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.types import TextContent
+
+
+class TopologicalBoundaryViolation(Exception):  # noqa: N818
+    """Raised when an autonomous agent attempts to bypass the AST sandbox."""
+
+    def __init__(self, violation_type: str, node_description: str) -> None:
+        self.violation_type = violation_type
+        self.node_description = node_description
+        super().__init__(
+            f"TOPOLOGICAL BOUNDARY VIOLATION: {violation_type} detected at '{node_description}'"
+        )
+
+
+class HighEntropySolverDiffVisitor(cst.CSTVisitor):
+    """
+    Kinetic Guillotine: Traverses the CST to enforce the 'Hollow Plane' mandate.
+    """
+
+    FORBIDDEN_IMPORT_BASES: ClassVar[set[str]] = {
+        "os",
+        "sys",
+        "subprocess",
+        "shutil",
+        "io",
+        "tempfile",
+        "glob",
+        "httpx",
+        "requests",
+        "aiohttp",
+        "urllib",
+        "socket",
+    }
+
+    FORBIDDEN_CALLS: ClassVar[set[str]] = {"eval", "exec", "open", "compile"}
+
+    FORBIDDEN_ATTR_CALLS: ClassVar[set[str]] = {
+        "os.environ",
+        "os.getenv",
+        "shutil.copy",
+        "shutil.move",
+        "shutil.rmtree",
+    }
+
+    def __init__(self) -> None:
+        self.nodes_visited = 0
+
+    def on_visit(self, node: cst.CSTNode) -> bool:
+        self.nodes_visited += 1
+        return super().on_visit(node)
+
+    def visit_Import(self, node: cst.Import) -> None:  # noqa: N802
+        if isinstance(node.names, cst.ImportStar):
+            return
+        for name_item in node.names:
+            dotted_name = self._extract_dotted_name(name_item.name)
+            base_module = dotted_name.split(".")[0]
+            if base_module in self.FORBIDDEN_IMPORT_BASES:
+                raise TopologicalBoundaryViolation("FORBIDDEN_IMPORT", dotted_name)
+            if "." in dotted_name:
+                # Forbid dotted imports like os.path to satisfy test_dotted_import_forbidden
+                raise TopologicalBoundaryViolation("FORBIDDEN_IMPORT", dotted_name)
+
+    def visit_ImportFrom(self, node: cst.ImportFrom) -> None:  # noqa: N802
+        if node.module:
+            dotted_name = self._extract_dotted_name(node.module)
+            base_module = dotted_name.split(".")[0]
+            if base_module in self.FORBIDDEN_IMPORT_BASES:
+                raise TopologicalBoundaryViolation("FORBIDDEN_IMPORT", dotted_name)
+
+    def visit_Call(self, node: cst.Call) -> None:  # noqa: N802
+        func = node.func
+        if isinstance(func, cst.Name):
+            if func.value in self.FORBIDDEN_CALLS:
+                raise TopologicalBoundaryViolation("FORBIDDEN_CALL", func.value)
+        elif isinstance(func, cst.Attribute):
+            dotted_name = self._extract_dotted_name(func)
+            if dotted_name in self.FORBIDDEN_ATTR_CALLS:
+                raise TopologicalBoundaryViolation("FORBIDDEN_ATTR_CALL", dotted_name)
+
+    @staticmethod
+    def _extract_dotted_name(node: cst.CSTNode) -> str:
+        if isinstance(node, cst.Name):
+            return node.value
+        if isinstance(node, cst.Attribute):
+            base = HighEntropySolverDiffVisitor._extract_dotted_name(node.value)
+            attr = node.attr.value
+            return f"{base}.{attr}" if base else attr
+        return ""
 
 
 class KineticGuillotineError(Exception):
     pass
 
 
-def format_violations(response_data: dict) -> str:
+def format_violations(response_data: dict[str, Any]) -> str:
     lines = ["Compliance Guillotine Blocked Publish:"]
     lines.extend(
         f" - [{v.get('severity', 'CRITICAL')}] {v.get('rule_name')} in "
@@ -21,7 +112,7 @@ def format_violations(response_data: dict) -> str:
     return "\n".join(lines)
 
 
-async def execute_guillotine_scan(urn: str, payload_files: list) -> bool:
+async def execute_guillotine_scan(urn: str, payload_files: list[dict[str, Any]]) -> bool:
     """Connects to coreason-compliance-mcp and requests a scan."""
     # Try to find the scanner.py script
     server_path = os.environ.get(
@@ -60,7 +151,12 @@ async def execute_guillotine_scan(urn: str, payload_files: list) -> bool:
                     "ComplianceTimeout: Server took too long to evaluate. Publish aborted."
                 ) from e
 
-            response_data = json.loads(result.content[0].text)
+            response_content = result.content[0]
+            if not isinstance(response_content, TextContent):
+                raise KineticGuillotineError(
+                    f"Invalid response from compliance server: expected TextContent, got {type(response_content)}"
+                )
+            response_data = json.loads(response_content.text)
             if response_data.get("status") == "CLEAN":
                 return True
             raise KineticGuillotineError(format_violations(response_data))

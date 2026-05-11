@@ -1,4 +1,6 @@
 # Copyright (c) 2026 CoReason, Inc.
+from typing import Any
+
 import pytest
 
 from coreason_meta_engineering.utils.congruence_judge import (
@@ -7,7 +9,7 @@ from coreason_meta_engineering.utils.congruence_judge import (
 )
 
 
-def test_evaluate_congruence_fallback(monkeypatch):
+def test_evaluate_congruence_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
     # Mock environment to ensure fallback is hit or LLM returns quickly
     monkeypatch.setenv("COREASON_LLM_API_URL", "http://invalid-url.local/api/generate")
 
@@ -19,13 +21,13 @@ def test_evaluate_congruence_fallback(monkeypatch):
     assert res["composite_congruence"] == 1.0
 
 
-def test_evaluate_congruence_faults(monkeypatch):
+def test_evaluate_congruence_faults(monkeypatch: pytest.MonkeyPatch) -> None:
     # Test that the fault error is raised if scores are too low
     import json
     import urllib.request
 
     class MockResponse:
-        def read(self):
+        def read(self) -> bytes:
             return json.dumps(
                 {
                     "response": json.dumps(
@@ -38,13 +40,13 @@ def test_evaluate_congruence_faults(monkeypatch):
                 }
             ).encode()
 
-        def __enter__(self):
+        def __enter__(self) -> "MockResponse":
             return self
 
-        def __exit__(self, exc_type, exc_val, exc_tb):
+        def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
             pass
 
-    def mock_urlopen(_req, _timeout=15.0):
+    def mock_urlopen(_req: Any, _timeout: float = 15.0) -> MockResponse:
         return MockResponse()
 
     monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
