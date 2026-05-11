@@ -17,6 +17,7 @@ _PROSPERITY_HEADER = f"""# Copyright (c) {datetime.datetime.now().year} CoReason
 #
 # This software is licensed under the Prosperity Public License 3.0.0.
 # A copy of the license is available at https://prosperitylicense.com/versions/3.0.0
+# For details, see the LICENSE file.
 # The issuer of the Prosperity Public License for this software is CoReason, Inc..
 #
 # Content created is contributed to the CoReason codebase under the terms of Prosperity 3.0.

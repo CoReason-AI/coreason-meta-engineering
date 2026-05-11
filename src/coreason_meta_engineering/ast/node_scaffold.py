@@ -52,6 +52,7 @@ def apply_prosperity_headers(code: str) -> str:
         cst.EmptyLine(comment=cst.Comment(value="#")),
         cst.EmptyLine(comment=cst.Comment(value="# This software is licensed under the Prosperity Public License 3.0.0.")),
         cst.EmptyLine(comment=cst.Comment(value="# A copy of the license is available at https://prosperitylicense.com/versions/3.0.0")),
+        cst.EmptyLine(comment=cst.Comment(value="# For details, see the LICENSE file.")),
         cst.EmptyLine(comment=cst.Comment(value="# The issuer of the Prosperity Public License for this software is CoReason, Inc..")),
         cst.EmptyLine(comment=cst.Comment(value="#")),
         cst.EmptyLine(comment=cst.Comment(value="# Content created is contributed to the CoReason codebase under the terms of Prosperity 3.0.")),
