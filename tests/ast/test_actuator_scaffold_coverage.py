@@ -4,7 +4,7 @@ import libcst as cst
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
 
 
-def test_logic_injection_functor_complex_scenarios():
+def test_logic_injection_functor_complex_scenarios() -> None:
     # Test case for raw statements in logic_body (hits line 109)
     # Test case for Any/Annotated/StringConstraints needs (hits lines 160-229)
     # Test case for required_imports (hits lines 231-235)
@@ -41,7 +41,7 @@ def test_logic_injection_functor_complex_scenarios():
     assert "__action_space_urn__" in generated_code
 
 
-def test_logic_injection_functor_idempotency():
+def test_logic_injection_functor_idempotency() -> None:
     functor = LogicInjectionFunctor(
         actuator_name="test_tool", geometric_schema=[], return_type="int", action_space_id="urn:test:v1"
     )
@@ -54,7 +54,7 @@ def test_logic_injection_functor_idempotency():
     assert modified.code == code
 
 
-def test_logic_injection_functor_malformed_logic():
+def test_logic_injection_functor_malformed_logic() -> None:
     functor = LogicInjectionFunctor(
         actuator_name="test_tool",
         geometric_schema=[],
@@ -69,7 +69,7 @@ def test_logic_injection_functor_malformed_logic():
     assert "pass" in modified.code  # Fallback to Pass()
 
 
-def test_logic_injection_functor_invalid_required_import():
+def test_logic_injection_functor_invalid_required_import() -> None:
     functor = LogicInjectionFunctor(
         actuator_name="test_tool",
         geometric_schema=[],

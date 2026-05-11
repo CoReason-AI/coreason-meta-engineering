@@ -9,7 +9,9 @@
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import json
 from pathlib import Path
+from typing import Any
 
+import pytest
 from typer.testing import CliRunner
 
 from coreason_meta_engineering.main import app
@@ -274,7 +276,7 @@ def test_scaffold_agent_node_cli_invalid_urn(tmp_path: Path) -> None:
     assert "Invalid URN" in result.output
 
 
-def test_enforce_cryptographic_license_commercial(tmp_path, monkeypatch):
+def test_enforce_cryptographic_license_commercial(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
     from coreason_meta_engineering.main import enforce_cryptographic_license
 
@@ -291,10 +293,10 @@ def test_enforce_cryptographic_license_commercial(tmp_path, monkeypatch):
     class MockResp:
         status_code = 200
 
-        def json(self):
+        def json(self) -> dict[str, bool]:
             return {"authorized": True}
 
-    def mock_post(*_args, **_kwargs):
+    def mock_post(*_args: Any, **_kwargs: Any) -> MockResp:
         return MockResp()
 
     monkeypatch.setattr(httpx, "post", mock_post)
@@ -306,7 +308,7 @@ def test_enforce_cryptographic_license_commercial(tmp_path, monkeypatch):
     assert "LIC-123" in target.read_text()
 
 
-def test_enforce_cryptographic_license_unauthorized(tmp_path, monkeypatch):
+def test_enforce_cryptographic_license_unauthorized(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import httpx
     import pytest
 
@@ -320,7 +322,7 @@ def test_enforce_cryptographic_license_unauthorized(tmp_path, monkeypatch):
     class MockResp:
         status_code = 200
 
-        def json(self):
+        def json(self) -> dict[str, bool]:
             return {"authorized": False}
 
     monkeypatch.setattr(httpx, "post", lambda *_args, **_kwargs: MockResp())
@@ -330,7 +332,7 @@ def test_enforce_cryptographic_license_unauthorized(tmp_path, monkeypatch):
     assert excinfo.value.code == 1
 
 
-def test_enforce_cryptographic_license_error(tmp_path, monkeypatch):
+def test_enforce_cryptographic_license_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import httpx
     import pytest
 

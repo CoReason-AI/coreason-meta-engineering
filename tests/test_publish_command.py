@@ -1,6 +1,9 @@
 # Copyright (c) 2026 CoReason, Inc.
+from pathlib import Path
+from typing import Any, NoReturn
 from unittest.mock import AsyncMock, patch
 
+import pytest
 import yaml
 from typer.testing import CliRunner
 
@@ -9,7 +12,7 @@ from coreason_meta_engineering.main import app
 runner = CliRunner()
 
 
-def test_publish_command_success(tmp_path, monkeypatch):
+def test_publish_command_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     capability_dir = tmp_path / "assets" / "solver" / "test_v1"
     capability_dir.mkdir(parents=True)
 
@@ -45,7 +48,7 @@ def test_publish_command_success(tmp_path, monkeypatch):
         assert result.exit_code == 0
 
 
-def test_publish_command_semantic_fail(tmp_path, monkeypatch):
+def test_publish_command_semantic_fail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     capability_dir = tmp_path / "assets" / "solver" / "test_v1"
     capability_dir.mkdir(parents=True)
     manifest_path = capability_dir / "manifest.yaml"
@@ -60,7 +63,7 @@ def test_publish_command_semantic_fail(tmp_path, monkeypatch):
 
     from coreason_meta_engineering.utils.topological_validation import SemanticAmbiguityError
 
-    def mock_ambiguity(_e, _r):
+    def mock_ambiguity(_e: Any, _r: Any) -> NoReturn:
         raise SemanticAmbiguityError("Ambiguous")
 
     monkeypatch.setattr("coreason_meta_engineering.main.check_semantic_ambiguity", mock_ambiguity)
@@ -71,7 +74,7 @@ def test_publish_command_semantic_fail(tmp_path, monkeypatch):
     assert result.exit_code != 0 or blocked_msg in result.stderr or blocked_msg in result.stdout
 
 
-def test_publish_command_scan_fail(tmp_path):
+def test_publish_command_scan_fail(tmp_path: Path) -> None:
     capability_dir = tmp_path / "assets" / "solver" / "test_v1"
     capability_dir.mkdir(parents=True)
     manifest_path = capability_dir / "manifest.yaml"
@@ -91,7 +94,7 @@ def test_publish_command_scan_fail(tmp_path):
         assert result.exit_code != 0 or blocked_msg in result.stderr or blocked_msg in result.stdout
 
 
-def test_publish_command_congruence_fail(tmp_path, monkeypatch):
+def test_publish_command_congruence_fail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     capability_dir = tmp_path / "assets" / "solver" / "test_v1"
     capability_dir.mkdir(parents=True)
     manifest_path = capability_dir / "manifest.yaml"
@@ -108,7 +111,7 @@ def test_publish_command_congruence_fail(tmp_path, monkeypatch):
         mock_scan.return_value = True
         from coreason_meta_engineering.utils.congruence_judge import CongruenceFaultError
 
-        def mock_eval(_m, _s):
+        def mock_eval(_m: Any, _s: Any) -> NoReturn:
             raise CongruenceFaultError("Score too low")
 
         monkeypatch.setattr("coreason_meta_engineering.main.evaluate_congruence", mock_eval)
@@ -118,19 +121,19 @@ def test_publish_command_congruence_fail(tmp_path, monkeypatch):
         assert result.exit_code != 0 or blocked_msg in result.stderr or blocked_msg in result.stdout
 
 
-def test_publish_command_not_found():
+def test_publish_command_not_found() -> None:
     result = runner.invoke(app, ["publish", "nonexistent.yaml"])
     assert result.exit_code == 1
 
 
-def test_publish_command_invalid_yaml(tmp_path):
+def test_publish_command_invalid_yaml(tmp_path: Path) -> None:
     manifest = tmp_path / "bad.yaml"
     manifest.write_text(":")
     result = runner.invoke(app, ["publish", str(manifest)])
     assert result.exit_code == 1
 
 
-def test_publish_command_no_server_py(tmp_path):
+def test_publish_command_no_server_py(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text("urn: test")
     result = runner.invoke(app, ["publish", str(manifest)])

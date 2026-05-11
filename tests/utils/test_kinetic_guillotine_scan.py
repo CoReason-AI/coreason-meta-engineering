@@ -11,7 +11,7 @@ from coreason_meta_engineering.utils.kinetic_guillotine import (
 )
 
 
-def test_format_violations():
+def test_format_violations() -> None:
     data = {
         "violations": [
             {
@@ -31,7 +31,7 @@ def test_format_violations():
 
 
 @pytest.mark.asyncio
-async def test_execute_guillotine_scan_clean():
+async def test_execute_guillotine_scan_clean() -> None:
     with (
         patch("coreason_meta_engineering.utils.kinetic_guillotine.stdio_client") as mock_stdio,
         patch("coreason_meta_engineering.utils.kinetic_guillotine.ClientSession") as mock_session,
@@ -49,7 +49,7 @@ async def test_execute_guillotine_scan_clean():
 
 
 @pytest.mark.asyncio
-async def test_execute_guillotine_scan_blocked():
+async def test_execute_guillotine_scan_blocked() -> None:
     with (
         patch("coreason_meta_engineering.utils.kinetic_guillotine.stdio_client") as mock_stdio,
         patch("coreason_meta_engineering.utils.kinetic_guillotine.ClientSession") as mock_session,
@@ -72,7 +72,7 @@ async def test_execute_guillotine_scan_blocked():
 
 
 @pytest.mark.asyncio
-async def test_execute_guillotine_scan_timeout():
+async def test_execute_guillotine_scan_timeout() -> None:
     with (
         patch("coreason_meta_engineering.utils.kinetic_guillotine.stdio_client") as mock_stdio,
         patch("coreason_meta_engineering.utils.kinetic_guillotine.ClientSession") as mock_session,
@@ -86,7 +86,7 @@ async def test_execute_guillotine_scan_timeout():
 
 
 @pytest.mark.asyncio
-async def test_execute_guillotine_scan_connection_error():
+async def test_execute_guillotine_scan_connection_error() -> None:
     with patch("coreason_meta_engineering.utils.kinetic_guillotine.stdio_client") as mock_stdio:
         mock_stdio.side_effect = Exception("Connection refused")
 
@@ -95,7 +95,7 @@ async def test_execute_guillotine_scan_connection_error():
 
 
 @pytest.mark.asyncio
-async def test_execute_guillotine_scan_invalid_content_type():
+async def test_execute_guillotine_scan_invalid_content_type() -> None:
     with (
         patch("coreason_meta_engineering.utils.kinetic_guillotine.stdio_client") as mock_stdio,
         patch("coreason_meta_engineering.utils.kinetic_guillotine.ClientSession") as mock_session,
@@ -108,12 +108,12 @@ async def test_execute_guillotine_scan_invalid_content_type():
             await execute_guillotine_scan("urn:test", [])
 
 
-def test_format_violations_empty():
+def test_format_violations_empty() -> None:
     assert format_violations({}) == "Compliance Guillotine Blocked Publish:"
 
 
 @pytest.mark.asyncio
-async def test_execute_guillotine_scan_sse(monkeypatch):
+async def test_execute_guillotine_scan_sse(monkeypatch: pytest.MonkeyPatch) -> None:
     from coreason_meta_engineering.utils.kinetic_guillotine import execute_guillotine_scan
 
     monkeypatch.setenv("COREASON_COMPLIANCE_URL", "http://localhost:8080")
