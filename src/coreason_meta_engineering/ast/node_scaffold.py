@@ -8,8 +8,58 @@
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import textwrap
+import datetime
+import hashlib
+from typing import Optional
 
 import libcst as cst
+
+
+def strip_existing_headers_and_apply_proprietary(code: str, commercial_owner: Optional[str], license_hash: str) -> str:
+    module = cst.parse_module(code)
+    
+    # Remove existing comments that match prosperity hash or keywords
+    filtered_header = []
+    for line in module.header:
+        if isinstance(line, cst.EmptyLine) and line.comment:
+            if "Prosperity" in line.comment.value or "CoReason" in line.comment.value:
+                continue
+        filtered_header.append(line)
+        
+    year = datetime.datetime.now().year
+    owner = commercial_owner or "Unknown"
+    new_header = [
+        cst.EmptyLine(comment=cst.Comment(value=f"# Copyright (c) {year} {owner}. All rights reserved.")),
+        cst.EmptyLine(comment=cst.Comment(value=f"# Licensed under {license_hash}")),
+        cst.EmptyLine(comment=cst.Comment(value="# Authorized via CoReason Epistemic Ledger Token."))
+    ]
+    
+    return module.with_changes(header=tuple(new_header) + tuple(filtered_header)).code
+
+
+def apply_prosperity_headers(code: str) -> str:
+    module = cst.parse_module(code)
+    
+    # Check if header already exists
+    for line in module.header:
+        if isinstance(line, cst.EmptyLine) and line.comment:
+            if "Prosperity Public License 3.0" in line.comment.value:
+                return code
+                
+    year = datetime.datetime.now().year
+    new_header = [
+        cst.EmptyLine(comment=cst.Comment(value=f"# Copyright (c) {year} CoReason, Inc.. All Rights Reserved")),
+        cst.EmptyLine(comment=cst.Comment(value="#")),
+        cst.EmptyLine(comment=cst.Comment(value="# This software is licensed under the Prosperity Public License 3.0.0.")),
+        cst.EmptyLine(comment=cst.Comment(value="# A copy of the license is available at https://prosperitylicense.com/versions/3.0.0")),
+        cst.EmptyLine(comment=cst.Comment(value="# The issuer of the Prosperity Public License for this software is CoReason, Inc..")),
+        cst.EmptyLine(comment=cst.Comment(value="#")),
+        cst.EmptyLine(comment=cst.Comment(value="# Content created is contributed to the CoReason codebase under the terms of Prosperity 3.0.")),
+        cst.EmptyLine(comment=cst.Comment(value="#")),
+        cst.EmptyLine(comment=cst.Comment(value="# For a commercial version of this software, please contact us at license@coreason.ai."))
+    ]
+    
+    return module.with_changes(header=tuple(new_header) + module.header).code
 
 
 class EpistemicNodeInjectionFunctor(cst.CSTTransformer):  # type: ignore[misc]

@@ -9,17 +9,53 @@
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import json
 import typing
+import os
+import sys
+import httpx
 from pathlib import Path
 
 import libcst as cst
 import typer
 
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
-from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
+from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor, strip_existing_headers_and_apply_proprietary, apply_prosperity_headers
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
-from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings
+from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings, DEFAULT_PROSPERITY_HASH
 from coreason_meta_engineering.utils.logger import logger
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
+
+def enforce_cryptographic_license(target_file: Path, action_space_id: str, manifest_data: dict[str, typing.Any]) -> None:
+    license_hash = manifest_data.get("license_hash", DEFAULT_PROSPERITY_HASH)
+    commercial_owner = manifest_data.get("commercial_owner")
+    
+    if license_hash != DEFAULT_PROSPERITY_HASH:
+        pub_key = os.environ.get("COREASON_PUBLIC_KEY", "unknown")
+        authority_url = os.environ.get("COREASON_URN_AUTHORITY_URL", "http://localhost:8080")
+        
+        payload = {
+            "target_urn": action_space_id,
+            "license_hash": license_hash,
+            "requester_public_key": pub_key
+        }
+        
+        try:
+            resp = httpx.post(f"{authority_url}/api/v1/auth/verify_commercial_rights", json=payload, timeout=2.0)
+            if resp.status_code == 200 and resp.json().get("authorized") is True:
+                pass
+            else:
+                logger.error("CryptographicLicenseError: Unauthorized.")
+                sys.exit(1)
+        except Exception:
+            logger.error("ConnectionError: Cannot verify commercial override. Ensure your local URN Authority is running.")
+            sys.exit(1)
+            
+        code = target_file.read_text(encoding="utf-8")
+        code = strip_existing_headers_and_apply_proprietary(code, commercial_owner, license_hash)
+        target_file.write_text(code, encoding="utf-8")
+    else:
+        code = target_file.read_text(encoding="utf-8")
+        code = apply_prosperity_headers(code)
+        target_file.write_text(code, encoding="utf-8")
 
 app = typer.Typer()
 
@@ -66,8 +102,11 @@ def scaffold_manifest_state(
 
     # 5. Write modified code
     target_file.write_text(new_module.code, encoding="utf-8")
+    
+    # 6. Licensing
+    enforce_cryptographic_license(target_file, action_space_id, geometric_schema)
 
-    # 6. Print success message
+    # 7. Print success message
     typer.echo(f"Successfully injected {state_name} into {target_file}")
 
 
@@ -100,6 +139,7 @@ def scaffold_logic_actuator(
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
+    enforce_cryptographic_license(target_file, action_space_id, geometric_schema)
 
     typer.echo(f"Successfully injected {actuator_name} into {target_file}")
 
@@ -131,6 +171,8 @@ def scaffold_epistemic_node(
     )
     new_module = module.visit(transformer)
     target_file.write_text(new_module.code, encoding="utf-8")
+    # For epistemic node, we don't have geometric_schema in the args, just use empty dict to trigger default
+    enforce_cryptographic_license(target_file, action_space_id, {})
 
     typer.echo(f"Successfully injected {node_name} into {target_file}")
 

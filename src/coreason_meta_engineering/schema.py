@@ -9,6 +9,29 @@
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 from typing import Any
 
+import datetime
+import hashlib
+from pydantic import BaseModel, Field
+
+_PROSPERITY_HEADER = f"""# Copyright (c) {datetime.datetime.now().year} CoReason, Inc.. All Rights Reserved
+#
+# This software is licensed under the Prosperity Public License 3.0.0.
+# A copy of the license is available at https://prosperitylicense.com/versions/3.0.0
+# The issuer of the Prosperity Public License for this software is CoReason, Inc..
+#
+# Content created is contributed to the CoReason codebase under the terms of Prosperity 3.0.
+#
+# For a commercial version of this software, please contact us at license@coreason.ai."""
+
+DEFAULT_PROSPERITY_HASH = "sha256-" + hashlib.sha256(_PROSPERITY_HEADER.encode("utf-8")).hexdigest()
+
+class ToolManifest(BaseModel):
+    name: str
+    description: str
+    license_hash: str = Field(default=DEFAULT_PROSPERITY_HASH)
+    commercial_owner: str | None = None
+    requester_public_key: str | None = None
+
 
 def resolve_epistemic_schema_to_ast_bindings(schema: dict[str, Any]) -> list[dict[str, Any]]:
     """
