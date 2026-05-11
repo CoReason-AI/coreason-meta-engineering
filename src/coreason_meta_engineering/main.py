@@ -12,6 +12,8 @@ import typing
 import os
 import sys
 import httpx
+import asyncio
+import yaml
 from pathlib import Path
 
 import libcst as cst
@@ -23,6 +25,7 @@ from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
 from coreason_meta_engineering.schema import resolve_epistemic_schema_to_ast_bindings, DEFAULT_PROSPERITY_HASH
 from coreason_meta_engineering.utils.logger import logger
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
+from coreason_meta_engineering.utils.kinetic_guillotine import execute_guillotine_scan, KineticGuillotineError
 
 def enforce_cryptographic_license(target_file: Path, action_space_id: str, manifest_data: dict[str, typing.Any]) -> None:
     license_hash = manifest_data.get("license_hash", DEFAULT_PROSPERITY_HASH)
@@ -176,6 +179,46 @@ def scaffold_epistemic_node(
 
     typer.echo(f"Successfully injected {node_name} into {target_file}")
 
+
+@app.command(name="publish")  # type: ignore[misc]
+def publish_urn(
+    manifest_path: str = typer.Argument(..., help="Path to manifest.yaml")
+) -> None:
+    """
+    Publish a URN capability, validating through the pre-commit DLP Guillotine.
+    """
+    manifest_file = Path(manifest_path)
+    if not manifest_file.exists():
+        logger.error(f"Manifest not found at {manifest_path}")
+        sys.exit(1)
+        
+    try:
+        manifest_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.error(f"Failed to parse manifest: {e}")
+        sys.exit(1)
+        
+    urn = manifest_data.get("urn", "unknown_urn")
+    
+    # 1. Gather AST and Manifest
+    payload_files = []
+    payload_files.append({"file_name": manifest_file.name, "content": manifest_file.read_text(encoding="utf-8")})
+    
+    for py_file in manifest_file.parent.glob("*.py"):
+        payload_files.append({"file_name": py_file.name, "content": py_file.read_text(encoding="utf-8")})
+        
+    # 2. THE GUILLOTINE
+    try:
+        asyncio.run(execute_guillotine_scan(urn, payload_files))
+    except KineticGuillotineError as e:
+        logger.error(f"Publish blocked by Compliance Engine:\n{e}")
+        sys.exit(1) # Hard exit, fail-closed
+        
+    # 3. Cryptographic Commitment
+    # Code execution only reaches here if MCP returns "CLEAN"
+    typer.echo(f"Payload for {urn} is CLEAN. Proceeding to cryptographic commitment.")
+    # signature = sign_payload(payload_files, local_private_key)
+    # commit_to_epistemic_ledger(urn, payload_files, signature)
 
 if __name__ == "__main__":  # pragma: no cover
     app()
