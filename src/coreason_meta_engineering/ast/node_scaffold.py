@@ -19,9 +19,12 @@ def strip_existing_headers_and_apply_proprietary(code: str, commercial_owner: st
     # Remove existing comments that match prosperity hash or keywords
     filtered_header = []
     for line in module.header:
-        if isinstance(line, cst.EmptyLine) and line.comment:
-            if "Prosperity" in line.comment.value or "CoReason" in line.comment.value:
-                continue
+        if (
+            isinstance(line, cst.EmptyLine)
+            and line.comment
+            and ("Prosperity" in line.comment.value or "CoReason" in line.comment.value)
+        ):
+            continue
         filtered_header.append(line)
 
     year = datetime.datetime.now().year
@@ -40,9 +43,8 @@ def apply_prosperity_headers(code: str) -> str:
 
     # Check if header already exists
     for line in module.header:
-        if isinstance(line, cst.EmptyLine) and line.comment:
-            if "Prosperity Public License 3.0" in line.comment.value:
-                return code
+        if isinstance(line, cst.EmptyLine) and line.comment and "Prosperity Public License 3.0" in line.comment.value:
+            return code
 
     year = datetime.datetime.now().year
     new_header = [

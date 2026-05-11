@@ -32,10 +32,9 @@ def extract_kinetic_skeleton(filepath: str) -> dict[str, Any]:
                 func_doc = ast.get_docstring(node)
                 if func_doc:
                     skeleton["docstring"] = func_doc
-        elif isinstance(node, ast.ClassDef):
-            if not skeleton["docstring"]:
-                class_doc = ast.get_docstring(node)
-                if class_doc:
-                    skeleton["docstring"] = class_doc
+        elif isinstance(node, ast.ClassDef) and not skeleton["docstring"]:
+            class_doc = ast.get_docstring(node)
+            if class_doc:
+                skeleton["docstring"] = class_doc
 
     return skeleton

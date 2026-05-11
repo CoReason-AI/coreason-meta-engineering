@@ -12,10 +12,12 @@ class KineticGuillotineError(Exception):
 
 def format_violations(response_data: dict) -> str:
     lines = ["Compliance Guillotine Blocked Publish:"]
-    for v in response_data.get("violations", []):
-        lines.append(
-            f" - [{v.get('severity', 'CRITICAL')}] {v.get('rule_name')} in {v.get('file_name', 'unknown')}:{v.get('line_number', 0)} ({v.get('context_snippet', '')})"
-        )
+    lines.extend(
+        f" - [{v.get('severity', 'CRITICAL')}] {v.get('rule_name')} in "
+        f"{v.get('file_name', 'unknown')}:{v.get('line_number', 0)} "
+        f"({v.get('context_snippet', '')})"
+        for v in response_data.get("violations", [])
+    )
     return "\n".join(lines)
 
 
@@ -53,10 +55,10 @@ async def execute_guillotine_scan(urn: str, payload_files: list) -> bool:
                     session.call_tool("evaluate_payload", arguments={"target_urn": urn, "files": payload_files}),
                     timeout=2.0,  # 2000ms SLA
                 )
-            except TimeoutError:
+            except TimeoutError as e:
                 raise KineticGuillotineError(
                     "ComplianceTimeout: Server took too long to evaluate. Publish aborted."
-                )
+                ) from e
 
             response_data = json.loads(result.content[0].text)
             if response_data.get("status") == "CLEAN":
@@ -65,4 +67,4 @@ async def execute_guillotine_scan(urn: str, payload_files: list) -> bool:
     except Exception as e:
         if isinstance(e, KineticGuillotineError):
             raise
-        raise KineticGuillotineError(f"GuillotineConnectionError: Cannot verify payload safety. Details: {e!s}")
+        raise KineticGuillotineError(f"GuillotineConnectionError: Cannot verify payload safety. Details: {e!s}") from e

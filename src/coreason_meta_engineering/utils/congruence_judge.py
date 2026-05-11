@@ -52,10 +52,10 @@ def evaluate_congruence(manifest: dict[str, Any], ast_skeleton: dict[str, Any]) 
 
     payload = json.dumps({"model": model_name, "prompt": prompt, "format": "json", "stream": False}).encode("utf-8")
 
-    req = urllib.request.Request(llm_api_url, data=payload, headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(llm_api_url, data=payload, headers={"Content-Type": "application/json"})  # noqa: S310
 
     try:
-        with urllib.request.urlopen(req, timeout=15.0) as response:
+        with urllib.request.urlopen(req, timeout=15.0) as response:  # noqa: S310
             result = json.loads(response.read().decode())
             response_json = json.loads(result.get("response", "{}"))
     except (urllib.error.URLError, json.JSONDecodeError, TimeoutError) as e:

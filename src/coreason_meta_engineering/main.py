@@ -8,6 +8,7 @@
 #
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import asyncio
+import contextlib
 import json
 import os
 import sys
@@ -227,10 +228,8 @@ def publish_urn(manifest_path: str = typer.Argument(..., help="Path to manifest.
     registry_path = manifest_file.parents[2] / "registry" / "compiled_matrix.json"
     local_registry = {}
     if registry_path.exists():
-        try:
+        with contextlib.suppress(Exception):
             local_registry = json.loads(registry_path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
 
     try:
         check_semantic_ambiguity(embeddings, local_registry)
@@ -259,8 +258,10 @@ def publish_urn(manifest_path: str = typer.Argument(..., help="Path to manifest.
     payload_files = []
     payload_files.append({"file_name": manifest_file.name, "content": manifest_file.read_text(encoding="utf-8")})
 
-    for py_file in manifest_file.parent.glob("*.py"):
-        payload_files.append({"file_name": py_file.name, "content": py_file.read_text(encoding="utf-8")})
+    payload_files.extend(
+        {"file_name": py_file.name, "content": py_file.read_text(encoding="utf-8")}
+        for py_file in manifest_file.parent.glob("*.py")
+    )
 
     # 5. THE DLP GUILLOTINE
     try:

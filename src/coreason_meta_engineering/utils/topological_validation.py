@@ -91,10 +91,7 @@ def generate_multi_well_embeddings(docstring: str) -> dict[str, list[float]]:
 
     embeddings = {}
     for well_name, content in wells.items():
-        if content:
-            vector = model.encode(content).tolist()
-        else:
-            vector = [0.0] * 384
+        vector = model.encode(content).tolist() if content else [0.0] * 384
         embeddings[well_name] = vector
 
     return embeddings
