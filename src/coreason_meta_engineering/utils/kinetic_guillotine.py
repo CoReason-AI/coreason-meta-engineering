@@ -120,7 +120,7 @@ class TopologicalBoundaryViolation(Exception):  # noqa: N818
     """Fatal exception raised when the Kinetic Guillotine detects a forbidden AST node.
 
     When this exception fires, the PVV process halts immediately.
-    The WASM container's execution receipt is marked as FALSIFIED.
+    The OpenShell enclave's execution receipt is marked as FALSIFIED.
     """
 
     def __init__(self, violation_type: str, node_description: str) -> None:
