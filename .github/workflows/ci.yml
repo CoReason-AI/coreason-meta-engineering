@@ -92,6 +92,8 @@ jobs:
         exclude:
           - os: windows-latest
             python-version: "3.14t"
+          - os: macos-latest
+            python-version: "3.14t"
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
