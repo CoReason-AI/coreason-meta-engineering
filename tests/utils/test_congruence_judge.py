@@ -46,7 +46,7 @@ def test_evaluate_congruence_faults(monkeypatch: pytest.MonkeyPatch) -> None:
         def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
             pass
 
-    def mock_urlopen(_req: Any, _timeout: float = 15.0) -> MockResponse:
+    def mock_urlopen(_req: Any, timeout: float = 15.0) -> MockResponse:
         return MockResponse()
 
     monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
@@ -54,5 +54,40 @@ def test_evaluate_congruence_faults(monkeypatch: pytest.MonkeyPatch) -> None:
     manifest = {"urn": "urn:test"}
     ast_skeleton = {"docstring": "test"}
 
-    with pytest.raises(CongruenceFaultError):
+    with pytest.raises(CongruenceFaultError, match="Congruence Fault"):
+        evaluate_congruence(manifest, ast_skeleton)
+
+def test_evaluate_congruence_individual_fault(monkeypatch: pytest.MonkeyPatch) -> None:
+    import json
+    import urllib.request
+
+    class MockResponse:
+        def read(self) -> bytes:
+            return json.dumps(
+                {
+                    "response": json.dumps(
+                        {
+                            "instruction_score": 0.5,
+                            "composite_congruence": 0.95,  # Passes line 73
+                            "reasoning": "Instruction mismatch",
+                        }
+                    )
+                }
+            ).encode()
+
+        def __enter__(self) -> "MockResponse":
+            return self
+
+        def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+            pass
+
+    def mock_urlopen(_req: Any, timeout: float = 15.0) -> MockResponse:
+        return MockResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
+
+    manifest = {"urn": "urn:test"}
+    ast_skeleton = {"docstring": "test"}
+
+    with pytest.raises(CongruenceFaultError, match="instruction_score"):
         evaluate_congruence(manifest, ast_skeleton)

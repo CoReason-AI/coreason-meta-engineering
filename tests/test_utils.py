@@ -105,12 +105,17 @@ class TestHighEntropySolverDiffVisitor:
         module.visit(visitor)  # Should not raise
         assert visitor.nodes_visited >= 1
 
-    def test_dotted_import_forbidden(self) -> None:
-        code = "import os.path\n"
+    def test_dotted_forbidden_import(self) -> None:
+        code = "import json.decoder\n"
         module = cst.parse_module(code)
         visitor = HighEntropySolverDiffVisitor()
         with pytest.raises(TopologicalBoundaryViolation, match="FORBIDDEN_IMPORT"):
             module.visit(visitor)
+
+        code2 = "from os import path\n"
+        module2 = cst.parse_module(code2)
+        with pytest.raises(TopologicalBoundaryViolation, match="FORBIDDEN_IMPORT"):
+            module2.visit(visitor)
 
     def test_safe_method_call_on_object(self) -> None:
         code = "result = my_model.predict(data)\n"
@@ -194,10 +199,9 @@ class TestHighEntropySolverDiffVisitor:
         assert result == ""
 
     def test_visit_import_star_branch(self) -> None:
-        """Cover the ImportStar branch in visit_Import via direct method call."""
+        """Cover the ImportStar branch in visit_ImportFrom."""
         visitor = HighEntropySolverDiffVisitor()
-        mock_node = MagicMock(spec=cst.Import)
-        mock_node.names = cst.ImportStar()
-        visitor.visit_Import(mock_node)
-        assert True
-        assert visitor.nodes_visited == 1
+        code = "from typing import *\n"
+        module = cst.parse_module(code)
+        module.visit(visitor)
+        assert visitor.nodes_visited >= 1

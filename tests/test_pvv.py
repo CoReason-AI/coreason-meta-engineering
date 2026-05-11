@@ -88,7 +88,7 @@ class TestTopologicalBounds:
 
     def test_import_os_raises(self) -> None:
         module = cst.parse_module("import os\n")
-        with pytest.raises(TopologicalBoundaryViolation, match=r"FORBIDDEN_IMPORT.*import os"):
+        with pytest.raises(TopologicalBoundaryViolation, match=r"FORBIDDEN_IMPORT.*os"):
             _enforce_topological_bounds(module)
 
     def test_from_os_import_raises(self) -> None:

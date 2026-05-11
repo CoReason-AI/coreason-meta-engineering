@@ -36,16 +36,24 @@ class HighEntropySolverDiffVisitor(cst.CSTVisitor):
         "aiohttp",
         "urllib",
         "socket",
+        "http",
+        "pathlib",
     }
 
-    FORBIDDEN_CALLS: ClassVar[set[str]] = {"eval", "exec", "open", "compile"}
+    FORBIDDEN_CALLS: ClassVar[set[str]] = {"eval", "exec", "open", "compile", "__import__"}
 
     FORBIDDEN_ATTR_CALLS: ClassVar[set[str]] = {
         "os.environ",
         "os.getenv",
+        "os.system",
         "shutil.copy",
         "shutil.move",
         "shutil.rmtree",
+        "subprocess.run",
+        "subprocess.Popen",
+        "subprocess.call",
+        "subprocess.check_call",
+        "subprocess.check_output",
     }
 
     def __init__(self) -> None:
@@ -56,8 +64,6 @@ class HighEntropySolverDiffVisitor(cst.CSTVisitor):
         return super().on_visit(node)
 
     def visit_Import(self, node: cst.Import) -> None:  # noqa: N802
-        if isinstance(node.names, cst.ImportStar):
-            return
         for name_item in node.names:
             dotted_name = self._extract_dotted_name(name_item.name)
             base_module = dotted_name.split(".")[0]

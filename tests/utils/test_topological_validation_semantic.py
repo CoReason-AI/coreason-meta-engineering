@@ -59,3 +59,29 @@ def test_check_semantic_ambiguity() -> None:
         }
     }
     assert check_semantic_ambiguity(embeddings, local_registry_safe) is True
+
+
+def test_topological_ambiguity_zero_norm() -> None:
+    # Test norm zero branch
+    embeddings = {"instruction": [0.0]*384, "affordance": [0.0]*384, "bounds": [0.0]*384, "routing": [0.0]*384}
+    registry = {"urn:existing": {"embedding_instruction": [1.0]*384}}
+    assert check_semantic_ambiguity(embeddings, registry) is True
+
+
+def test_extract_semantic_wells_empty() -> None:
+    assert extract_semantic_wells("") == {"instruction": "", "affordance": "", "bounds": "", "routing": ""}
+
+
+def test_generate_multi_well_embeddings_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    import builtins
+    real_import = builtins.__import__
+
+    def mock_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "sentence_transformers":
+            raise ImportError
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", mock_import)
+    res = generate_multi_well_embeddings("test")
+    assert all(len(v) == 384 for v in res.values())
+    assert all(sum(v) == 0.0 for v in res.values())
