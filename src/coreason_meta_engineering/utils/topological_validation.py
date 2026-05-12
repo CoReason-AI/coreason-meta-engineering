@@ -9,6 +9,7 @@
 # Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 
 import re
+from typing import Any
 
 # Canonical URN regex — must stay synchronized with ActionSpaceURNState
 # in coreason_manifest.spec.ontology.  Supports multiple namespace authorities
@@ -44,3 +45,81 @@ def verify_cryptographic_urn_boundary(action_space_id: str) -> None:
             f"where category is one of {sorted(_VALID_CATEGORIES)}. "
             f"Received: {action_space_id}"
         )
+
+
+class SemanticAmbiguityError(Exception):
+    pass
+
+
+def extract_semantic_wells(docstring: str) -> dict[str, str]:
+    """Parse the 4 explicit components from the docstring."""
+    wells = {"instruction": "", "affordance": "", "bounds": "", "routing": ""}
+    if not docstring:
+        return wells
+
+    lines = docstring.split("\n")
+    current_well = None
+
+    for line in lines:
+        if "AGENT INSTRUCTION:" in line:
+            current_well = "instruction"
+            wells[current_well] += line.split("AGENT INSTRUCTION:")[1] + "\n"
+        elif "CAUSAL AFFORDANCE:" in line:
+            current_well = "affordance"
+            wells[current_well] += line.split("CAUSAL AFFORDANCE:")[1] + "\n"
+        elif "EPISTEMIC BOUNDS:" in line:
+            current_well = "bounds"
+            wells[current_well] += line.split("EPISTEMIC BOUNDS:")[1] + "\n"
+        elif "MCP ROUTING TRIGGERS:" in line:
+            current_well = "routing"
+            wells[current_well] += line.split("MCP ROUTING TRIGGERS:")[1] + "\n"
+        elif current_well:
+            wells[current_well] += line + "\n"
+
+    return {k: v.strip() for k, v in wells.items()}
+
+
+def generate_multi_well_embeddings(docstring: str) -> dict[str, list[float]]:
+    """Generates four distinct vector embeddings using sentence-transformers."""
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError:
+        # Fallback if sentence-transformers not installed (e.g. CI without ML deps)
+        return {k: [0.0] * 384 for k in ["instruction", "affordance", "bounds", "routing"]}
+
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    wells = extract_semantic_wells(docstring)
+
+    embeddings = {}
+    for well_name, content in wells.items():
+        vector = model.encode(content).tolist() if content else [0.0] * 384
+        embeddings[well_name] = vector
+
+    return embeddings
+
+
+def check_semantic_ambiguity(embeddings: dict[str, list[float]], local_registry_matrix: dict[str, Any]) -> bool:
+    """Computes cosine similarity against existing capabilities in the matrix."""
+    import numpy as np
+
+    for urn, data in local_registry_matrix.items():
+        for well_name in ["instruction", "affordance", "bounds", "routing"]:
+            emb_key = f"embedding_{well_name}"
+            if emb_key in data and len(data[emb_key]) == len(embeddings[well_name]):
+                target_vector = np.array(embeddings[well_name])
+                existing_vector = np.array(data[emb_key])
+
+                norm_target = np.linalg.norm(target_vector)
+                norm_existing = np.linalg.norm(existing_vector)
+
+                if norm_target == 0 or norm_existing == 0:
+                    continue
+
+                similarity = np.dot(target_vector, existing_vector) / (norm_target * norm_existing)
+
+                if similarity > 0.95:
+                    raise SemanticAmbiguityError(
+                        f"Collision detected with {urn} on semantic well '{well_name}' (Score: {similarity:.2f}). "
+                        "Please add topological constraints to disambiguate your documentation."
+                    )
+    return True

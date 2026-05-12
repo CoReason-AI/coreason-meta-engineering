@@ -9,7 +9,9 @@
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import json
 from pathlib import Path
+from typing import Any
 
+import pytest
 from typer.testing import CliRunner
 
 from coreason_meta_engineering.main import app
@@ -272,3 +274,75 @@ def test_scaffold_agent_node_cli_invalid_urn(tmp_path: Path) -> None:
     )
     assert result.exit_code != 0
     assert "Invalid URN" in result.output
+
+
+def test_enforce_cryptographic_license_commercial(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+
+    from coreason_meta_engineering.main import enforce_cryptographic_license
+
+    target = tmp_path / "server.py"
+    target.write_text("print('test')")
+
+    monkeypatch.setenv("COREASON_COMMERCIAL_OWNER", "CoReason")
+    monkeypatch.setenv("COREASON_LICENSE_HASH", "LIC-123")
+    monkeypatch.setenv("COREASON_URN_AUTHORITY_URL", "http://localhost:8080")
+    monkeypatch.setenv("COREASON_PUBLIC_KEY", "PUB-123")
+
+    import httpx
+
+    class MockResp:
+        status_code = 200
+
+        def json(self) -> dict[str, bool]:
+            return {"authorized": True}
+
+    def mock_post(*_args: Any, **_kwargs: Any) -> MockResp:
+        return MockResp()
+
+    monkeypatch.setattr(httpx, "post", mock_post)
+
+    manifest_data = {"license_hash": "LIC-123", "commercial_owner": "CoReason"}
+
+    enforce_cryptographic_license(target, "urn:coreason:actionspace:oracle:test:v1", manifest_data)
+    assert "Copyright (c) 2026 CoReason" in target.read_text()
+    assert "LIC-123" in target.read_text()
+
+
+def test_enforce_cryptographic_license_unauthorized(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+    import pytest
+
+    from coreason_meta_engineering.main import enforce_cryptographic_license
+
+    target = tmp_path / "server.py"
+    target.write_text("print('test')")
+
+    monkeypatch.setenv("COREASON_URN_AUTHORITY_URL", "http://localhost:8080")
+
+    class MockResp:
+        status_code = 200
+
+        def json(self) -> dict[str, bool]:
+            return {"authorized": False}
+
+    monkeypatch.setattr(httpx, "post", lambda *_args, **_kwargs: MockResp())
+
+    with pytest.raises(SystemExit) as excinfo:
+        enforce_cryptographic_license(target, "urn:test", {"license_hash": "BAD"})
+    assert excinfo.value.code == 1
+
+
+def test_enforce_cryptographic_license_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+    import pytest
+
+    from coreason_meta_engineering.main import enforce_cryptographic_license
+
+    target = tmp_path / "server.py"
+    target.write_text("print('test')")
+
+    monkeypatch.setattr(httpx, "post", Exception("Network error"))
+
+    with pytest.raises(SystemExit) as excinfo:
+        enforce_cryptographic_license(target, "urn:test", {"license_hash": "BAD"})
+    assert excinfo.value.code == 1
