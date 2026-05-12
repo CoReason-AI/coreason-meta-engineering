@@ -170,6 +170,7 @@ def scaffold_epistemic_node(
     new_module = module.visit(transformer)
     return new_module.code
 
+
 @mcp.tool()  # type: ignore[misc]
 def scaffold_kubernetes_crd(
     crd_name: str,
