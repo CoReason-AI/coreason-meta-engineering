@@ -203,6 +203,66 @@ def test_reconcile_manifest_state(tmp_path: Path) -> None:
     assert "name: Annotated[str" in result
 
 
+def test_scaffold_kubernetes_crd_success(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_kubernetes_crd
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    schema = {
+        "properties": {
+            "name": {"type": "string", "description": "The name"},
+        },
+        "required": ["name"],
+    }
+
+    result = scaffold_kubernetes_crd(
+        crd_name="TestCRD",
+        geometric_schema=schema,
+        target_file_path=str(target_file),
+        action_space_id="urn:coreason:actionspace:substrate:test_crd:v1",
+        api_group="test.group",
+        api_version="v1",
+        kind="TestKind",
+    )
+
+    assert "class Testcrd(KubernetesCRDBase):" in result
+    assert 'api_group = "test.group"' in result
+    assert "Testcrd.model_rebuild()" in result
+
+
+def test_scaffold_kubernetes_crd_invalid_urn(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_kubernetes_crd
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    with pytest.raises(ValueError, match="Invalid URN format"):
+        scaffold_kubernetes_crd(
+            crd_name="BadModel",
+            geometric_schema={"properties": {}},
+            target_file_path=str(target_file),
+            action_space_id="finance_ledger_v1",
+        )
+
+
+def test_scaffold_kubernetes_crd_target_not_a_file(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_kubernetes_crd
+
+    missing_target = tmp_path / "missing_dir"
+    missing_target.mkdir()
+
+    result = scaffold_kubernetes_crd(
+        crd_name="TestCRD",
+        geometric_schema={"properties": {}},
+        target_file_path=str(missing_target),
+        action_space_id="urn:coreason:actionspace:substrate:test_crd:v1",
+    )
+    
+    assert "class Testcrd(KubernetesCRDBase):" in result
+
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # verify_solver_diff (PVV Pipeline MCP Tool)
 # ═════════════════════════════════════════════════════════════════════════════
