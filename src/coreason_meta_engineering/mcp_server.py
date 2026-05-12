@@ -16,6 +16,7 @@ from coreason_manifest.spec import DeliberativeEnvelope
 from mcp.server.fastmcp import FastMCP
 
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
+from coreason_meta_engineering.ast.kubernetes_crd_scaffold import KubernetesCRDInjectionFunctor
 from coreason_meta_engineering.ast.node_scaffold import EpistemicNodeInjectionFunctor
 from coreason_meta_engineering.ast.state_reconciliation import StateReconciliationFunctor
 from coreason_meta_engineering.ast.state_scaffold import StateInjectionFunctor
@@ -165,6 +166,39 @@ def scaffold_epistemic_node(
         cognitive_boundary_directive=cognitive_boundary_directive,
         action_space_id=action_space_id,
         base_class=base_class,
+    )
+    new_module = module.visit(transformer)
+    return new_module.code
+
+@mcp.tool()  # type: ignore[misc]
+def scaffold_kubernetes_crd(
+    crd_name: str,
+    geometric_schema: dict[str, typing.Any],
+    target_file_path: str,
+    action_space_id: str,
+    api_group: str = "chaos-mesh.org",
+    api_version: str = "v1alpha1",
+    kind: str = "NetworkChaos",
+) -> str:
+    """
+    Scaffolds a Kubernetes Custom Resource Definition (CRD) AST mapping.
+    When a ChaosExperimentTask is requested, it formats it for Kubernetes CRDs instead of Python dicts.
+    """
+    crd_name = _sanitize_python_class_name(crd_name)
+    target_file = Path(target_file_path)
+    verify_cryptographic_urn_boundary(action_space_id)
+    source_code = target_file.read_text(encoding="utf-8") if target_file.exists() and target_file.is_file() else ""
+
+    fields = resolve_epistemic_schema_to_ast_bindings(geometric_schema)
+
+    module = cst.parse_module(source_code)
+    transformer = KubernetesCRDInjectionFunctor(
+        crd_name=crd_name,
+        geometric_schema=fields,
+        action_space_id=action_space_id,
+        api_group=api_group,
+        api_version=api_version,
+        kind=kind,
     )
     new_module = module.visit(transformer)
     return new_module.code
