@@ -37,12 +37,12 @@ def test_crd_inject_transformer_basic() -> None:
     assert 'kind = "NetworkChaos"' in code
     assert '__action_space_urn__ = "urn:coreason:actionspace:substrate:my_crd:v1"' in code
     assert "MCP ROUTING TRIGGERS: urn:coreason:actionspace:substrate:my_crd:v1" in code
-    
+
     assert "from typing import Self, Any, Annotated" in code
     assert "from pydantic import Field, model_validator, StringConstraints" in code
-    
+
     assert "def _enforce_canonical_sort(self) -> Self:" in code
-    assert "model_validator(mode=\"after\")" in code
+    assert 'model_validator(mode="after")' in code
     assert "sorted(self.y)" in code
     assert "MyNewCRD.model_rebuild()" in code
 
@@ -64,10 +64,7 @@ def test_crd_inject_transformer_idempotency() -> None:
 
 
 def test_crd_inject_with_existing_imports() -> None:
-    source = (
-        "from typing import Any, Annotated, Self\n"
-        "from pydantic import Field, model_validator, StringConstraints\n"
-    )
+    source = "from typing import Any, Annotated, Self\nfrom pydantic import Field, model_validator, StringConstraints\n"
     module = cst.parse_module(source)
     transformer = KubernetesCRDInjectionFunctor(
         crd_name="MyNewCRD",

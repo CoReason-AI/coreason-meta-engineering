@@ -258,9 +258,8 @@ def test_scaffold_kubernetes_crd_target_not_a_file(tmp_path: Path) -> None:
         target_file_path=str(missing_target),
         action_space_id="urn:coreason:actionspace:substrate:test_crd:v1",
     )
-    
-    assert "class Testcrd(KubernetesCRDBase):" in result
 
+    assert "class Testcrd(KubernetesCRDBase):" in result
 
 
 # ═════════════════════════════════════════════════════════════════════════════
