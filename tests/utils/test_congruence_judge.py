@@ -99,5 +99,5 @@ def test_evaluate_congruence_invalid_url(monkeypatch: pytest.MonkeyPatch) -> Non
     manifest = {"urn": "urn:test"}
     ast_skeleton = {"docstring": "test"}
 
-    with pytest.raises(ValueError, match="Invalid URL scheme. Only http/https are allowed."):
+    with pytest.raises(ValueError, match=r"Invalid URL scheme\. Only http/https are allowed\."):
         evaluate_congruence(manifest, ast_skeleton)
