@@ -45,7 +45,6 @@ class MockLLMHandler(BaseHTTPRequestHandler):
 @pytest.fixture
 def llm_server():
     server = HTTPServer(("localhost", 0), MockLLMHandler)
-    port = server.server_port
     thread = threading.Thread(target=server.serve_forever)
     thread.daemon = True
     thread.start()
