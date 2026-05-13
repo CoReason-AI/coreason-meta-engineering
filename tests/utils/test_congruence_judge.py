@@ -92,3 +92,12 @@ def test_evaluate_congruence_individual_fault(monkeypatch: pytest.MonkeyPatch) -
 
     with pytest.raises(CongruenceFaultError, match="instruction_score"):
         evaluate_congruence(manifest, ast_skeleton)
+
+
+def test_evaluate_congruence_invalid_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COREASON_LLM_API_URL", "ftp://invalid-url.local/api/generate")
+    manifest = {"urn": "urn:test"}
+    ast_skeleton = {"docstring": "test"}
+
+    with pytest.raises(ValueError, match="Invalid URL scheme. Only http/https are allowed."):
+        evaluate_congruence(manifest, ast_skeleton)
