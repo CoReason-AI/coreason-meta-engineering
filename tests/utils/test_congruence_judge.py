@@ -1,4 +1,7 @@
 # Copyright (c) 2026 CoReason, Inc.
+import json
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
 import pytest
@@ -9,9 +12,50 @@ from coreason_meta_engineering.utils.congruence_judge import (
 )
 
 
+class MockLLMHandler(BaseHTTPRequestHandler):
+    def do_POST(self) -> None:
+        content_length = int(self.headers["Content-Length"])
+        _post_data = self.rfile.read(content_length)
+
+        # Default success response
+        response_data = {
+            "response": json.dumps(
+                {
+                    "instruction_score": 0.95,
+                    "composite_congruence": 0.95,
+                    "reasoning": "Perfect match",
+                }
+            )
+        }
+
+        # Check for specific triggers in the path or just use global state
+        if hasattr(self.server, "response_override"):
+            response_data = self.server.response_override
+
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(response_data).encode())
+
+    def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
+        # Silencing server logs
+        pass
+
+
+@pytest.fixture
+def llm_server():
+    server = HTTPServer(("localhost", 0), MockLLMHandler)
+    port = server.server_port
+    thread = threading.Thread(target=server.serve_forever)
+    thread.daemon = True
+    thread.start()
+    yield server
+    server.shutdown()
+
+
 def test_evaluate_congruence_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Mock environment to ensure fallback is hit or LLM returns quickly
-    monkeypatch.setenv("COREASON_LLM_API_URL", "http://invalid-url.local/api/generate")
+    # Use a non-existent local port to trigger fallback
+    monkeypatch.setenv("COREASON_LLM_API_URL", "http://localhost:1")
 
     manifest = {"urn": "urn:test"}
     ast_skeleton = {"docstring": "test"}
@@ -21,35 +65,20 @@ def test_evaluate_congruence_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
     assert res["composite_congruence"] == 1.0
 
 
-def test_evaluate_congruence_faults(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_evaluate_congruence_faults(llm_server: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> None:
     # Test that the fault error is raised if scores are too low
-    import json
-    import urllib.request
+    url = f"http://localhost:{llm_server.server_port}/api/generate"
+    monkeypatch.setenv("COREASON_LLM_API_URL", url)
 
-    class MockResponse:
-        def read(self) -> bytes:
-            return json.dumps(
-                {
-                    "response": json.dumps(
-                        {
-                            "instruction_score": 0.5,  # Below 0.70
-                            "composite_congruence": 0.80,  # Below 0.85
-                            "reasoning": "Poor match",
-                        }
-                    )
-                }
-            ).encode()
-
-        def __enter__(self) -> "MockResponse":
-            return self
-
-        def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-            pass
-
-    def mock_urlopen(_req: Any, timeout: float = 15.0) -> MockResponse:  # noqa: ARG001
-        return MockResponse()
-
-    monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
+    llm_server.response_override = {
+        "response": json.dumps(
+            {
+                "instruction_score": 0.5,  # Below 0.70
+                "composite_congruence": 0.80,  # Below 0.85
+                "reasoning": "Poor match",
+            }
+        )
+    }
 
     manifest = {"urn": "urn:test"}
     ast_skeleton = {"docstring": "test"}
@@ -58,34 +87,21 @@ def test_evaluate_congruence_faults(monkeypatch: pytest.MonkeyPatch) -> None:
         evaluate_congruence(manifest, ast_skeleton)
 
 
-def test_evaluate_congruence_individual_fault(monkeypatch: pytest.MonkeyPatch) -> None:
-    import json
-    import urllib.request
+def test_evaluate_congruence_individual_fault(
+    llm_server: HTTPServer, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    url = f"http://localhost:{llm_server.server_port}/api/generate"
+    monkeypatch.setenv("COREASON_LLM_API_URL", url)
 
-    class MockResponse:
-        def read(self) -> bytes:
-            return json.dumps(
-                {
-                    "response": json.dumps(
-                        {
-                            "instruction_score": 0.5,
-                            "composite_congruence": 0.95,  # Passes line 73
-                            "reasoning": "Instruction mismatch",
-                        }
-                    )
-                }
-            ).encode()
-
-        def __enter__(self) -> "MockResponse":
-            return self
-
-        def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-            pass
-
-    def mock_urlopen(_req: Any, timeout: float = 15.0) -> MockResponse:  # noqa: ARG001
-        return MockResponse()
-
-    monkeypatch.setattr(urllib.request, "urlopen", mock_urlopen)
+    llm_server.response_override = {
+        "response": json.dumps(
+            {
+                "instruction_score": 0.5,
+                "composite_congruence": 0.95,  # Passes composite
+                "reasoning": "Instruction mismatch",
+            }
+        )
+    }
 
     manifest = {"urn": "urn:test"}
     ast_skeleton = {"docstring": "test"}
