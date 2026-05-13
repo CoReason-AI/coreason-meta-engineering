@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -52,11 +54,13 @@ jobs:
           attestations: false  # Requires Enterprise Cloud or public repo
 
       - name: Sign Wheel
-        uses: sigstore/gh-action-sigstore-python@f514d46b907ebcd5bedc05145c03b69c1edd8b46 # v3.0.0
+        uses: sigstore/gh-action-sigstore-python@v3.3.0
         with:
           inputs: >-
             dist/*.whl
             dist/*.tar.gz
+          release-signing-artifacts: true
+          source: false
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
