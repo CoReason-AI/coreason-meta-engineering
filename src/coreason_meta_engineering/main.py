@@ -82,8 +82,8 @@ def parse_geometric_schema(val: str) -> dict[str, typing.Any]:
         path = Path(val)
         if path.is_file():
             return typing.cast("dict[str, typing.Any]", json.loads(path.read_text(encoding="utf-8")))
-    except OSError:
-        pass
+    except OSError as e:
+        logger.debug(f"Path is not a valid file or cannot be read: {e}")
     return typing.cast("dict[str, typing.Any]", json.loads(val))
 
 
