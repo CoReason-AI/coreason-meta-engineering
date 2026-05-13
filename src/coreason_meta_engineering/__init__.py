@@ -11,7 +11,7 @@
 The Agentic Forge & AST Manipulation Layer
 """
 
-__version__ = "0.1.0"
+__version__ = "0.7.4"
 __author__ = "Gowtham A Rao"
 __email__ = "gowtham.rao@coreason.ai"
 
