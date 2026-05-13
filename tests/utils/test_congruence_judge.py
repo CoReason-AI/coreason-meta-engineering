@@ -1,8 +1,9 @@
 # Copyright (c) 2026 CoReason, Inc.
 import json
 import threading
+from collections.abc import Generator
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 
@@ -47,7 +48,7 @@ class MockLLMHandler(BaseHTTPRequestHandler):
 
 
 @pytest.fixture
-def llm_server() -> Generator[MockLLMServer, None, None]:
+def llm_server() -> Generator[MockLLMServer]:
     server = MockLLMServer(("localhost", 0), MockLLMHandler)
     thread = threading.Thread(target=server.serve_forever)
     thread.daemon = True
