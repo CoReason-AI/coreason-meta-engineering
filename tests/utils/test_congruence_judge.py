@@ -86,9 +86,7 @@ def test_evaluate_congruence_faults(llm_server: HTTPServer, monkeypatch: pytest.
         evaluate_congruence(manifest, ast_skeleton)
 
 
-def test_evaluate_congruence_individual_fault(
-    llm_server: HTTPServer, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_evaluate_congruence_individual_fault(llm_server: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> None:
     url = f"http://localhost:{llm_server.server_port}/api/generate"
     monkeypatch.setenv("COREASON_LLM_API_URL", url)
 
