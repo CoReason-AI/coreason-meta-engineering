@@ -48,6 +48,8 @@ def evaluate_congruence(manifest: dict[str, Any], ast_skeleton: dict[str, Any]) 
     """
 
     llm_api_url = os.environ.get("COREASON_LLM_API_URL", "http://localhost:11434/api/generate")
+    if not llm_api_url.startswith(("http://", "https://")):
+        raise ValueError("Invalid URL scheme. Only http/https are allowed.")
     model_name = os.environ.get("COREASON_LLM_MODEL", "phi3")
 
     payload = json.dumps({"model": model_name, "prompt": prompt, "format": "json", "stream": False}).encode("utf-8")
