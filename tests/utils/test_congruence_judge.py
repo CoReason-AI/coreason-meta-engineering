@@ -2,7 +2,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any
+from typing import Any, Generator
 
 import pytest
 
@@ -10,6 +10,10 @@ from coreason_meta_engineering.utils.congruence_judge import (
     CongruenceFaultError,
     evaluate_congruence,
 )
+
+
+class MockLLMServer(HTTPServer):
+    response_override: dict[str, Any]
 
 
 class MockLLMHandler(BaseHTTPRequestHandler):
@@ -43,8 +47,8 @@ class MockLLMHandler(BaseHTTPRequestHandler):
 
 
 @pytest.fixture
-def llm_server():
-    server = HTTPServer(("localhost", 0), MockLLMHandler)
+def llm_server() -> Generator[MockLLMServer, None, None]:
+    server = MockLLMServer(("localhost", 0), MockLLMHandler)
     thread = threading.Thread(target=server.serve_forever)
     thread.daemon = True
     thread.start()
@@ -64,7 +68,7 @@ def test_evaluate_congruence_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
     assert res["composite_congruence"] == 1.0
 
 
-def test_evaluate_congruence_faults(llm_server: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_evaluate_congruence_faults(llm_server: MockLLMServer, monkeypatch: pytest.MonkeyPatch) -> None:
     # Test that the fault error is raised if scores are too low
     url = f"http://localhost:{llm_server.server_port}/api/generate"
     monkeypatch.setenv("COREASON_LLM_API_URL", url)
@@ -86,7 +90,7 @@ def test_evaluate_congruence_faults(llm_server: HTTPServer, monkeypatch: pytest.
         evaluate_congruence(manifest, ast_skeleton)
 
 
-def test_evaluate_congruence_individual_fault(llm_server: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_evaluate_congruence_individual_fault(llm_server: MockLLMServer, monkeypatch: pytest.MonkeyPatch) -> None:
     url = f"http://localhost:{llm_server.server_port}/api/generate"
     monkeypatch.setenv("COREASON_LLM_API_URL", url)
 
