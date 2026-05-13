@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -57,6 +59,8 @@ jobs:
           inputs: >-
             dist/*.whl
             dist/*.tar.gz
+          release-signing-artifacts: true
+          source: false
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
