@@ -157,7 +157,7 @@ def validate_generated_topology(file_path: str, target_class_name: str, expected
 
         # 4. DETERMINISTIC MATCH
         # Compare the actual generated schema against the MCP target schema
-        return actual_schema == expected_schema
+        return bool(actual_schema == expected_schema)
 
     except Exception:
         # Any failure (SyntaxError, AttributeError, PydanticSchemaError) means the agent failed.
