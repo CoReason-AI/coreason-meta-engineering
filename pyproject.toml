@@ -15,7 +15,7 @@ authors = [
     { name = "Gowtham A Rao", email = "gowtham.rao@coreason.ai" },
 ]
 dependencies = [
-    "coreason-manifest>=0.61.0",
+    "coreason-manifest>=0.61.1",
     "coreason-urn-authority>=0.11.1",
     "httpx>=0.28.1",
     "libcst>=1.8.6",
