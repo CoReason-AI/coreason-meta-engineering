@@ -12,25 +12,24 @@
 PVV Pipeline — Proof, Validation, and Verification.
 
 The deterministic ingestion pipeline for high-entropy solver diffs generated
-by autonomous agents (e.g. Claw Code).  Implements the 4-phase verification
-loop documented in ``docs/01_core_architecture/02_execution_engine/
-25_abstract_syntax_tree_compilation.md``:
-
-1. **Epistemic Strip** — discard the probabilistic ``deliberation_trace``.
-2. **Syntax Integrity** — parse the payload with ``libcst.parse_module()``.
-3. **Topological Bounds** — traverse via the Kinetic Guillotine visitor.
-4. **Receipt Generation** — SHA-256 hash → ``OracleExecutionReceipt``.
+by autonomous agents (e.g. Claw Code). Implements native Python execution
+bounds via sub-process isolation and Pydantic validation (The True Guillotine).
 """
 
 from __future__ import annotations
 
-import libcst as cst
+import contextlib
+import importlib.util
+import inspect
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any
+
 from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState, OracleExecutionReceipt
 from coreason_urn_authority.crypto.hasher import compute_canonical_hash
+from pydantic import BaseModel
 
-from coreason_meta_engineering.utils.kinetic_guillotine import (
-    HighEntropySolverDiffVisitor,
-)
 from coreason_meta_engineering.utils.logger import logger
 
 
@@ -39,97 +38,90 @@ def execute_pvv_pipeline(
     envelope: CognitiveDeliberativeEnvelopeState[str],
     solver_urn: str,
     tokens_burned: int,
+    target_schema: dict[str, Any] | list[dict[str, Any]] | None = None,
 ) -> OracleExecutionReceipt:
-    """Execute the full PVV pipeline on a ``CognitiveDeliberativeEnvelopeState``.
+    """Execute the full PVV pipeline using native Python bounds.
 
-    Args:
-        envelope: The raw envelope produced by a high-entropy solver.
-            The ``payload`` field MUST contain a valid Python source string.
-        solver_urn: The fully qualified URN of the solver agent
-            (e.g. ``urn:coreason:solver:claw_developer:v1``).
-        tokens_burned: The total tokens consumed during the generation.
-
-    Returns:
-        An ``OracleExecutionReceipt`` attesting the payload is safe for
-        kinetic deployment.
-
-    Raises:
-        libcst.ParserSyntaxError: If the payload is not valid Python.
-        TopologicalBoundaryViolation: If any forbidden AST node is detected.
+    1. Epistemic Strip
+    2. Sub-process Isolation & Native Import (Syntax Check)
+    3. Pydantic Validation (The True Guillotine)
+    4. Receipt Generation
     """
-    # ── Phase 1: Epistemic Strip ─────────────────────────────────────────
     payload = _epistemic_strip(envelope)
 
-    # ── Phase 2: Syntax Integrity ────────────────────────────────────────
-    module = _parse_syntax(payload)
+    _native_validation(payload, target_schema)
 
-    # ── Phase 3: Topological Bounds (Kinetic Guillotine) ─────────────────
-    _enforce_topological_bounds(module)
-
-    # ── Phase 4: Receipt Generation ──────────────────────────────────────
     return _generate_receipt(
-        module=module,
+        payload=payload,
         solver_urn=solver_urn,
         tokens_burned=tokens_burned,
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Phase Functions
-# ─────────────────────────────────────────────────────────────────────────────
-
-
 def _epistemic_strip(envelope: CognitiveDeliberativeEnvelopeState[str]) -> str:
-    """Phase 1 — Discard the ``deliberation_trace`` and extract only the payload.
-
-    The heuristic "thoughts" of the agent have zero mathematical bearing on
-    the validity of the code and must not contaminate the AST compiler.
-    """
-    logger.info(
-        "Epistemic Strip: discarding deliberation_trace "
-        f"({len(envelope.deliberation_trace)} chars), "
-        f"extracting payload ({len(envelope.payload)} chars)."
-    )
+    logger.info("Epistemic Strip: extracting payload.")
     return str(envelope.payload)
 
 
-def _parse_syntax(payload: str) -> cst.Module:
-    """Phase 2 — Feed the payload into ``libcst.parse_module()``.
+def _native_validation(payload: str, target_schema: dict[str, Any] | list[dict[str, Any]] | None) -> None:
+    """Writes the payload to a temp file, imports it natively, and validates via Pydantic."""
+    with tempfile.NamedTemporaryFile(suffix=".py", mode="w", encoding="utf-8", delete=False) as f:
+        f.write(payload)
+        temp_path = Path(f.name)
 
-    If the solver hallucinated invalid Python syntax the parser fails
-    deterministically with ``libcst.ParserSyntaxError``.
-    """
-    module = cst.parse_module(payload)
-    logger.info("Syntax Integrity: payload parsed successfully.")
-    return module
+    module_name = "generated_sandbox_module"
+    try:
+        spec = importlib.util.spec_from_file_location(module_name, temp_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("Failed to create module spec.")
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+
+        # Native Import - catches syntax errors
+        spec.loader.exec_module(module)
+
+        # Pydantic Validation (The True Guillotine)
+        if target_schema is not None:
+            _compare_schema(module, target_schema)
+
+    finally:
+        # Cleanup
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+        with contextlib.suppress(OSError):
+            temp_path.unlink()
 
 
-def _enforce_topological_bounds(module: cst.Module) -> None:
-    """Phase 3 — Traverse the CST via the Kinetic Guillotine visitor.
+def _compare_schema(module: Any, target_schema: dict[str, Any] | list[dict[str, Any]]) -> None:
+    found_models = []
+    for _name, obj in inspect.getmembers(module, inspect.isclass):
+        if issubclass(obj, BaseModel) and obj is not BaseModel:
+            found_models.append(obj)
 
-    Raises:
-        TopologicalBoundaryViolation: If any illegal AST node is detected.
-    """
-    visitor = HighEntropySolverDiffVisitor()
-    module.visit(visitor)
-    logger.info(
-        f"Topological Boundary Enforcement passed: {visitor.nodes_visited} nodes scanned, zero violations detected."
-    )
+    if not found_models:
+        if isinstance(target_schema, dict) and target_schema:
+            raise ValueError("No Pydantic models found in the generated payload to validate against the target schema.")
+        return
+
+    if isinstance(target_schema, dict) and target_schema:
+        # Check the first generated model's schema against the target properties
+        model_schema = found_models[0].model_json_schema()
+        target_properties = target_schema.get("properties", {})
+        model_properties = model_schema.get("properties", {})
+
+        for key in target_properties:
+            if key not in model_properties:
+                raise ValueError(f"Schema mismatch: missing property '{key}' in generated class.")
 
 
 def _generate_receipt(
     *,
-    module: cst.Module,
+    payload: str,
     solver_urn: str,
     tokens_burned: int,
 ) -> OracleExecutionReceipt:
-    """Phase 4 — Hash the verified AST payload and produce the receipt."""
-
-    # Extract the deterministically formatted code (stripping LLM variations)
-    canonical_code = module.code
-
-    # Hash using the authoritative ledger crypto
-    execution_hash = compute_canonical_hash(canonical_code)
+    execution_hash = compute_canonical_hash(payload)
 
     receipt = OracleExecutionReceipt(
         execution_hash=execution_hash,

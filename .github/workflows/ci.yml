@@ -26,10 +26,10 @@ jobs:
         run: uv sync --all-extras --dev
         shell: bash
       - name: Check code
-        run: uvx ruff check .
+        run: uv run ruff check .
         shell: bash
       - name: Format check
-        run: uvx ruff format --check .
+        run: uv run ruff format --check .
         shell: bash
       - name: Typecheck
         run: uv run mypy src/ tests/
