@@ -8,8 +8,12 @@
 #
 # Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 
+import importlib.util
 import re
+import sys
 from typing import Any
+
+from pydantic import BaseModel
 
 # Canonical URN regex — must stay synchronized with ActionSpaceURNState
 # in coreason_manifest.spec.ontology.  Supports multiple namespace authorities
@@ -123,3 +127,41 @@ def check_semantic_ambiguity(embeddings: dict[str, list[float]], local_registry_
                         "Please add topological constraints to disambiguate your documentation."
                     )
     return True
+
+
+def validate_generated_topology(file_path: str, target_class_name: str, expected_schema: dict[str, Any]) -> bool:
+    """
+    The Ultimate Guillotine.
+    Does not use libcst. Uses Python's native compiler and Pydantic's internal engine.
+    """
+    try:
+        # 1. NATIVE COMPILATION CHECK
+        # If Aider hallucinated bad syntax, this will immediately throw a SyntaxError.
+        spec = importlib.util.spec_from_file_location("generated_module", file_path)
+        if spec is None or spec.loader is None:
+            return False
+
+        generated_module = importlib.util.module_from_spec(spec)
+        sys.modules["generated_module"] = generated_module
+        spec.loader.exec_module(generated_module)
+
+        # 2. CLASS EXTRACTION
+        generated_class = getattr(generated_module, target_class_name)
+
+        # 3. PYDANTIC TOPOLOGY CHECK
+        # We rely on Pydantic to do the heavy lifting of resolving types, Fields, and constraints.
+        if not issubclass(generated_class, BaseModel):
+            return False
+
+        actual_schema = generated_class.model_json_schema()
+
+        # 4. DETERMINISTIC MATCH
+        # Compare the actual generated schema against the MCP target schema
+        return actual_schema == expected_schema
+
+    except Exception:
+        # Any failure (SyntaxError, AttributeError, PydanticSchemaError) means the agent failed.
+        return False
+    finally:
+        if "generated_module" in sys.modules:
+            del sys.modules["generated_module"]
