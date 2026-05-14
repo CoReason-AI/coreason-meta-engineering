@@ -59,7 +59,7 @@ jobs:
           inputs: >-
             dist/*.whl
             dist/*.tar.gz
-          release-signing-artifacts: true
+
           source: false
 
       - name: Create GitHub Release

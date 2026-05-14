@@ -12,7 +12,7 @@ import typing
 from pathlib import Path
 
 import libcst as cst
-from coreason_manifest.spec import DeliberativeEnvelope
+from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 from mcp.server.fastmcp import FastMCP
 
 from coreason_meta_engineering.ast.actuator_scaffold import LogicInjectionFunctor
@@ -220,7 +220,7 @@ def verify_solver_diff(
 
     Returns the ``OracleExecutionReceipt`` as a dictionary.
     """
-    envelope = DeliberativeEnvelope[str](
+    envelope = CognitiveDeliberativeEnvelopeState[str](
         deliberation_trace=deliberation_trace,
         payload=payload,
     )

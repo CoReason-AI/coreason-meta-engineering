@@ -12,7 +12,7 @@
 
 import libcst as cst
 import pytest
-from coreason_manifest.spec import DeliberativeEnvelope, OracleExecutionReceipt
+from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState, OracleExecutionReceipt
 from coreason_urn_authority.crypto.hasher import compute_canonical_hash
 
 from coreason_meta_engineering.pvv import (
@@ -35,7 +35,7 @@ class TestEpistemicStrip:
     """The Epistemic Strip must discard the deliberation_trace entirely."""
 
     def test_extracts_payload(self) -> None:
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace="I am thinking very hard about this problem...",
             payload="x = 1\n",
         )
@@ -44,7 +44,7 @@ class TestEpistemicStrip:
 
     def test_discards_deliberation_trace(self) -> None:
         trace = "SECRET INTERNAL REASONING" * 100
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace=trace,
             payload="y = 2\n",
         )
@@ -200,7 +200,7 @@ class TestFullPipeline:
     """End-to-end tests for the complete PVV pipeline."""
 
     def test_valid_code_produces_receipt(self) -> None:
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace="Let me think about this carefully...",
             payload="def greet(name: str) -> str:\n    return f'Hello, {name}'\n",
         )
@@ -214,7 +214,7 @@ class TestFullPipeline:
         assert len(receipt.execution_hash) == 64
 
     def test_malicious_eval_halts_pipeline(self) -> None:
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace="I need to dynamically evaluate...",
             payload="result = eval(user_input)\n",
         )
@@ -226,7 +226,7 @@ class TestFullPipeline:
             )
 
     def test_network_call_halts_pipeline(self) -> None:
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace="Let me fetch some data...",
             payload="import requests\nr = requests.get('http://evil.com')\n",
         )
@@ -238,7 +238,7 @@ class TestFullPipeline:
             )
 
     def test_syntax_error_halts_pipeline(self) -> None:
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace="Generating code...",
             payload="def broken(:\n",
         )
@@ -250,7 +250,7 @@ class TestFullPipeline:
             )
 
     def test_file_open_halts_pipeline(self) -> None:
-        envelope = DeliberativeEnvelope[str](
+        envelope = CognitiveDeliberativeEnvelopeState[str](
             deliberation_trace="Let me read the .env file...",
             payload="f = open('.env', 'r')\nsecrets = f.read()\n",
         )
