@@ -105,14 +105,21 @@ def _compare_schema(module: Any, target_schema: dict[str, Any] | list[dict[str, 
         return
 
     if isinstance(target_schema, dict) and target_schema:
-        # Check the first generated model's schema against the target properties
-        model_schema = found_models[0].model_json_schema()
         target_properties = target_schema.get("properties", {})
-        model_properties = model_schema.get("properties", {})
+        
+        # Try to find a model that has all required properties
+        missing_keys = []
+        for model in found_models:
+            model_schema = model.model_json_schema()
+            model_properties = model_schema.get("properties", {})
+            
+            missing = [key for key in target_properties if key not in model_properties]
+            if not missing:
+                return  # Found a valid model
+            missing_keys = missing
 
-        for key in target_properties:
-            if key not in model_properties:
-                raise ValueError(f"Schema mismatch: missing property '{key}' in generated class.")
+        if missing_keys:
+            raise ValueError(f"Schema mismatch: missing property '{missing_keys[0]}' in generated class.")
 
 
 def _generate_receipt(
