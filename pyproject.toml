@@ -81,6 +81,9 @@ target-version = "py314"
 select = ["E", "F", "B", "I", "UP", "SIM", "RUF", "ARG", "C4", "PT", "TCH", "FA", "PIE", "RET", "PERF", "FURB", "LOG", "N", "A", "S"]
 ignore = ["S101", "TC001", "TC002", "TC003", "UP037"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["coreason_meta_engineering"]
+
 [tool.mypy]
 python_version = "3.14"
 strict = true
