@@ -25,7 +25,7 @@ loop documented in ``docs/01_core_architecture/02_execution_engine/
 from __future__ import annotations
 
 import libcst as cst
-from coreason_manifest.spec import DeliberativeEnvelope, OracleExecutionReceipt
+from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState, OracleExecutionReceipt
 from coreason_urn_authority.crypto.hasher import compute_canonical_hash
 
 from coreason_meta_engineering.utils.kinetic_guillotine import (
@@ -36,11 +36,11 @@ from coreason_meta_engineering.utils.logger import logger
 
 def execute_pvv_pipeline(
     *,
-    envelope: DeliberativeEnvelope[str],
+    envelope: CognitiveDeliberativeEnvelopeState[str],
     solver_urn: str,
     tokens_burned: int,
 ) -> OracleExecutionReceipt:
-    """Execute the full PVV pipeline on a ``DeliberativeEnvelope``.
+    """Execute the full PVV pipeline on a ``CognitiveDeliberativeEnvelopeState``.
 
     Args:
         envelope: The raw envelope produced by a high-entropy solver.
@@ -79,7 +79,7 @@ def execute_pvv_pipeline(
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _epistemic_strip(envelope: DeliberativeEnvelope[str]) -> str:
+def _epistemic_strip(envelope: CognitiveDeliberativeEnvelopeState[str]) -> str:
     """Phase 1 — Discard the ``deliberation_trace`` and extract only the payload.
 
     The heuristic "thoughts" of the agent have zero mathematical bearing on
@@ -90,7 +90,7 @@ def _epistemic_strip(envelope: DeliberativeEnvelope[str]) -> str:
         f"({len(envelope.deliberation_trace)} chars), "
         f"extracting payload ({len(envelope.payload)} chars)."
     )
-    return envelope.payload
+    return str(envelope.payload)
 
 
 def _parse_syntax(payload: str) -> cst.Module:
