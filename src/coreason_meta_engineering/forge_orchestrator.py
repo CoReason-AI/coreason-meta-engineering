@@ -81,6 +81,7 @@ class DynamicForgeOrchestrator:
                     envelope=envelope,
                     solver_urn=action_space_id,
                     tokens_burned=0,
+                    target_schema=geometric_schema,
                 )
 
                 if receipt:
