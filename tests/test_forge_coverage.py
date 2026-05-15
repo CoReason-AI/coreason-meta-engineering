@@ -66,7 +66,7 @@ def test_compare_schema_missing_property() -> None:
     class DummyModule:
         pass
 
-    setattr(DummyModule, "MyModel", MyModel)
+    setattr(DummyModule, "MyModel", MyModel)  # noqa: B010
 
     with pytest.raises(ValueError, match="Schema mismatch: missing property 'age'"):
         _compare_schema(DummyModule, {"properties": {"name": {}, "age": {}}})
