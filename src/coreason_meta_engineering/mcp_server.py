@@ -9,6 +9,7 @@
 # Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 import re
 import typing
+from datetime import UTC
 
 from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 from mcp.server.fastmcp import FastMCP
@@ -229,6 +230,78 @@ def verify_solver_diff(
         tokens_burned=tokens_burned,
     )
     return receipt.model_dump()
+
+
+@mcp.tool()  # type: ignore[misc]
+def scaffold_manifest_yaml(
+    target_dir: str,
+    urn: str,
+    author_id: str,
+) -> str:
+    """Scaffolds a new manifest.yaml for a given URN, injecting default CLA properties based on the AST Guillotine."""
+    import os
+    from datetime import datetime
+
+    import yaml
+
+    # AST Guillotine checks
+    cla_status = "UNSIGNED"
+    cla_assignee = ""
+    # CoReason Global default
+    tenant_cid = "889955217295c2bfef2d6812071b633b0819477e67f57853febf116f69f30531"
+
+    if os.environ.get("AST_GUILLOTINE_ACTIVE") == "True":
+        cla_status = "AUTO_ASSIGNED_PPL3"
+        cla_assignee = "urn:tenant:coreason:global:authority"
+    else:
+        # Commercial Exception Active - Attempt to pull configured private identity
+        import hvac
+
+        vault_url = os.environ.get("VAULT_ADDR", "http://127.0.0.1:8200")
+        vault_token = os.environ.get("VAULT_TOKEN", "dev-only-token")
+        try:
+            client = hvac.Client(url=vault_url, token=vault_token)
+            response = client.secrets.kv.v2.read_secret_version(
+                path="coreason/identity", raise_on_deleted_version=False
+            )
+            if response and "data" in response and "data" in response["data"]:
+                ident = response["data"]["data"]
+                private_cid = ident.get("tenant_cid")
+                if private_cid:
+                    tenant_cid = private_cid
+                    # Sovereign assignment to themselves
+                    cla_assignee = private_cid
+        except Exception:
+            pass
+
+    manifest_data = {
+        "urn": urn,
+        "tenant_cid": tenant_cid,
+        "default_clearance_tiers": [200],
+        "default_minimum_rigidity_tier": 255,
+        "epistemic_status": "DRAFT",
+        "provenance": {
+            "author_id": author_id,
+            "created_at": datetime.now(UTC).isoformat(),
+            "oracle_validator": None,
+            "certification": "pending",
+            "prior_event_hash": None,
+            "cla_status": cla_status,
+            "cla_assignee": cla_assignee,
+            "cla_version": "v1.0",
+        },
+        "validation": {"test_coverage_pct": 0.0, "latency_ms": 0, "cryptographic_hash": "null"},
+    }
+
+    import pathlib
+
+    target = pathlib.Path(target_dir) / "manifest.yaml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(target, "w", encoding="utf-8") as f:
+        yaml.dump(manifest_data, f, default_flow_style=False, sort_keys=False)
+
+    return f"Scaffolded manifest.yaml at {target}"
 
 
 def main() -> None:  # pragma: no cover

@@ -10,6 +10,7 @@
 
 import asyncio
 import json
+import os
 import typing
 from pathlib import Path
 
@@ -157,6 +158,22 @@ class DynamicForgeOrchestrator:
         target_file = Path(target_file_path)
         if target_file.is_dir():
             raise ValueError(f"Target path {target_file} is a directory, not a file.")
+
+        # --- License Chronometer: AST Guillotine ---
+        if os.environ.get("AST_GUILLOTINE_ACTIVE") == "True":
+            license_header = (
+                "# Copyright (c) 2026 CoReason, Inc\n"
+                "#\n"
+                "# This software is proprietary and dual-licensed\n"
+                '# Licensed under the Prosperity Public License 3.0 (the "License")\n'
+                "# A copy of the license is available at <https://prosperitylicense.com/versions/3.0.0>\n"
+                "# For details, see the LICENSE file\n"
+                "# Commercial use beyond a 30-day trial requires a separate license\n\n"
+            )
+            if not valid_code.startswith("# Copyright (c)"):
+                valid_code = license_header + valid_code
+        # -------------------------------------------
+
         # Note: In an actual workflow we may want to inject this into the file. For now we overwrite/create.
         if target_file.exists():
             target_file.write_text(valid_code, encoding="utf-8")
