@@ -243,12 +243,13 @@ def scaffold_manifest_yaml(
     from datetime import datetime
 
     import yaml
+    from coreason_manifest.spec.ontology import COREASON_GLOBAL_TENANT_CID
 
     # AST Guillotine checks
     cla_status = "UNSIGNED"
     cla_assignee = ""
     # CoReason Global default
-    tenant_cid = "889955217295c2bfef2d6812071b633b0819477e67f57853febf116f69f30531"
+    tenant_cid = COREASON_GLOBAL_TENANT_CID
 
     if os.environ.get("AST_GUILLOTINE_ACTIVE") == "True":
         cla_status = "AUTO_ASSIGNED_PPL3"
