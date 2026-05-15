@@ -6,9 +6,16 @@
 # For details, see the LICENSE file.
 # Commercial use beyond a 30-day trial requires a separate license.
 #
-# Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
+# Source Code: https://github.com/CoReason-AI/coreason-meta-engineering
 """
-The Agentic Forge & AST Manipulation Layer
+coreason-meta-engineering: The Agentic Forge.
+
+This package provides the deterministic mathematical toolchain (EDA) for expanding
+the CoReason ecosystem. It utilizes Concrete Syntax Tree (libcst) manipulation to
+surgically inject structural boundaries and URN-addressable assets into the 
+repository, acting as the manufacturing layer for the cybernetic manifold.
+
+Part of the CoReason Tripartite Cybernetic Manifold.
 """
 
 __version__ = "0.7.4"
