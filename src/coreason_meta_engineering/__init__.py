@@ -12,7 +12,7 @@ coreason-meta-engineering: The Agentic Forge.
 
 This package provides the deterministic mathematical toolchain (EDA) for expanding
 the CoReason ecosystem. It utilizes Concrete Syntax Tree (libcst) manipulation to
-surgically inject structural boundaries and URN-addressable assets into the 
+surgically inject structural boundaries and URN-addressable assets into the
 repository, acting as the manufacturing layer for the cybernetic manifold.
 
 Part of the CoReason Tripartite Cybernetic Manifold.
