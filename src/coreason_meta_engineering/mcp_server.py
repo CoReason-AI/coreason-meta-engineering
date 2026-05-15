@@ -262,6 +262,7 @@ def scaffold_manifest_yaml(
                 developer_tenant_cid = private_cid
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"Failed to fetch developer identity from Vault: {e}")
 
     # AST Guillotine checks: defaults to CoReason Global for IP Ownership
