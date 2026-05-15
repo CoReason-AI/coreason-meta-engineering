@@ -282,7 +282,7 @@ wheels = [
 
 [[package]]
 name = "coreason-manifest"
-version = "0.61.1"
+version = "0.70.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "canonicaljson" },
@@ -292,9 +292,9 @@ dependencies = [
     { name = "pycrdt" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/d6/8f48736cbdb205a2a6d9ffccb8515c9e5ade777b57bf42958e1978625f33/coreason_manifest-0.61.1.tar.gz", hash = "sha256:62c0f5969db5bc9c484b058d2ccf7329b39250f54ebe70e17df2f3ef85881f43", size = 857962, upload-time = "2026-05-14T10:36:04.332Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/ea/ff853e537b3a03cd6582fca71ff8b299605940e78b2ab01f3e885ca745ea/coreason_manifest-0.70.0.tar.gz", hash = "sha256:3a72d33989d8840481aa52308057a58040b1f416307591f8c9ccdecb35ba34f1", size = 892714, upload-time = "2026-05-15T02:46:02.018Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/7b/721539ba29000478083c6ff3a7274a72f0dc22976e21908f5760791c7f7a/coreason_manifest-0.61.1-py3-none-any.whl", hash = "sha256:6fbad7cef28a1534e2207da9c89ae6dd9d6f09efe74d5f678b1388da6ffa5f13", size = 199405, upload-time = "2026-05-14T10:36:03.144Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/de/02b670b4edc76eaa73a1302e9299859369ea28929522bfcb8770a297cae8/coreason_manifest-0.70.0-py3-none-any.whl", hash = "sha256:4f9c3323ade70143c318d514cbbce9889bf0a60172ca2e631afa39f85e47d440", size = 200943, upload-time = "2026-05-15T02:46:00.63Z" },
 ]
 
 [[package]]
@@ -304,6 +304,7 @@ dependencies = [
     { name = "coreason-manifest" },
     { name = "coreason-urn-authority" },
     { name = "httpx" },
+    { name = "hvac" },
     { name = "libcst" },
     { name = "loguru" },
     { name = "mcp" },
@@ -337,9 +338,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "coreason-manifest", specifier = ">=0.61.1" },
+    { name = "coreason-manifest", specifier = ">=0.70.0" },
     { name = "coreason-urn-authority", specifier = ">=0.11.1" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "hvac", specifier = ">=2.4.0" },
     { name = "libcst", specifier = ">=1.8.6" },
     { name = "loguru", specifier = ">=0.7.2" },
     { name = "mcp", specifier = ">=1.3.0" },
@@ -794,6 +796,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/39/40/43109e943fd718b0ccd0cd61eb4f1c347df22bf81f5874c6f22adf44bcff/huggingface_hub-1.14.0.tar.gz", hash = "sha256:d6d2c9cd6be1d02ae9ec6672d5587d10a427f377db688e82528f426a041622c2", size = 782365, upload-time = "2026-05-06T14:14:34.278Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/a5/33b49ba7bea7c41bb37f74ec0f8beea0831e052330196633fe2c77516ea6/huggingface_hub-1.14.0-py3-none-any.whl", hash = "sha256:efe075535c62e130b30e836b138e13785f6f043d1f0539e0a39aa411a99e90b8", size = 661479, upload-time = "2026-05-06T14:14:32.029Z" },
+]
+
+[[package]]
+name = "hvac"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e2/57/b46c397fb3842cfb02a44609aa834c887f38dd75f290c2fc5a34da4b2fee/hvac-2.4.0.tar.gz", hash = "sha256:e0056ad9064e7923e874e6769015b032580b639e29246f5ab1044f7959c1c7e0", size = 332543, upload-time = "2025-10-30T12:57:47.512Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/33/71e45a6bd6875f44a26f99da31c63b6840123e88bedf2c0b1ce429b8be12/hvac-2.4.0-py3-none-any.whl", hash = "sha256:008db5efd8c2f77bd37d2368ea5f713edceae1c65f11fd608393179478649e0f", size = 155921, upload-time = "2025-10-30T12:57:46.253Z" },
 ]
 
 [[package]]

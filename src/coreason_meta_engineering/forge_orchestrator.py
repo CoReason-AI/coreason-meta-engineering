@@ -10,6 +10,7 @@
 
 import asyncio
 import json
+import os
 import typing
 from pathlib import Path
 
@@ -18,35 +19,71 @@ from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 from coreason_meta_engineering.pvv import execute_pvv_pipeline
 from coreason_meta_engineering.utils.logger import logger
 
+__all__ = ["DynamicForgeOrchestrator", "dispatch_agent_generation", "orchestrate_generation"]
+
 try:
-    from coreason_runtime.execution_plane.fabricator import dispatch_agent_generation
+    from coreason_runtime.execution_plane.fabricator import dispatch_agent_generation  # type: ignore
 except ImportError:
     # If not running in a full swarm, fallback logic can be placed here or we just raise.
     async def dispatch_agent_generation(prompt_context: str) -> typing.Any:
         if "actionspace:substrate:test_crd" in prompt_context:
-            return {"payload": "from pydantic import BaseModel\nfrom typing import ClassVar\nclass KubernetesCRDBase(BaseModel): pass\nclass Testcrd(KubernetesCRDBase):\n    api_group: ClassVar[str] = \"test.group\"\n    name: str\n\nTestcrd.model_rebuild()\n", "deliberation_trace": "test"}
+            return {
+                "payload": 'from pydantic import BaseModel\nfrom typing import ClassVar\nclass KubernetesCRDBase(BaseModel): pass\nclass Testcrd(KubernetesCRDBase):\n    api_group: ClassVar[str] = "test.group"\n    name: str\n\nTestcrd.model_rebuild()\n',
+                "deliberation_trace": "test",
+            }
         if "TestModelClass" in prompt_context or "Test Model Class" in prompt_context:
-            return {"payload": "from typing import Optional\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestModelClass(CoreasonBaseState):\n    name: str\n    count: Optional[int] = None\n\nTestModelClass.model_rebuild()\n", "deliberation_trace": "test"}
+            return {
+                "payload": "from typing import Optional\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestModelClass(CoreasonBaseState):\n    name: str\n    count: Optional[int] = None\n\nTestModelClass.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
         if "my_actuator" in prompt_context:
-            return {"payload": "class DummyMCP:\n    def tool(self):\n        return lambda f: f\nmcp = DummyMCP()\nfrom pydantic import BaseModel\nclass Dummy(BaseModel):\n    name: str\n    age: int\n    is_active: bool\n@mcp.tool()\ndef my_actuator_func(name: str) -> str:\n    pass\n", "deliberation_trace": "test"}
+            return {
+                "payload": "class DummyMCP:\n    def tool(self):\n        return lambda f: f\nmcp = DummyMCP()\nfrom pydantic import BaseModel\nclass Dummy(BaseModel):\n    name: str\n    age: int\n    is_active: bool\n@mcp.tool()\ndef my_actuator_func(name: str) -> str:\n    pass\n",
+                "deliberation_trace": "test",
+            }
         if "my_agent" in prompt_context:
-            return {"payload": "from pydantic import BaseModel\nclass CoreasonBaseAgent(BaseModel): pass\nclass MyAgentClass(CoreasonBaseAgent):\n    pass\n\nMyAgentClass.model_rebuild()\n", "deliberation_trace": "test"}
+            return {
+                "payload": "from pydantic import BaseModel\nclass CoreasonBaseAgent(BaseModel): pass\nclass MyAgentClass(CoreasonBaseAgent):\n    pass\n\nMyAgentClass.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
         if "Class1InvalidClassStart" in prompt_context:
-            return {"payload": "from pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass Class1InvalidClassStart(CoreasonBaseState):\n    pass\n\nClass1InvalidClassStart.model_rebuild()\n", "deliberation_trace": "test"}
+            return {
+                "payload": "from pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass Class1InvalidClassStart(CoreasonBaseState):\n    pass\n\nClass1InvalidClassStart.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
         if "actionspace:node:test" in prompt_context:
-            return {"payload": "from pydantic import BaseModel\nclass CoreasonBaseAgent(BaseModel): pass\nclass GeneratedClass(CoreasonBaseAgent):\n    pass\n\nGeneratedClass.model_rebuild()\n", "deliberation_trace": "test"}
+            return {
+                "payload": "from pydantic import BaseModel\nclass CoreasonBaseAgent(BaseModel): pass\nclass GeneratedClass(CoreasonBaseAgent):\n    pass\n\nGeneratedClass.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
         if "tool_1_actuator" in prompt_context:
-            return {"payload": "class DummyMCP:\n    def tool(self):\n        return lambda f: f\nmcp = DummyMCP()\nfrom pydantic import BaseModel\nclass Dummy(BaseModel): pass\n@mcp.tool()\ndef tool_1_actuator() -> str:\n    pass\n", "deliberation_trace": "test"}
-        if "generated_identifier" in prompt_context or ("actionspace:solver" in prompt_context and "___" in prompt_context):
-            return {"payload": "class DummyMCP:\n    def tool(self):\n        return lambda f: f\nmcp = DummyMCP()\nfrom pydantic import BaseModel\nclass Dummy(BaseModel): pass\n@mcp.tool()\ndef generated_identifier() -> str:\n    pass\n", "deliberation_trace": "test"}
+            return {
+                "payload": "class DummyMCP:\n    def tool(self):\n        return lambda f: f\nmcp = DummyMCP()\nfrom pydantic import BaseModel\nclass Dummy(BaseModel): pass\n@mcp.tool()\ndef tool_1_actuator() -> str:\n    pass\n",
+                "deliberation_trace": "test",
+            }
+        if "generated_identifier" in prompt_context or (
+            "actionspace:solver" in prompt_context and "___" in prompt_context
+        ):
+            return {
+                "payload": "class DummyMCP:\n    def tool(self):\n        return lambda f: f\nmcp = DummyMCP()\nfrom pydantic import BaseModel\nclass Dummy(BaseModel): pass\n@mcp.tool()\ndef generated_identifier() -> str:\n    pass\n",
+                "deliberation_trace": "test",
+            }
         if "DummyState" in prompt_context or "Dummystate" in prompt_context:
-            return {"payload": "from typing import Annotated\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass DummyState(CoreasonBaseState):\n    name: Annotated[str, 'test']\n\nDummyState.model_rebuild()\n", "deliberation_trace": "test"}
+            return {
+                "payload": "from typing import Annotated\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass DummyState(CoreasonBaseState):\n    name: Annotated[str, 'test']\n\nDummyState.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
 
         # Default fallback for any other tests
         if "actionspace:solver" in prompt_context:
-            return {"payload": "from typing import Optional\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestModelClass(CoreasonBaseState):\n    name: str\n    count: Optional[int] = None\n\nTestModelClass.model_rebuild()\n", "deliberation_trace": "test"}
-            
-        raise NotImplementedError(f"Dynamic forge requires coreason_runtime.execution_plane.fabricator. Prompt was: {prompt_context[:100]}")
+            return {
+                "payload": "from typing import Optional\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestModelClass(CoreasonBaseState):\n    name: str\n    count: Optional[int] = None\n\nTestModelClass.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
+
+        raise NotImplementedError(
+            f"Dynamic forge requires coreason_runtime.execution_plane.fabricator. Prompt was: {prompt_context[:100]}"
+        )
 
 
 class DynamicForgeOrchestrator:
@@ -121,6 +158,22 @@ class DynamicForgeOrchestrator:
         target_file = Path(target_file_path)
         if target_file.is_dir():
             raise ValueError(f"Target path {target_file} is a directory, not a file.")
+
+        # --- License Chronometer: AST Guillotine ---
+        if os.environ.get("AST_GUILLOTINE_ACTIVE") == "True":
+            license_header = (
+                "# Copyright (c) 2026 CoReason, Inc\n"
+                "#\n"
+                "# This software is proprietary and dual-licensed\n"
+                '# Licensed under the Prosperity Public License 3.0 (the "License")\n'
+                "# A copy of the license is available at <https://prosperitylicense.com/versions/3.0.0>\n"
+                "# For details, see the LICENSE file\n"
+                "# Commercial use beyond a 30-day trial requires a separate license\n\n"
+            )
+            if not valid_code.startswith("# Copyright (c)"):
+                valid_code = license_header + valid_code
+        # -------------------------------------------
+
         # Note: In an actual workflow we may want to inject this into the file. For now we overwrite/create.
         if target_file.exists():
             target_file.write_text(valid_code, encoding="utf-8")

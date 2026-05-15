@@ -313,8 +313,6 @@ class TestVerifySolverDiff:
         assert result["solver_urn"] == "urn:coreason:solver:claw_developer:v1"
         assert result["tokens_burned"] == 500
 
-
-
     def test_receipt_dict_structure(self) -> None:
         from coreason_meta_engineering.mcp_server import verify_solver_diff
 
