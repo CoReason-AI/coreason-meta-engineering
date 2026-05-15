@@ -88,6 +88,7 @@ def test_native_validation_spec_none(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_scaffold_ast_success_with_license(tmp_path: Path) -> None:
     import os
+
     from coreason_meta_engineering.forge_orchestrator import DynamicForgeOrchestrator
 
     target_file = tmp_path / "target_success.py"

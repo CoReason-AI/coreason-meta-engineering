@@ -327,9 +327,11 @@ class TestVerifySolverDiff:
 
 
 def test_scaffold_manifest_yaml_success(tmp_path: Path) -> None:
-    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
-    import yaml
     import os
+
+    import yaml
+
+    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
 
     target_dir = tmp_path / "assets" / "solver" / "test_v1"
     urn = "urn:coreason:actionspace:solver:test:v1"
@@ -348,7 +350,7 @@ def test_scaffold_manifest_yaml_success(tmp_path: Path) -> None:
     assert manifest_file.exists()
     assert "Scaffolded manifest.yaml" in result
 
-    with open(manifest_file, "r") as f:
+    with open(manifest_file) as f:
         data = yaml.safe_load(f)
 
     assert data["urn"] == urn
@@ -357,8 +359,9 @@ def test_scaffold_manifest_yaml_success(tmp_path: Path) -> None:
 
 
 def test_scaffold_manifest_yaml_vault_failure_path(tmp_path: Path) -> None:
-    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
     import os
+
+    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
 
     target_dir = tmp_path / "assets" / "solver" / "test_v2"
     urn = "urn:coreason:actionspace:solver:test:v2"
