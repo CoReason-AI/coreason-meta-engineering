@@ -64,6 +64,7 @@ ignore = ["DEP002"]
 
 [tool.deptry.per_rule_ignores]
 DEP003 = ["coreason_manifest"]
+DEP001 = ["coreason_runtime"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/coreason_meta_engineering"]
