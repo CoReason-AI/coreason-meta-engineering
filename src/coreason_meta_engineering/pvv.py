@@ -106,13 +106,13 @@ def _compare_schema(module: Any, target_schema: dict[str, Any] | list[dict[str, 
 
     if isinstance(target_schema, dict) and target_schema:
         target_properties = target_schema.get("properties", {})
-        
+
         # Try to find a model that has all required properties
         missing_keys = []
         for model in found_models:
             model_schema = model.model_json_schema()
             model_properties = model_schema.get("properties", {})
-            
+
             missing = [key for key in target_properties if key not in model_properties]
             if not missing:
                 return  # Found a valid model
