@@ -15,7 +15,11 @@ authors = [
     { name = "Gowtham A Rao", email = "gowtham.rao@coreason.ai" },
 ]
 dependencies = [
+<<<<<<< Updated upstream
     "coreason-manifest>=0.73.0",
+=======
+    "coreason-manifest==0.75.0",
+>>>>>>> Stashed changes
     "coreason-urn-authority>=0.11.1",
     "httpx>=0.28.1",
     "hvac>=2.4.0",
@@ -111,3 +115,13 @@ source = "vcs"
 
 [tool.uv]
 prerelease = "allow"
+<<<<<<< Updated upstream
+=======
+
+
+
+
+
+
+
+>>>>>>> Stashed changes
