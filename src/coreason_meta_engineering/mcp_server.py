@@ -242,38 +242,40 @@ def scaffold_manifest_yaml(
     import os
     from datetime import datetime
 
+    import hvac
     import yaml
     from coreason_manifest.spec.ontology import COREASON_GLOBAL_TENANT_CID
 
-    # AST Guillotine checks
+    vault_url = os.environ.get("VAULT_ADDR", "http://127.0.0.1:8200")
+    vault_token = os.environ.get("VAULT_TOKEN", "dev-only-token")
+
+    # Always try to identify the local environment that physically forged the asset
+    developer_tenant_cid = "UNKNOWN_LOCAL_TENANT"
+    private_cid = None
+    try:
+        client = hvac.Client(url=vault_url, token=vault_token)
+        response = client.secrets.kv.v2.read_secret_version(path="coreason/identity", raise_on_deleted_version=False)
+        if response and "data" in response and "data" in response["data"]:
+            ident = response["data"]["data"]
+            private_cid = ident.get("tenant_cid")
+            if private_cid:
+                developer_tenant_cid = private_cid
+    except Exception:
+        pass
+
+    # AST Guillotine checks: defaults to CoReason Global for IP Ownership
     cla_status = "UNSIGNED"
     cla_assignee = ""
-    # CoReason Global default
     tenant_cid = COREASON_GLOBAL_TENANT_CID
 
     if os.environ.get("AST_GUILLOTINE_ACTIVE") == "True":
         cla_status = "AUTO_ASSIGNED_PPL3"
         cla_assignee = "urn:tenant:coreason:global:authority"
     else:
-        # Commercial Exception Active - Attempt to pull configured private identity
-        import hvac
-
-        vault_url = os.environ.get("VAULT_ADDR", "http://127.0.0.1:8200")
-        vault_token = os.environ.get("VAULT_TOKEN", "dev-only-token")
-        try:
-            client = hvac.Client(url=vault_url, token=vault_token)
-            response = client.secrets.kv.v2.read_secret_version(
-                path="coreason/identity", raise_on_deleted_version=False
-            )
-            if response and "data" in response and "data" in response["data"]:
-                ident = response["data"]["data"]
-                private_cid = ident.get("tenant_cid")
-                if private_cid:
-                    tenant_cid = private_cid
-                    # Sovereign assignment to themselves
-                    cla_assignee = private_cid
-        except Exception:
-            pass
+        # Commercial Exception Active - Tenant keeps the IP they forged
+        if private_cid:
+            tenant_cid = private_cid
+            cla_assignee = private_cid
 
     manifest_data = {
         "urn": urn,
@@ -290,6 +292,8 @@ def scaffold_manifest_yaml(
             "cla_status": cla_status,
             "cla_assignee": cla_assignee,
             "cla_version": "v1.0",
+            "developer_tenant_cid": developer_tenant_cid,
+            "cla_attestation_signature": "null",
         },
         "validation": {"test_coverage_pct": 0.0, "latency_ms": 0, "cryptographic_hash": "null"},
     }
