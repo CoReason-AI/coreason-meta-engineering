@@ -1,7 +1,8 @@
 import pytest
+
 from coreason_meta_engineering.forge_orchestrator import DynamicForgeOrchestrator, dispatch_agent_generation
-from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 from coreason_meta_engineering.pvv import _compare_schema, _native_validation
+
 
 @pytest.mark.asyncio
 async def test_dispatch_agent_generation_fallback():
@@ -54,16 +55,16 @@ def test_compare_schema_missing_property():
 
     class DummyModule:
         pass
-    setattr(DummyModule, "MyModel", MyModel)
+    DummyModule.MyModel = MyModel
     
     with pytest.raises(ValueError, match="Schema mismatch: missing property 'age'"):
         _compare_schema(DummyModule, {"properties": {"name": {}, "age": {}}})
 
 def test_native_validation_spec_none(monkeypatch):
     import importlib.util
-    def mock_spec(*args, **kwargs):
+    def mock_spec(*_args, **_kwargs):
         return None
     monkeypatch.setattr(importlib.util, "spec_from_file_location", mock_spec)
     
-    with pytest.raises(RuntimeError, match="Failed to create module spec."):
+    with pytest.raises(RuntimeError, match=r"Failed to create module spec\."):
         _native_validation("x = 1", {})

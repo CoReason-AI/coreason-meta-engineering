@@ -1,19 +1,19 @@
 import sys
-from pydantic import BaseModel
-import pytest
+
 from coreason_meta_engineering.utils.topological_validation import validate_generated_topology
+
 
 def test_validate_generated_topology_success(tmp_path):
     f = tmp_path / "valid.py"
     f.write_text("from pydantic import BaseModel\nclass MyClass(BaseModel):\n    name: str\n")
-    expected = {"properties": {"name": {"title": "Name", "type": "string"}}, "required": ["name"], "title": "MyClass", "type": "object"}
+    expected = {"properties": {"name": {"title": "Name", "type": "string"}}, "required": ["name"], "title": "MyClass", "type": "object"}  # noqa: E501
     assert validate_generated_topology(str(f), "MyClass", expected) is True
     assert "generated_module" not in sys.modules
 
 def test_validate_generated_topology_mismatch(tmp_path):
     f = tmp_path / "valid.py"
     f.write_text("from pydantic import BaseModel\nclass MyClass(BaseModel):\n    age: int\n")
-    expected = {"properties": {"name": {"title": "Name", "type": "string"}}, "required": ["name"], "title": "MyClass", "type": "object"}
+    expected = {"properties": {"name": {"title": "Name", "type": "string"}}, "required": ["name"], "title": "MyClass", "type": "object"}  # noqa: E501
     assert validate_generated_topology(str(f), "MyClass", expected) is False
 
 def test_validate_generated_topology_not_basemodel(tmp_path):
@@ -33,7 +33,7 @@ def test_validate_generated_topology_missing_class(tmp_path):
 
 def test_validate_generated_topology_invalid_spec(tmp_path, monkeypatch):
     import importlib.util
-    def mock_spec(*args, **kwargs):
+    def mock_spec(*_args, **_kwargs):
         return None
     monkeypatch.setattr(importlib.util, "spec_from_file_location", mock_spec)
     f = tmp_path / "valid.py"
@@ -42,7 +42,7 @@ def test_validate_generated_topology_invalid_spec(tmp_path, monkeypatch):
 
 def test_validate_generated_topology_invalid_loader(tmp_path, monkeypatch):
     import importlib.util
-    def mock_spec(*args, **kwargs):
+    def mock_spec(*_args, **_kwargs):
         class MockSpec:
             loader = None
         return MockSpec()
