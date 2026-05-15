@@ -324,3 +324,55 @@ class TestVerifySolverDiff:
         )
         assert result["topology_class"] == "oracle_execution_receipt"
         assert result["human_attestation_signature"] is None
+
+
+def test_scaffold_manifest_yaml_success(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
+    import yaml
+    import os
+
+    target_dir = tmp_path / "assets" / "solver" / "test_v1"
+    urn = "urn:coreason:actionspace:solver:test:v1"
+    author_id = "agent:test"
+
+    # Set env var to trigger the AST Guillotine branch for more coverage
+    os.environ["AST_GUILLOTINE_ACTIVE"] = "True"
+
+    result = scaffold_manifest_yaml(
+        target_dir=str(target_dir),
+        urn=urn,
+        author_id=author_id,
+    )
+
+    manifest_file = target_dir / "manifest.yaml"
+    assert manifest_file.exists()
+    assert "Scaffolded manifest.yaml" in result
+
+    with open(manifest_file, "r") as f:
+        data = yaml.safe_load(f)
+
+    assert data["urn"] == urn
+    assert data["provenance"]["author_id"] == author_id
+    assert data["provenance"]["cla_status"] == "AUTO_ASSIGNED_PPL3"
+
+
+def test_scaffold_manifest_yaml_vault_failure_path(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
+    import os
+
+    target_dir = tmp_path / "assets" / "solver" / "test_v2"
+    urn = "urn:coreason:actionspace:solver:test:v2"
+    author_id = "agent:test"
+
+    # Ensure Vault variables point to nothing or are invalid to trigger exception handling
+    os.environ["VAULT_ADDR"] = "http://localhost:1"  # Invalid port
+    os.environ["AST_GUILLOTINE_ACTIVE"] = "False"
+
+    result = scaffold_manifest_yaml(
+        target_dir=str(target_dir),
+        urn=urn,
+        author_id=author_id,
+    )
+
+    assert (target_dir / "manifest.yaml").exists()
+    assert "Scaffolded manifest.yaml" in result
