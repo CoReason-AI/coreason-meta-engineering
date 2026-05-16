@@ -5,9 +5,11 @@
 
 import re
 import typing
+
 from coreason_meta_engineering.forge_orchestrator import orchestrate_generation
 from coreason_meta_engineering.pvv import execute_pvv_pipeline
 from coreason_meta_engineering.utils.topological_validation import verify_cryptographic_urn_boundary
+
 
 def _sanitize_python_identifier(name: str) -> str:
     safe_name = name.lower()
@@ -28,6 +30,7 @@ def _sanitize_python_class_name(name: str) -> str:
     if not safe_name:
         safe_name = "GeneratedClass"
     return safe_name
+
 
 def scaffold_manifest_state(
     state_name: str,
@@ -54,6 +57,7 @@ def scaffold_manifest_state(
         prompt_template=prompt_template,
     )
 
+
 def reconcile_manifest_state(
     state_name: str,
     geometric_schema: dict[str, typing.Any],
@@ -78,6 +82,7 @@ def reconcile_manifest_state(
         complexity_score=5,
         prompt_template=prompt_template,
     )
+
 
 def scaffold_logic_actuator(
     actuator_name: str,
@@ -112,6 +117,7 @@ def scaffold_logic_actuator(
         prompt_template=prompt_template,
     )
 
+
 def scaffold_epistemic_node(
     node_name: str,
     cognitive_boundary_directive: str,
@@ -137,6 +143,7 @@ def scaffold_epistemic_node(
         prompt_template=prompt_template,
     )
 
+
 def verify_solver_diff(
     deliberation_trace: str,
     payload: str,
@@ -144,6 +151,7 @@ def verify_solver_diff(
     tokens_burned: int,
 ) -> dict[str, typing.Any]:
     from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
+
     envelope = CognitiveDeliberativeEnvelopeState[str](
         deliberation_trace=deliberation_trace,
         payload=payload,
@@ -162,11 +170,12 @@ def scaffold_manifest_yaml(
     author_id: str,
 ) -> str:
     import os
-    from datetime import datetime, UTC
+    import pathlib
+    from datetime import UTC, datetime
+
     import hvac
     import yaml
     from coreason_manifest.spec.ontology import COREASON_GLOBAL_TENANT_CID
-    import pathlib
 
     vault_url = os.environ.get("VAULT_ADDR", "http://127.0.0.1:8200")
     vault_token = os.environ.get("VAULT_TOKEN", "dev-only-token")
@@ -183,6 +192,7 @@ def scaffold_manifest_yaml(
                 developer_tenant_cid = private_cid
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"Failed to fetch developer identity from Vault: {e}")
 
     cla_status = "UNSIGNED"

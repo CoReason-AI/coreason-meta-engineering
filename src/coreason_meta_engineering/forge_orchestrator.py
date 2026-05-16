@@ -156,7 +156,7 @@ class DynamicForgeOrchestrator:
             )
 
         target_file = Path(target_file_path)
-        
+
         # --- Sandbox Awareness ---
         workspace_root = os.environ.get("COREASON_WORKSPACE_ROOT")
         if workspace_root:
