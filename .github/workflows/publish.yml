@@ -175,3 +175,11 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
+
+      - name: Publish to MCP Registry
+        run: |
+          if [ -f "server.json" ]; then
+            npx @modelcontextprotocol/publisher publish --config server.json
+          else
+            echo "No server.json found, skipping MCP Registry publish."
+          fi
