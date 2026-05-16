@@ -125,3 +125,26 @@ async def test_scaffold_ast_target_dir_error(tmp_path: Path) -> None:
             complexity_score=1,
             prompt_template="actionspace:node:test",
         )
+
+
+@pytest.mark.asyncio
+async def test_scaffold_ast_workspace_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from coreason_meta_engineering.forge_orchestrator import DynamicForgeOrchestrator
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    target_rel_path = "subdir/target.py"
+
+    monkeypatch.setenv("COREASON_WORKSPACE_ROOT", str(workspace))
+
+    await DynamicForgeOrchestrator.scaffold_ast(
+        target_file_path=target_rel_path,
+        action_space_id="urn:coreason:actionspace:node:test:v1",
+        geometric_schema={"properties": {}},
+        complexity_score=1,
+        prompt_template="actionspace:node:test",
+    )
+
+    expected_file = workspace / "subdir" / "target.py"
+    assert expected_file.exists()
+    assert "class GeneratedClass" in expected_file.read_text()

@@ -1,0 +1,30 @@
+spin_manifest_version = 2
+
+[project]
+name = "coreason-forge"
+version = "0.1.0"
+description = "The Agentic Forge & AST Manipulation Layer (Wasm Refactor)"
+authors = ["Gowtham A Rao <gowtham.rao@coreason.ai>"]
+
+[[trigger.http]]
+route = "/mcp/forge"
+component = "forge"
+
+[component.forge]
+source = "components/forge/forge.wasm"
+[component.forge.build]
+# Command to build the Wasm component using componentize-py
+command = "componentize-py -w ../wit/world.wit forge src -o ../forge.wasm"
+watch = ["src/**/*.py", "../../wit/*.wit"]
+
+[component.forge.env]
+AST_GUILLOTINE_ACTIVE = "True"
+VAULT_ADDR = "http://vault:8200"
+# Note: The Forge logic now expects files relative to /workspace
+COREASON_WORKSPACE_ROOT = "/workspace"
+
+[component.forge.files]
+# This implements the AST Sandbox. 
+# The Forge component can ONLY see and mutate files within this mapped directory.
+# In production, this would be a specific volume mount.
+{ source = "../../", destination = "/workspace" }

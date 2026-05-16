@@ -1,0 +1,25 @@
+package wasmcp:mcp@0.1.0;
+
+interface types {
+    record tool-definition {
+        name: string,
+        description: option<string>,
+        input-schema: string,
+    }
+
+    record tool-content {
+        text: string,
+    }
+
+    record call-tool-result {
+        content: list<tool-content>,
+        is-error: bool,
+    }
+}
+
+interface tool {
+    use types.{tool-definition, call-tool-result};
+
+    list-tools: func() -> list<tool-definition>;
+    call-tool: func(name: string, arguments: string) -> call-tool-result;
+}

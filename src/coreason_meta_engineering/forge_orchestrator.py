@@ -156,6 +156,13 @@ class DynamicForgeOrchestrator:
             )
 
         target_file = Path(target_file_path)
+
+        # --- Sandbox Awareness ---
+        workspace_root = os.environ.get("COREASON_WORKSPACE_ROOT")
+        if workspace_root:
+            target_file = Path(workspace_root) / target_file
+        # -------------------------
+
         if target_file.is_dir():
             raise ValueError(f"Target path {target_file} is a directory, not a file.")
 
