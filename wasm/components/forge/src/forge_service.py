@@ -173,7 +173,7 @@ def scaffold_manifest_yaml(
     import pathlib
     from datetime import UTC, datetime
 
-    import hvac
+    import hvac  # type: ignore[import-untyped]
     import yaml
     from coreason_manifest.spec.ontology import COREASON_GLOBAL_TENANT_CID
 
