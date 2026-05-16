@@ -2,10 +2,15 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
+      - develop
   pull_request:
 
-permissions:
-  contents: read
+permissions: read-all
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,45 +19,80 @@ concurrency:
 jobs:
   lint-and-audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Pre-Flight Workspace Purity
+        run: sudo chown -R $(whoami):$(whoami) ${{ github.workspace }} || true
+
+      - name: Harden Runner (Endpoint Network Security)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
           python-version: '3.14'
+
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --dev --frozen
         shell: bash
-      - name: Check code
+
+      - name: Check code (Ruff)
         run: uv run ruff check .
         shell: bash
-      - name: Format check
+
+      - name: Format check (Ruff)
         run: uv run ruff format --check .
         shell: bash
-      - name: Typecheck
+
+      - name: Typecheck (Mypy)
         run: uv run mypy src/ tests/
         shell: bash
-      - name: Audit dependencies
+
+      - name: Audit dependencies (Deptry)
         run: uv run deptry src/
         shell: bash
+
       - name: Build docs
         run: uv run zensical build
         shell: bash
+
+      - name: Substrate Purity Verification
+        run: git clean -xfd -e .venv -e .uv_cache
 
   test-ubuntu:
     needs: [lint-and-audit]
     if: always() && needs.lint-and-audit.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         python-version: ["3.14", "3.14t"]
     steps:
-      - uses: actions/checkout@v4
+      - name: Pre-Flight Workspace Purity
+        run: sudo chown -R $(whoami):$(whoami) ${{ github.workspace }} || true
+
+      - name: Harden Runner (Endpoint Network Security)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -63,28 +103,28 @@ jobs:
         shell: bash
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --dev --frozen
         shell: bash
 
       - name: Run tests
         run: uv run pytest --cov=src --cov-report=xml
         shell: bash
 
-      - name: Build docs
-        run: uv run zensical build
-        shell: bash
-
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@1e68e0611db2136730979cd394747063d8985160 # v6.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
 
+      - name: Substrate Purity Verification
+        run: git clean -xfd -e .venv -e .uv_cache
+
   test-extended:
     needs: [test-ubuntu]
     if: always() && needs.test-ubuntu.result == 'success'
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
@@ -95,10 +135,13 @@ jobs:
           - os: macos-latest
             python-version: "3.14t"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -109,7 +152,7 @@ jobs:
         shell: bash
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --dev --frozen
         shell: bash
 
       - name: Run tests
@@ -120,19 +163,47 @@ jobs:
     name: Determinism Verification
     needs: [test-ubuntu, test-extended]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Harden Runner (Endpoint Network Security)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
           python-version: "3.14"
-      - name: Build wheel
-        run: uv build
-        shell: bash
-      - name: Verify SHA256 sum
-        run: sha256sum dist/*.whl
+
+      - name: Build wheel (attempt 1)
+        run: |
+          export SOURCE_DATE_EPOCH=315532800
+          uv build --out-dir dist1
+          sha256sum dist1/*.whl | tee /tmp/hash1.txt
         shell: bash
 
+      - name: Build wheel (attempt 2)
+        run: |
+          export SOURCE_DATE_EPOCH=315532800
+          uv build --out-dir dist2
+          sha256sum dist2/*.whl | tee /tmp/hash2.txt
+        shell: bash
 
+      - name: Verify deterministic build
+        run: |
+          HASH1=$(awk '{print $1}' /tmp/hash1.txt)
+          HASH2=$(awk '{print $1}' /tmp/hash2.txt)
+          echo "Build 1 SHA256: $HASH1"
+          echo "Build 2 SHA256: $HASH2"
+          if [ "$HASH1" != "$HASH2" ]; then
+            echo "::error::CRITICAL: Non-deterministic build detected! Hashes do not match."
+            exit 1
+          fi
+          echo "✅ Deterministic build verified. SHA256: $HASH1"
+        shell: bash
