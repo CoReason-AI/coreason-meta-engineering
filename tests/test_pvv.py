@@ -1,200 +1,132 @@
-# Copyright (c) 2026 CoReason, Inc.
+# Copyright (c) 2026 CoReason, Inc
 #
-# This software is proprietary and dual-licensed.
-# Licensed under the Prosperity Public License 3.0 (the "License").
-# A copy of the license is available at https://prosperitylicense.com/versions/3.0.0
-# For details, see the LICENSE file.
-# Commercial use beyond a 30-day trial requires a separate license.
+# This software is proprietary and dual-licensed
+# Licensed under the Prosperity Public License 3.0 (the "License")
+# A copy of the license is available at <https://prosperitylicense.com/versions/3.0.0>
+# For details, see the LICENSE file
+# Commercial use beyond a 30-day trial requires a separate license
 #
-# Source Code: https://github.com/CoReason-AI/coreason_meta_engineering
+# Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 
-from pathlib import Path
+"""Tests for the PVV Pipeline (pvv.py)."""
 
 import pytest
+from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState, OracleExecutionReceipt
+from coreason_urn_authority.crypto.hasher import compute_canonical_hash
 
 from coreason_meta_engineering.pvv import (
-    ValidationReceiptEvent,
-    accumulate_pvv_signatures,
-    broadcast_urn_to_mesh,
-    compute_merkle_directory_cid,
-    post_scaffold_cid_injection,
-    publish_capability_to_mesh,
+    _epistemic_strip,
+    _generate_receipt,
+    _native_validation,
+    execute_pvv_pipeline,
 )
 
-
-def test_compute_merkle_directory_cid(tmp_path: Path) -> None:
-    # Create some dummy files
-    (tmp_path / "file1.txt").write_text("hello", encoding="utf-8")
-    (tmp_path / "file2.py").write_text("print('world')", encoding="utf-8")
-    (tmp_path / "manifest.yaml").write_text("Should be ignored", encoding="utf-8")
-
-    cid = compute_merkle_directory_cid(tmp_path)
-    assert cid.startswith("sha256:")
-    assert len(cid) > 10
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 1: Epistemic Strip
+# ═════════════════════════════════════════════════════════════════════════════
 
 
-def test_post_scaffold_cid_injection_success(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text("validation:\n  cryptographic_hash: null", encoding="utf-8")
+class TestEpistemicStrip:
+    """The Epistemic Strip must discard the deliberation_trace entirely."""
 
-    # Create a target file to pretend it was just scaffolded
-    target = tmp_path / "server.py"
-    target.touch()
-
-    post_scaffold_cid_injection(target)
-
-    content = manifest.read_text(encoding="utf-8")
-    assert "sha256:" in content
-
-
-def test_post_scaffold_cid_injection_append_validation(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text("validation:\n  other_field: 123", encoding="utf-8")
-    target = tmp_path / "server.py"
-    target.touch()
-
-    post_scaffold_cid_injection(target)
-    content = manifest.read_text(encoding="utf-8")
-    assert "sha256:" in content
-
-
-def test_post_scaffold_cid_injection_append_no_validation(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text("other: field", encoding="utf-8")
-    target = tmp_path / "server.py"
-    target.touch()
-
-    post_scaffold_cid_injection(target)
-    content = manifest.read_text(encoding="utf-8")
-    assert "sha256:" in content
-
-
-def test_post_scaffold_cid_injection_no_manifest(tmp_path: Path) -> None:
-    target = tmp_path / "server.py"
-    target.touch()
-
-    # Should not raise
-    post_scaffold_cid_injection(target)
-
-
-def test_broadcast_urn_to_mesh_success(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
-
-    with pytest.raises(NotImplementedError):
-        broadcast_urn_to_mesh(str(tmp_path))
-
-
-def test_broadcast_urn_to_mesh_missing_manifest(tmp_path: Path) -> None:
-    with pytest.raises(NotImplementedError):
-        # Even if missing manifest, NotImplementedError is raised first since WASM compilation is at the top
-        broadcast_urn_to_mesh(str(tmp_path))
-
-
-def test_broadcast_urn_to_mesh_missing_dir() -> None:
-    with pytest.raises(FileNotFoundError):
-        broadcast_urn_to_mesh("/non/existent/dir/12345")
-
-
-def test_accumulate_pvv_signatures_genesis_override(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('epistemic_status: "DRAFT"\nconsensus_signatures: []', encoding="utf-8")
-
-    receipt = ValidationReceiptEvent(
-        urn="urn:test", cid="sha256:abc", node_id="genesis_node_1", signature_jwt="genesis_jwt_abc", is_approved=True
-    )
-
-    result = accumulate_pvv_signatures(str(tmp_path), [receipt])
-
-    assert "Status -> PUBLISHED" in result
-    content = manifest.read_text(encoding="utf-8")
-    assert "PUBLISHED" in content
-    assert "genesis_jwt_abc" in content
-
-
-def test_accumulate_pvv_signatures_five_signatures(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('epistemic_status: "DRAFT"', encoding="utf-8")
-
-    receipts = [
-        ValidationReceiptEvent(
-            urn="urn:test", cid="sha256:abc", node_id=f"node_{i}", signature_jwt=f"jwt_{i}", is_approved=True
+    def test_extracts_payload(self) -> None:
+        envelope = CognitiveDeliberativeEnvelopeState[str](
+            deliberation_trace="I am thinking very hard about this problem...",
+            payload="x = 1\n",
         )
-        for i in range(5)
-    ]
+        result = _epistemic_strip(envelope)
+        assert result == "x = 1\n"
 
-    result = accumulate_pvv_signatures(str(tmp_path), receipts)
-
-    assert "Status -> PUBLISHED" in result
-    content = manifest.read_text(encoding="utf-8")
-    assert "PUBLISHED" in content
-    assert "jwt_0" in content
-    assert "jwt_4" in content
-
-
-def test_accumulate_pvv_signatures_pending(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('epistemic_status: "DRAFT"', encoding="utf-8")
-
-    receipts = [
-        ValidationReceiptEvent(
-            urn="urn:test", cid="sha256:abc", node_id=f"node_{i}", signature_jwt=f"jwt_{i}", is_approved=True
+    def test_discards_deliberation_trace(self) -> None:
+        trace = "SECRET INTERNAL REASONING" * 100
+        envelope = CognitiveDeliberativeEnvelopeState[str](
+            deliberation_trace=trace,
+            payload="y = 2\n",
         )
-        for i in range(3)
-    ]
-
-    result = accumulate_pvv_signatures(str(tmp_path), receipts)
-
-    assert "Consensus pending" in result
-    content = manifest.read_text(encoding="utf-8")
-    assert "DRAFT" in content
+        result = _epistemic_strip(envelope)
+        assert "SECRET" not in result
+        assert result == "y = 2\n"
 
 
-def test_accumulate_pvv_signatures_missing_manifest(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError):
-        accumulate_pvv_signatures(str(tmp_path), [])
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 2 & 3: Native Validation (Syntax & Schema)
+# ═════════════════════════════════════════════════════════════════════════════
 
 
-def test_post_scaffold_cid_injection_empty_manifest(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text("", encoding="utf-8")
-    target = tmp_path / "server.py"
-    target.touch()
+class TestNativeValidation:
+    """Native validation must catch syntax errors and missing schemas."""
 
-    post_scaffold_cid_injection(target)
-    content = manifest.read_text(encoding="utf-8")
-    assert "sha256:" in content
+    def test_valid_python_parses(self) -> None:
+        payload = "def greet(name: str) -> str:\n    return f'Hello, {name}'\n"
+        _native_validation(payload, target_schema=None)  # Should not raise
 
+    def test_invalid_python_raises(self) -> None:
+        with pytest.raises(SyntaxError):
+            _native_validation("def broken(:\n", target_schema=None)
 
-def test_accumulate_pvv_signatures_empty_manifest(tmp_path: Path) -> None:
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text("", encoding="utf-8")
-
-    receipt = ValidationReceiptEvent(
-        urn="urn:test", cid="sha256:abc", node_id="genesis_node_1", signature_jwt="genesis_jwt_abc", is_approved=True
-    )
-
-    result = accumulate_pvv_signatures(str(tmp_path), [receipt])
-
-    assert "Status -> PUBLISHED" in result
-    content = manifest.read_text(encoding="utf-8")
-    assert "PUBLISHED" in content
-    assert "genesis_jwt_abc" in content
+    def test_empty_module_parses(self) -> None:
+        _native_validation("", target_schema=None)
 
 
-def test_publish_capability_to_mesh() -> None:
-    code = "def hello(): pass"
-    res = publish_capability_to_mesh("urn:test", code)
-    assert "Successfully compiled and broadcasted urn:test" in res
-    assert "CID" in res
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 4: Receipt Generation
+# ═════════════════════════════════════════════════════════════════════════════
 
 
-def test_publish_capability_to_mesh_import_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    import sys
+class TestReceiptGeneration:
+    """The receipt must contain a valid SHA-256 hash of the payload."""
 
-    # Simulate missing coreason_urn_authority to hit the except block
-    monkeypatch.setitem(sys.modules, "coreason_urn_authority.crypto.hasher", None)  # type: ignore
+    def test_receipt_hash_matches(self) -> None:
+        payload = "x = 42\n"
+        receipt = _generate_receipt(
+            payload=payload,
+            solver_urn="urn:coreason:solver:test:v1",
+            tokens_burned=100,
+        )
+        expected_hash = compute_canonical_hash(payload)
+        assert receipt.execution_hash == expected_hash
+        assert receipt.solver_urn == "urn:coreason:solver:test:v1"
+        assert receipt.tokens_burned == 100
 
-    code = "def hello(): pass"
-    res = publish_capability_to_mesh("urn:test", code)
-    assert "sha256:mock" in res
+    def test_receipt_is_oracle_execution_receipt(self) -> None:
+        receipt = _generate_receipt(
+            payload="y = 1\n",
+            solver_urn="urn:coreason:solver:test:v1",
+            tokens_burned=0,
+        )
+        assert isinstance(receipt, OracleExecutionReceipt)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Full Pipeline Integration
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+class TestFullPipeline:
+    """End-to-end tests for the complete PVV pipeline."""
+
+    def test_valid_code_produces_receipt(self) -> None:
+        envelope = CognitiveDeliberativeEnvelopeState[str](
+            deliberation_trace="Let me think about this carefully...",
+            payload="def greet(name: str) -> str:\n    return f'Hello, {name}'\n",
+        )
+        receipt = execute_pvv_pipeline(
+            envelope=envelope,
+            solver_urn="urn:coreason:solver:claw_developer:v1",
+            tokens_burned=1500,
+        )
+        assert isinstance(receipt, OracleExecutionReceipt)
+        assert receipt.tokens_burned == 1500
+        assert len(receipt.execution_hash) == 64
+
+    def test_syntax_error_halts_pipeline(self) -> None:
+        envelope = CognitiveDeliberativeEnvelopeState[str](
+            deliberation_trace="Generating code...",
+            payload="def broken(:\n",
+        )
+        with pytest.raises(SyntaxError):
+            execute_pvv_pipeline(
+                envelope=envelope,
+                solver_urn="urn:coreason:solver:claw_developer:v1",
+                tokens_burned=100,
+            )

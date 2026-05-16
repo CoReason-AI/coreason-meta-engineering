@@ -1,12 +1,15 @@
-# Copyright (c) 2026 CoReason, Inc.
+# Copyright (c) 2026 CoReason, Inc
 #
-# This software is proprietary and dual-licensed.
-# Licensed under the Prosperity Public License 3.0 (the "License").
-# A copy of the license is available at [https://prosperitylicense.com/versions/3.0.0](https://prosperitylicense.com/versions/3.0.0)
-# For details, see the LICENSE file.
-# Commercial use beyond a 30-day trial requires a separate license.
+# This software is proprietary and dual-licensed
+# Licensed under the Prosperity Public License 3.0 (the "License")
+# A copy of the license is available at <https://prosperitylicense.com/versions/3.0.0>
+# For details, see the LICENSE file
+# Commercial use beyond a 30-day trial requires a separate license
 #
-# Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
+# Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
+
+"""Tests for mcp_server.py."""
+
 from pathlib import Path
 
 import pytest
@@ -15,11 +18,9 @@ from coreason_meta_engineering.mcp_server import scaffold_manifest_state
 
 
 def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
-    # Setup dummy target file
     target_file = tmp_path / "ontology.py"
     target_file.write_text("class CoreasonBaseState:\n    pass\n")
 
-    # Define schema payload as dict
     schema = {
         "properties": {
             "name": {"type": "string", "description": "The name"},
@@ -28,7 +29,6 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
         "required": ["name"],
     }
 
-    # Call the actuator function
     result = scaffold_manifest_state(
         state_name="Test Model Class",
         geometric_schema=schema,
@@ -36,7 +36,6 @@ def test_scaffold_ontology_model_success(tmp_path: Path) -> None:
         action_space_id="urn:coreason:actionspace:solver:test:v1",
     )
 
-    # Assertions
     assert "class TestModelClass(CoreasonBaseState):" in result
     assert "TestModelClass.model_rebuild()" in result
 
@@ -45,8 +44,13 @@ def test_scaffold_ontology_model_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
 
-    # Because it no longer writes to disk or throws errors on missing target files,
-    # it just returns code in memory. So we just pass.
+    with pytest.raises(ValueError, match="is a directory, not a file"):
+        scaffold_manifest_state(
+            state_name="Test Model Class",
+            geometric_schema={"properties": {}},
+            target_file_path=str(missing_target),
+            action_space_id="urn:coreason:actionspace:solver:test:v1",
+        )
 
 
 def test_scaffold_ontology_model_invalid_urn(tmp_path: Path) -> None:
@@ -104,6 +108,18 @@ def test_scaffold_actuator_invalid_urn(tmp_path: Path) -> None:
 def test_scaffold_actuator_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
+    from coreason_meta_engineering.mcp_server import scaffold_logic_actuator
+
+    with pytest.raises(ValueError, match="is a directory, not a file"):
+        scaffold_logic_actuator(
+            actuator_name="My Actuator",
+            geometric_schema={"properties": {}},
+            target_file_path=str(missing_target),
+            action_space_id="urn:coreason:actionspace:solver:my_actuator:v1",
+            agent_instruction="i",
+            causal_affordance="a",
+            epistemic_bounds="b",
+        )
 
 
 def test_scaffold_agent_node_success(tmp_path: Path) -> None:
@@ -138,6 +154,15 @@ def test_scaffold_agent_node_invalid_urn(tmp_path: Path) -> None:
 def test_scaffold_agent_node_target_not_a_file(tmp_path: Path) -> None:
     missing_target = tmp_path / "missing_dir"
     missing_target.mkdir()
+    from coreason_meta_engineering.mcp_server import scaffold_epistemic_node
+
+    with pytest.raises(ValueError, match="is a directory, not a file"):
+        scaffold_epistemic_node(
+            node_name="My Agent",
+            cognitive_boundary_directive="role",
+            target_file_path=str(missing_target),
+            action_space_id="urn:coreason:actionspace:node:my_agent:v1",
+        )
 
 
 def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
@@ -147,7 +172,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         scaffold_manifest_state,
     )
 
-    # Test creating a new file from scratch & valid sanitization with digit prefix
     target1 = tmp_path / "new_state.py"
     res1 = scaffold_manifest_state(
         state_name="1_invalid_class_start",
@@ -157,7 +181,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert "Class1InvalidClassStart" in res1
 
-    # Test creating a new file from scratch & fallback class name
     target2 = tmp_path / "new_node.py"
     res2 = scaffold_epistemic_node(
         node_name="___",
@@ -167,7 +190,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert "GeneratedClass" in res2
 
-    # Test creating a new file from scratch & valid sanitization with digit prefix for identifier
     target3 = tmp_path / "new_actuator1.py"
     res3 = scaffold_logic_actuator(
         actuator_name="1_actuator",
@@ -180,7 +202,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
     )
     assert "def tool_1_actuator(" in res3
 
-    # Test fallback identifier for empty string
     target4 = tmp_path / "new_actuator2.py"
     res4 = scaffold_logic_actuator(
         actuator_name="___",
@@ -192,43 +213,6 @@ def test_mcp_server_new_files_and_sanitization(tmp_path: Path) -> None:
         epistemic_bounds="b",
     )
     assert "def generated_identifier(" in res4
-
-
-def test_mcp_broadcast_urn_to_mesh(tmp_path: Path) -> None:
-    from coreason_meta_engineering.mcp_server import broadcast_urn_to_mesh
-
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('urn: "urn:test"\nvalidation:\n  cryptographic_hash: "sha256:123"', encoding="utf-8")
-
-    with pytest.raises(NotImplementedError):
-        broadcast_urn_to_mesh(str(tmp_path))
-
-
-def test_mcp_publish_capability_to_mesh() -> None:
-    from coreason_meta_engineering.mcp_server import publish_capability_to_mesh
-
-    res = publish_capability_to_mesh("urn:test", "print('hello')")
-    assert "Successfully compiled and broadcasted" in res
-
-
-def test_mcp_accumulate_pvv_signatures(tmp_path: Path) -> None:
-    from coreason_meta_engineering.mcp_server import accumulate_pvv_signatures
-
-    manifest = tmp_path / "manifest.yaml"
-    manifest.write_text('epistemic_status: "DRAFT"\nconsensus_signatures: []', encoding="utf-8")
-
-    receipts = [
-        {
-            "urn": "urn:test",
-            "cid": "sha256:abc",
-            "node_id": "genesis_node_1",
-            "signature_jwt": "genesis_jwt_abc",
-            "is_approved": True,
-        }
-    ]
-
-    result = accumulate_pvv_signatures(str(tmp_path), receipts)
-    assert "Status -> PUBLISHED" in result
 
 
 def test_reconcile_manifest_state(tmp_path: Path) -> None:
@@ -246,3 +230,152 @@ def test_reconcile_manifest_state(tmp_path: Path) -> None:
     )
     assert "class DummyState" in result
     assert "name: Annotated[str" in result
+
+
+def test_scaffold_kubernetes_crd_success(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_kubernetes_crd
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    schema = {
+        "properties": {
+            "name": {"type": "string", "description": "The name"},
+        },
+        "required": ["name"],
+    }
+
+    result = scaffold_kubernetes_crd(
+        crd_name="TestCRD",
+        geometric_schema=schema,
+        target_file_path=str(target_file),
+        action_space_id="urn:coreason:actionspace:substrate:test_crd:v1",
+        api_group="test.group",
+        api_version="v1",
+        kind="TestKind",
+    )
+
+    assert "class Testcrd(KubernetesCRDBase):" in result
+    assert 'api_group: ClassVar[str] = "test.group"' in result
+    assert "Testcrd.model_rebuild()" in result
+
+
+def test_scaffold_kubernetes_crd_invalid_urn(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_kubernetes_crd
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    with pytest.raises(ValueError, match="Invalid URN format"):
+        scaffold_kubernetes_crd(
+            crd_name="BadModel",
+            geometric_schema={"properties": {}},
+            target_file_path=str(target_file),
+            action_space_id="finance_ledger_v1",
+        )
+
+
+def test_scaffold_kubernetes_crd_target_not_a_file(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_kubernetes_crd
+
+    missing_target = tmp_path / "missing_dir"
+    missing_target.mkdir()
+
+    with pytest.raises(ValueError, match="is a directory, not a file"):
+        scaffold_kubernetes_crd(
+            crd_name="TestCRD",
+            geometric_schema={"properties": {}},
+            target_file_path=str(missing_target),
+            action_space_id="urn:coreason:actionspace:substrate:test_crd:v1",
+        )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# verify_solver_diff (PVV Pipeline MCP Tool)
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+class TestVerifySolverDiff:
+    """Tests for the verify_solver_diff MCP tool."""
+
+    def test_valid_code_returns_receipt(self) -> None:
+        from coreason_meta_engineering.mcp_server import verify_solver_diff
+
+        result = verify_solver_diff(
+            deliberation_trace="Thinking hard...",
+            payload="x = 42\n",
+            solver_urn="urn:coreason:solver:claw_developer:v1",
+            tokens_burned=500,
+        )
+        assert isinstance(result, dict)
+        assert "execution_hash" in result
+        assert len(result["execution_hash"]) == 64
+        assert result["solver_urn"] == "urn:coreason:solver:claw_developer:v1"
+        assert result["tokens_burned"] == 500
+
+    def test_receipt_dict_structure(self) -> None:
+        from coreason_meta_engineering.mcp_server import verify_solver_diff
+
+        result = verify_solver_diff(
+            deliberation_trace="Careful analysis...",
+            payload="def add(a: int, b: int) -> int:\n    return a + b\n",
+            solver_urn="urn:coreason:solver:test:v1",
+            tokens_burned=0,
+        )
+        assert result["topology_class"] == "oracle_execution_receipt"
+        assert result["human_attestation_signature"] is None
+
+
+def test_scaffold_manifest_yaml_success(tmp_path: Path) -> None:
+    import os
+
+    import yaml
+
+    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
+
+    target_dir = tmp_path / "assets" / "solver" / "test_v1"
+    urn = "urn:coreason:actionspace:solver:test:v1"
+    author_id = "agent:test"
+
+    # Set env var to trigger the AST Guillotine branch for more coverage
+    os.environ["AST_GUILLOTINE_ACTIVE"] = "True"
+
+    result = scaffold_manifest_yaml(
+        target_dir=str(target_dir),
+        urn=urn,
+        author_id=author_id,
+    )
+
+    manifest_file = target_dir / "manifest.yaml"
+    assert manifest_file.exists()
+    assert "Scaffolded manifest.yaml" in result
+
+    with open(manifest_file) as f:
+        data = yaml.safe_load(f)
+
+    assert data["urn"] == urn
+    assert data["provenance"]["author_id"] == author_id
+    assert data["provenance"]["cla_status"] == "AUTO_ASSIGNED_PPL3"
+
+
+def test_scaffold_manifest_yaml_vault_failure_path(tmp_path: Path) -> None:
+    import os
+
+    from coreason_meta_engineering.mcp_server import scaffold_manifest_yaml
+
+    target_dir = tmp_path / "assets" / "solver" / "test_v2"
+    urn = "urn:coreason:actionspace:solver:test:v2"
+    author_id = "agent:test"
+
+    # Ensure Vault variables point to nothing or are invalid to trigger exception handling
+    os.environ["VAULT_ADDR"] = "http://localhost:1"  # Invalid port
+    os.environ["AST_GUILLOTINE_ACTIVE"] = "False"
+
+    result = scaffold_manifest_yaml(
+        target_dir=str(target_dir),
+        urn=urn,
+        author_id=author_id,
+    )
+
+    assert (target_dir / "manifest.yaml").exists()
+    assert "Scaffolded manifest.yaml" in result

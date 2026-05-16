@@ -1,5 +1,7 @@
 # coreason-meta-engineering
 
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/CoReason-AI/=OpenSSF)](https://scorecard.dev/viewer/?uri=github.com/CoReason-AI/coreason-meta-engineering)
+
 The Agentic Forge & AST Manipulation Layer
 
 [![CI](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/CoReason-AI/coreason-meta-engineering/actions/workflows/ci.yml)
@@ -51,3 +53,4 @@ For complete architectural rules, agent mandates, and SDK documentation, visit o
     ```sh
     uv run pytest
     ```
+

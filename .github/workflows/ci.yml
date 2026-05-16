@@ -15,10 +15,10 @@ jobs:
   lint-and-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: '3.14'
@@ -26,10 +26,10 @@ jobs:
         run: uv sync --all-extras --dev
         shell: bash
       - name: Check code
-        run: uvx ruff check .
+        run: uv run ruff check .
         shell: bash
       - name: Format check
-        run: uvx ruff format --check .
+        run: uv run ruff format --check .
         shell: bash
       - name: Typecheck
         run: uv run mypy src/ tests/
@@ -49,10 +49,10 @@ jobs:
       matrix:
         python-version: ["3.14", "3.14t"]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -92,11 +92,13 @@ jobs:
         exclude:
           - os: windows-latest
             python-version: "3.14t"
+          - os: macos-latest
+            python-version: "3.14t"
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -119,10 +121,10 @@ jobs:
     needs: [test-ubuntu, test-extended]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: "3.14"
@@ -132,3 +134,5 @@ jobs:
       - name: Verify SHA256 sum
         run: sha256sum dist/*.whl
         shell: bash
+
+

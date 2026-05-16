@@ -1,8 +1,8 @@
-# Welcome to coreason-meta-engineering
+# CoReason Meta-Engineering: The Agentic Forge
 
-**The Universal Asset Forge and Kinetic Compiler**
+Welcome to the **Agentic Forge** (`coreason-meta-engineering`). This repository operates as the strictly bound **Kinetic Toolchain** and **AST Manipulation Layer** within the CoReason Tripartite Cybernetic Manifold.
 
-`coreason-meta-engineering` is the deterministic mathematical toolchain (EDA) for expanding the CoReason ecosystem. Unlike passive data libraries, this repository is **Active by Design**, translating dynamic AI intent into the strict, immutable vocabulary of the platform.
+*If `coreason-manifest` is the DNA and `coreason-runtime` is the cell, `coreason-meta-engineering` is the manufacturing layer that "etches" structural classes into the repository via deterministic mathematical logic.*
 
 ## Core Mission
 
