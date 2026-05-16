@@ -4,6 +4,7 @@
 # Licensed under the Prosperity Public License 3.0 (the "License")
 
 import json
+import typing
 
 import forge_service
 
@@ -11,7 +12,7 @@ import forge_service
 # Note: In a real componentization flow, this class would implement
 # the interface defined in the generated bindings from world.wit
 class ForgeTool:
-    def list_tools(self):
+    def list_tools(self) -> list[dict[str, str]]:
         return [
             {
                 "name": "scaffold_manifest_state",
@@ -132,11 +133,11 @@ class ForgeTool:
             },
         ]
 
-    def call_tool(self, name, arguments):
+    def call_tool(self, name: str, arguments: str) -> dict[str, typing.Any]:
         args = json.loads(arguments)
         try:
             if name == "scaffold_manifest_state":
-                result = forge_service.scaffold_manifest_state(**args)
+                result: typing.Any = forge_service.scaffold_manifest_state(**args)
             elif name == "reconcile_manifest_state":
                 result = forge_service.reconcile_manifest_state(**args)
             elif name == "scaffold_logic_actuator":

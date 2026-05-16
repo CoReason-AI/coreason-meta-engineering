@@ -1,15 +1,27 @@
 # Stage 1: Builder
 FROM python:3.14-slim AS builder
 
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
 
 # Set the working directory
 WORKDIR /app
 
+# Copy project manifest files
+COPY pyproject.toml uv.lock ./
+# Copy .git if it exists for versioning
+COPY .gi[t] ./.git/
+
 # Copy the project files
-COPY pyproject.toml .
-COPY uv.lock .
 COPY src/ ./src/
 COPY README.md .
 COPY LICENSE .
