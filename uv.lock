@@ -282,8 +282,8 @@ wheels = [
 
 [[package]]
 name = "coreason-manifest"
-version = "0.75.0"
-source = { git = "https://github.com/CoReason-AI/coreason-manifest.git?rev=v0.75.0#a53c2b1ef3373eeb1186606c18a3f07b41b1cd00" }
+version = "0.77.0"
+source = { git = "https://github.com/CoReason-AI/coreason-manifest.git?rev=v0.77.0#e69e8e65d928ed23d95752a072f022f522a48b26" }
 dependencies = [
     { name = "canonicaljson" },
     { name = "jsonpatch" },
@@ -334,7 +334,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "coreason-manifest", git = "https://github.com/CoReason-AI/coreason-manifest.git?rev=v0.75.0" },
+    { name = "coreason-manifest", git = "https://github.com/CoReason-AI/coreason-manifest.git?rev=v0.77.0" },
     { name = "coreason-urn-authority", specifier = ">=0.11.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "hvac", specifier = ">=2.4.0" },
