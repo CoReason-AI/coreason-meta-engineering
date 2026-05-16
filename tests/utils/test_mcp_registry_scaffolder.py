@@ -3,7 +3,7 @@ import json
 from coreason_meta_engineering.utils.mcp_registry_scaffolder import generate_server_json
 
 
-def test_generate_server_json_dict():
+def test_generate_server_json_dict() -> None:
     schema = {
         "urn": "urn:coreason:actionspace:solver:test_solver:v1",
         "description": "Test description",
@@ -17,21 +17,21 @@ def test_generate_server_json_dict():
     assert data["registry_metadata"]["epistemic_status"] == "PUBLISHED"
 
 
-def test_generate_server_json_list():
+def test_generate_server_json_list() -> None:
     schema = [{"urn": "urn:coreason:actionspace:solver:test_list_solver:v1"}]
     result = generate_server_json(schema)
     data = json.loads(result)
     assert data["name"] == "test_list_solver"
 
 
-def test_generate_server_json_empty_list():
-    schema = []
+def test_generate_server_json_empty_list() -> None:
+    schema: list[dict[str, str]] = []
     result = generate_server_json(schema)
     data = json.loads(result)
     assert data["name"] == "unknown_capability"
 
 
-def test_generate_server_json_invalid_urn():
+def test_generate_server_json_invalid_urn() -> None:
     schema = {"urn": "invalid_urn"}
     result = generate_server_json(schema)
     data = json.loads(result)
