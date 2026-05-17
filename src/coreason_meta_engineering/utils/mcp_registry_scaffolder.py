@@ -8,39 +8,82 @@
 #
 # Source Code: <https://github.com/CoReason-AI/coreason-meta-engineering>
 
-import json
-from typing import Any
+import subprocess
+from pathlib import Path
+from typing import List
+
+from .logger import logger
 
 
-def generate_server_json(geometric_schema: dict[str, Any] | list[dict[str, Any]]) -> str:
+def generate_push_command(
+    component_path: Path,
+    oci_uri: str,
+    insecure: bool = False,
+) -> List[str]:
     """
-    Generates an MCP Registry server.json file based on the geometric schema.
-    This guarantees type isomorphism and prevents LLM hallucination.
+    AGENT INSTRUCTION: Generates the deterministic 'wash push' command for OCI artifact publishing.
+    This ensures standard WASI 0.2 components are pushed to standard registries with proper annotations.
+
+    CAUSAL AFFORDANCE: Enables the orchestrator to publish artifacts to OCI registries.
+
+    EPISTEMIC BOUNDS: Operates on Path objects and URI strings. Enforces --insecure flag based on policy.
+    Injects mandatory OCI annotations for traceability.
+
+    MCP ROUTING TRIGGERS: OCI, WASI, wash, push, registry, artifact
     """
-    if isinstance(geometric_schema, list):
-        geometric_schema = geometric_schema[0] if geometric_schema else {}
+    command = [
+        "wash",
+        "push",
+        oci_uri,
+        component_path.as_posix(),
+        "--annotation",
+        "org.opencontainers.image.source=https://github.com/coreason-ai/coreason",
+    ]
+    if insecure:
+        command.append("--insecure")
+    return command
 
-    urn = geometric_schema.get("urn", "urn:coreason:actionspace:unknown:v1")
 
-    # Extract components of URN assuming urn:coreason:actionspace:{type}:{name}:{version}
-    parts = urn.split(":")
-    capability_name = parts[4] if len(parts) >= 6 else "unknown_capability"
+def publish_mcp_artifact(
+    component_path: Path,
+    oci_uri: str,
+    insecure: bool = False,
+) -> str:
+    """
+    AGENT INSTRUCTION: Executes the 'wash push' CLI command to publish a WASI component.
+    This is the kinetic layer of artifact distribution.
 
-    server_json = {
-        "name": capability_name,
-        "description": geometric_schema.get("description", f"CoReason capabilities for {capability_name}"),
-        "version": "1.0.0",
-        "mcp_version": "1.0",
-        "author": "CoReason, Inc.",
-        "license": geometric_schema.get("economics", {}).get("license_class", "PROSPERITY_3.0_COMMERCIAL"),
-        "entrypoint": "mcp-server",
-        "repository": f"https://github.com/CoReason-AI/{capability_name}",
-        "registry_metadata": {
-            "urn": urn,
-            "epistemic_status": geometric_schema.get("epistemic_status", "DRAFT"),
-            "billing_tier": geometric_schema.get("economics", {}).get("billing_tier", "TIER_1_STANDARD"),
-            "validation": geometric_schema.get("validation", {}),
-        },
-    }
+    CAUSAL AFFORDANCE: Synchronously pushes a local .wasm component to a remote OCI registry.
 
-    return json.dumps(server_json, indent=2)
+    EPISTEMIC BOUNDS: Requires the 'wash' CLI to be present in the execution environment.
+    Enforces strict .wasm extension check to guarantee WASI 0.2 component integrity.
+    Wraps subprocess.run with strict error handling.
+
+    MCP ROUTING TRIGGERS: OCI, WASI, wash, push, registry, artifact, kinetic
+    """
+    if component_path.suffix != ".wasm":
+        raise ValueError(
+            f"Strict WASI 0.2 enforcement: Capability artifacts must be compiled .wasm binaries. Got: {component_path.suffix}"
+        )
+
+    if not component_path.exists():
+        raise FileNotFoundError(f"Component not found at {component_path}")
+
+    command = generate_push_command(component_path, oci_uri, insecure)
+    logger.info(f"Publishing artifact to {oci_uri}...")
+
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        logger.info(f"Successfully pushed {oci_uri}")
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to push {oci_uri}: {e.stderr}")
+        raise RuntimeError(f"wash push failed: {e.stderr}") from e
+    except FileNotFoundError:
+        logger.error("The 'wash' CLI was not found in the environment.")
+        raise RuntimeError("The 'wash' CLI is required for OCI publishing but was not found.")

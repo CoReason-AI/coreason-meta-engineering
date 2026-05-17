@@ -18,7 +18,7 @@ from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 
 from coreason_meta_engineering.pvv import execute_pvv_pipeline
 from coreason_meta_engineering.utils.logger import logger
-from coreason_meta_engineering.utils.mcp_registry_scaffolder import generate_server_json
+# Legacy generate_server_json import removed
 
 __all__ = ["DynamicForgeOrchestrator", "dispatch_agent_generation", "orchestrate_generation"]
 
@@ -189,10 +189,7 @@ class DynamicForgeOrchestrator:
             target_file.parent.mkdir(parents=True, exist_ok=True)
             target_file.write_text(valid_code, encoding="utf-8")
 
-        # --- Dual-Publish: Generate server.json ---
-        server_json_content = generate_server_json(geometric_schema)
-        server_json_path = target_file.parent / "server.json"
-        server_json_path.write_text(server_json_content, encoding="utf-8")
+        # Legacy Dual-Publish (server.json) removed in favor of OCI-native distribution.
 
         return valid_code
 
