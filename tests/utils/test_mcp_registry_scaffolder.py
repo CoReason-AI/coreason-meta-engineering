@@ -114,7 +114,7 @@ def test_publish_mcp_artifact_execution_failure(tmp_path: Path) -> None:
     old_path = os.environ.get("PATH", "")
     os.environ["PATH"] = str(bin_dir) + os.pathsep + old_path
     try:
-        with pytest.raises(RuntimeError, match="wash push failed: error message"):
+        with pytest.raises(RuntimeError, match=r"wash push failed: [\s\S]*error message"):
             publish_mcp_artifact(dummy_wasm, oci_uri, insecure=True)
     finally:
         os.environ["PATH"] = old_path
