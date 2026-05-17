@@ -98,7 +98,7 @@ def test_publish_mcp_artifact_execution_failure(tmp_path: Path) -> None:
     bin_dir.mkdir()
 
     if sys.platform == "win32":
-        shutil.copy2(sys.executable, bin_dir / "wash.exe")
+        shutil.copy2(getattr(sys, "_base_executable", sys.executable), bin_dir / "wash.exe")
         push_script = Path("push")
         push_script.write_text("import sys\nsys.stderr.write('error message\\n')\nsys.exit(1)\n", encoding="utf-8")
     else:
@@ -130,7 +130,7 @@ def test_publish_mcp_artifact_execution_success(tmp_path: Path) -> None:
     bin_dir.mkdir()
 
     if sys.platform == "win32":
-        shutil.copy2(sys.executable, bin_dir / "wash.exe")
+        shutil.copy2(getattr(sys, "_base_executable", sys.executable), bin_dir / "wash.exe")
         push_script = Path("push")
         push_script.write_text("import sys\nprint('success message')\nsys.exit(0)\n", encoding="utf-8")
     else:
