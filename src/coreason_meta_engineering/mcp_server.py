@@ -229,7 +229,7 @@ def verify_solver_diff(
         solver_urn=solver_urn,
         tokens_burned=tokens_burned,
     )
-    return typing.cast("dict[str, typing.Any]", receipt.model_dump())
+    return receipt.model_dump()  # type: ignore[no-any-return]
 
 
 @mcp.tool()  # type: ignore[misc]
