@@ -111,9 +111,9 @@ Before you finalize a capability or commit code, you MUST clear these verificati
 
 ## **6. The Anti-Mocking "Real Test" Directive**
 
-**CRITICAL INSTRUCTION TO AI AGENTS:** 
+**CRITICAL INSTRUCTION TO AI AGENTS:**
 I expect real tests. No mocks.
-You are strictly forbidden from using `unittest.mock`, `pytest.MonkeyPatch`, `responses`, or any other mocking library to simulate environment variables, network calls, or API responses. 
+You are strictly forbidden from using `unittest.mock`, `pytest.MonkeyPatch`, `responses`, or any other mocking library to simulate environment variables, network calls, or API responses.
 All tests MUST execute against real local servers, real environment state, or deterministic string/file inputs. Mocking produces false confidence and is mathematically classified as non-isomorphic testing.
 
 **By executing code in this repository, you confirm you are the Master Builder of the CoReason ecosystem. You forge the instruments that shape the cybernetic manifold.**
@@ -136,4 +136,3 @@ All tests MUST execute against real local servers, real environment state, or de
 
 ## The "Zero-Waste Engineering" Mandate
 You are strictly bound by the "Borrow vs. Build" philosophy. You MUST maximize the use of stable Open Source Software (OSS) whenever available. You are mathematically forbidden from building custom, proprietary implementations for logging, tracing, graph layout, container routing, UI components, or serialization if a mature OSS standard (e.g., OpenTelemetry, Zep Graphiti, Pi.dev, React Flow) exists to solve the problem.
-

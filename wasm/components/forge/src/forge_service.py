@@ -161,7 +161,7 @@ def verify_solver_diff(
         solver_urn=solver_urn,
         tokens_burned=tokens_burned,
     )
-    return receipt.model_dump()
+    return typing.cast("dict[str, typing.Any]", receipt.model_dump())
 
 
 def scaffold_manifest_yaml(

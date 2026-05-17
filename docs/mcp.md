@@ -15,7 +15,7 @@ uv run coreason-meta-mcp
 The MCP server exposes three strict tools for generating different classifications of assets. Each asset explicitly requires an `action_space_id` conforming to the URN constraints.
 
 ### 1. `scaffold_manifest_state`
-Used to deterministically inject passive state models into the AST map. 
+Used to deterministically inject passive state models into the AST map.
 It requires:
 - `state_name`: The class name of the Pydantic state model.
 - `geometric_schema`: The raw JSON defining the fields.

@@ -53,4 +53,3 @@ For complete architectural rules, agent mandates, and SDK documentation, visit o
     ```sh
     uv run pytest
     ```
-

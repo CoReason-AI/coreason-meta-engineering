@@ -10,7 +10,6 @@
 
 import subprocess
 from pathlib import Path
-from typing import List
 
 from .logger import logger
 
@@ -19,7 +18,7 @@ def generate_push_command(
     component_path: Path,
     oci_uri: str,
     insecure: bool = False,
-) -> List[str]:
+) -> list[str]:
     """
     AGENT INSTRUCTION: Generates the deterministic 'wash push' command for OCI artifact publishing.
     This ensures standard WASI 0.2 components are pushed to standard registries with proper annotations.
@@ -73,7 +72,7 @@ def publish_mcp_artifact(
     logger.info(f"Publishing artifact to {oci_uri}...")
 
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -84,6 +83,6 @@ def publish_mcp_artifact(
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to push {oci_uri}: {e.stderr}")
         raise RuntimeError(f"wash push failed: {e.stderr}") from e
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         logger.error("The 'wash' CLI was not found in the environment.")
-        raise RuntimeError("The 'wash' CLI is required for OCI publishing but was not found.")
+        raise RuntimeError("The 'wash' CLI is required for OCI publishing but was not found.") from e

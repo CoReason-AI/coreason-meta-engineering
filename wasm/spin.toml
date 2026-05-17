@@ -24,7 +24,7 @@ VAULT_ADDR = "http://vault:8200"
 COREASON_WORKSPACE_ROOT = "/workspace"
 
 [component.forge.files]
-# This implements the AST Sandbox. 
+# This implements the AST Sandbox.
 # The Forge component can ONLY see and mutate files within this mapped directory.
 # In production, this would be a specific volume mount.
 { source = "../../", destination = "/workspace" }

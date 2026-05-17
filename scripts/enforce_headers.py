@@ -26,7 +26,7 @@ HEADER_LINES = [
 ]
 
 
-class HeaderInjector(cst.CSTTransformer):
+class HeaderInjector(cst.CSTTransformer):  # type: ignore[misc]
     def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:  # noqa: N802, ARG002
         # Check if already has header
         if updated_node.header:

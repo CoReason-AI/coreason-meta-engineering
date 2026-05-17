@@ -12,7 +12,7 @@ Unlike passive libraries, this repository is **Active by Design**. It performs h
 * **The Idempotency Axiom:** Your AST transformers MUST be mathematically idempotent. Your `libcst` visitor MUST scan for existing nodes with the target name. If the node already exists, you MUST return the AST unchanged to prevent duplication or corruption.
 
 ## Law 3: The Anti-DRY & Cryptographic Determinism Enforcer
-Because the mesh relies on secure distributed consensus, unordered data destroys cryptographic determinism. 
+Because the mesh relies on secure distributed consensus, unordered data destroys cryptographic determinism.
 * **The Sorting Axiom:** Injections MUST include strict `@model_validator` sorting blocks (`_enforce_canonical_sort`) for any arrays/lists to ensure RFC-8785 canonical hashing.
 * Injections MUST append `[ClassName].model_rebuild()` to the end of the target module.
 * Injections MUST utilize the rigid 4-part epistemic docstring schema (`AGENT INSTRUCTION`, `CAUSAL AFFORDANCE`, `EPISTEMIC BOUNDS`, `MCP ROUTING TRIGGERS`).
