@@ -1,9 +1,9 @@
 name: OSV-Scanner
 on:
   push:
-    branches: [main, coreason-develop]
+    branches: [main, develop]
   pull_request:
-    branches: [main, coreason-develop]
+    branches: [main, develop]
   schedule:
     - cron: '0 0 * * 1'
 

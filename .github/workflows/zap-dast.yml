@@ -2,9 +2,9 @@ name: OWASP ZAP DAST Scan
 
 on:
   push:
-    branches: [ "main", "coreason-develop", "feat/add-security-scans" ]
+    branches: [ "main", "develop", "feat/add-security-scans" ]
   pull_request:
-    branches: [ "main", "coreason-develop" ]
+    branches: [ "main", "develop" ]
   workflow_dispatch:
 
 permissions: read-all

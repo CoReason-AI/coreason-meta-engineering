@@ -1,7 +1,7 @@
 name: Advanced Security Audit
 on:
   pull_request:
-    branches: [ coreason-develop, main ]
+    branches: [ develop, main ]
 
 permissions: read-all
 

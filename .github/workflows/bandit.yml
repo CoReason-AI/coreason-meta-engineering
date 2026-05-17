@@ -2,9 +2,9 @@ name: Bandit Security Scan
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   schedule:
     - cron: '0 0 * * *'
 

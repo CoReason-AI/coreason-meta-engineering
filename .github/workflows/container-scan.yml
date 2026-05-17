@@ -2,9 +2,9 @@ name: Container Vulnerability Scan
 
 on:
   push:
-    branches: [ "coreason-develop", "main" ]
+    branches: [ "develop", "main" ]
   pull_request:
-    branches: [ "coreason-develop", "main" ]
+    branches: [ "develop", "main" ]
 
 
 permissions:
