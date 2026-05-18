@@ -12,7 +12,6 @@
 
 import pytest
 from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState, OracleExecutionReceipt
-from coreason_urn_authority.crypto.hasher import compute_canonical_hash
 
 from coreason_meta_engineering.pvv import (
     _epistemic_strip,
@@ -20,6 +19,7 @@ from coreason_meta_engineering.pvv import (
     _native_validation,
     execute_pvv_pipeline,
 )
+from coreason_meta_engineering.utils.hasher import compute_canonical_hash
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Phase 1: Epistemic Strip
