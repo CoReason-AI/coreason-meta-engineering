@@ -27,9 +27,9 @@ from pathlib import Path
 from typing import Any
 
 from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState, OracleExecutionReceipt
-from coreason_urn_authority.crypto.hasher import compute_canonical_hash
 from pydantic import BaseModel
 
+from coreason_meta_engineering.utils.hasher import compute_canonical_hash
 from coreason_meta_engineering.utils.logger import logger
 
 
