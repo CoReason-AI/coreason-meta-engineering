@@ -30,6 +30,16 @@ dependencies = [
     "typer>=0.15.2",
 ]
 license = { file = "LICENSE" }
+keywords = [
+    "agents",
+    "code-generation",
+    "compiler",
+    "coreason",
+    "eda",
+    "mcp",
+    "metaprogramming",
+    "pydantic",
+]
 classifiers = [
     "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
