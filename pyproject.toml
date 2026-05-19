@@ -127,8 +127,8 @@ prerelease = "allow"
 
 
 [tool.uv.sources]
-coreason-manifest = { path = "../coreason-manifest" }
-coreason-urn-authority = { path = "../coreason-urn-authority" }
+coreason-manifest = { git = "https://github.com/CoReason-AI/coreason-manifest.git" }
+coreason-urn-authority = { git = "https://github.com/CoReason-AI/coreason-urn-authority.git" }
 
 [tool.hatch.metadata]
 allow-direct-references = true
