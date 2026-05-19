@@ -77,7 +77,7 @@ except ImportError:
             }
         if "test_ui_element" in prompt_context:
             return {
-                "payload": "from pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestUiElement(CoreasonBaseState):\n    pass\n\nTestUiElement.model_rebuild()\n",
+                "payload": "from pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestUiElement(CoreasonBaseState):\n    name: str\n\nTestUiElement.model_rebuild()\n",
                 "deliberation_trace": "test",
             }
 

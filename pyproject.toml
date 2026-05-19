@@ -17,7 +17,7 @@ authors = [
 dependencies = [
     "coreason-manifest==0.84.0",
     "coreason-urn-authority>=0.11.1",
-    "httpx>=0.28.1",
+    "httpx>=0.28.1,<1.0",
     "hvac>=2.4.0",
     "libcst>=1.8.6",
     "loguru>=0.7.2",
