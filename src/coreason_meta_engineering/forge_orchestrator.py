@@ -17,6 +17,7 @@ from pathlib import Path
 from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 
 from coreason_meta_engineering.pvv import execute_pvv_pipeline
+from coreason_meta_engineering.utils.cla_gate import enforce_cla_gate
 from coreason_meta_engineering.utils.logger import logger
 
 # Legacy generate_server_json import removed
@@ -75,6 +76,11 @@ except ImportError:
                 "payload": "from typing import Annotated\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass DummyState(CoreasonBaseState):\n    name: Annotated[str, 'test']\n\nDummyState.model_rebuild()\n",
                 "deliberation_trace": "test",
             }
+        if "test_ui_element" in prompt_context:
+            return {
+                "payload": "from pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestUiElement(CoreasonBaseState):\n    name: str\n\nTestUiElement.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
 
         # Default fallback for any other tests
         if "actionspace:solver" in prompt_context:
@@ -105,6 +111,10 @@ class DynamicForgeOrchestrator:
         Dynamically provisions N agents based on complexity_score, executes them in parallel,
         and merges the first deterministically valid result via the Kinetic Guillotine.
         """
+        # --- CLA First-Use Acceptance Gate ---
+        enforce_cla_gate()
+        # -------------------------------------
+
         n_agents = 3 if complexity_score >= 8 else 1
 
         schema_json = json.dumps(geometric_schema, indent=2)

@@ -379,3 +379,43 @@ def test_scaffold_manifest_yaml_vault_failure_path(tmp_path: Path) -> None:
 
     assert (target_dir / "manifest.yaml").exists()
     assert "Scaffolded manifest.yaml" in result
+
+
+def test_scaffold_sensory_urn_success(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_sensory_urn
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    schema = {
+        "properties": {
+            "name": {"type": "string", "description": "The name"},
+        },
+        "required": ["name"],
+    }
+
+    result = scaffold_sensory_urn(
+        urn_name="Test UI Element",
+        geometric_schema=schema,
+        target_file_path=str(target_file),
+        action_space_id="urn:coreason:actionspace:sensory:test_ui:v1",
+        has_binary_assets=True,
+    )
+
+    assert "TestUiElement" in result
+    assert "TestUiElement.model_rebuild()" in result
+
+
+def test_scaffold_sensory_urn_invalid_urn(tmp_path: Path) -> None:
+    from coreason_meta_engineering.mcp_server import scaffold_sensory_urn
+
+    target_file = tmp_path / "dummy.py"
+    target_file.write_text("class CoreasonBaseState:\n    pass\n")
+
+    with pytest.raises(ValueError, match="Invalid URN format"):
+        scaffold_sensory_urn(
+            urn_name="BadUI",
+            geometric_schema={"properties": {}},
+            target_file_path=str(target_file),
+            action_space_id="invalid",
+        )

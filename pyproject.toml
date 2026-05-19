@@ -15,9 +15,9 @@ authors = [
     { name = "Gowtham A Rao", email = "gowtham.rao@coreason.ai" },
 ]
 dependencies = [
-    "coreason-manifest==0.81.0",
-    "coreason-urn-authority>=0.11.1",
-    "httpx>=0.28.1",
+    "coreason-manifest==0.84.1",
+    "coreason-urn-authority>=0.26.1",
+    "httpx>=0.28.1,<1.0",
     "hvac>=2.4.0",
     "libcst>=1.8.6",
     "loguru>=0.7.2",
@@ -30,6 +30,16 @@ dependencies = [
     "typer>=0.15.2",
 ]
 license = { file = "LICENSE" }
+keywords = [
+    "agents",
+    "code-generation",
+    "compiler",
+    "coreason",
+    "eda",
+    "mcp",
+    "metaprogramming",
+    "pydantic",
+]
 classifiers = [
     "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
@@ -109,6 +119,9 @@ omit = ["tests/*"]
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
 [tool.uv]
 prerelease = "allow"
 
@@ -117,8 +130,8 @@ prerelease = "allow"
 
 
 [tool.uv.sources]
-coreason-manifest = { path = "../coreason-manifest" }
-coreason-urn-authority = { path = "../coreason-urn-authority" }
+coreason-manifest = { git = "https://github.com/CoReason-AI/coreason-manifest.git" }
+coreason-urn-authority = { git = "https://github.com/CoReason-AI/coreason-urn-authority.git" }
 
 [tool.hatch.metadata]
 allow-direct-references = true

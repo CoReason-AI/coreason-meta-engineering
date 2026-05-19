@@ -39,35 +39,22 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Checkout coreason-manifest
-        uses: actions/checkout@v4
-        with:
-          repository: CoReason-AI/coreason-manifest
-          ref: develop
-          path: coreason-manifest
-          token: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
-
-      - name: Link coreason-manifest as sibling
-        run: python -c "import os, shutil; src=os.path.abspath('coreason-manifest'); dst=os.path.abspath('../coreason-manifest'); (os.remove(dst) if os.path.islink(dst) else (shutil.rmtree(dst) if os.path.isdir(dst) else os.remove(dst))) if (os.path.exists(dst) or os.path.islink(dst)) else None; os.symlink(src, dst, target_is_directory=True)"
-        shell: bash
-
-      - name: Checkout coreason-urn-authority
-        uses: actions/checkout@v4
-        with:
-          repository: CoReason-AI/coreason-urn-authority
-          ref: develop
-          path: coreason-urn-authority
-          token: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
-
-      - name: Link coreason-urn-authority as sibling
-        run: python -c "import os, shutil; src=os.path.abspath('coreason-urn-authority'); dst=os.path.abspath('../coreason-urn-authority'); (os.remove(dst) if os.path.islink(dst) else (shutil.rmtree(dst) if os.path.isdir(dst) else os.remove(dst))) if (os.path.exists(dst) or os.path.islink(dst)) else None; os.symlink(src, dst, target_is_directory=True)"
-        shell: bash
-
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: '3.14'
+
+      - name: Extract versions and Patch PyProject
+        run: |
+          export MANIFEST_VERSION=$(python -c "import re; m = re.search(r'coreason-manifest==([0-9]+\.[0-9]+\.[0-9]+)', open('pyproject.toml').read()); print('v' + m.group(1)) if m else exit(1)")
+          export URN_AUTHORITY_VERSION=$(python -c "import re; m = re.search(r'coreason-urn-authority[>=~]+([0-9]+\.[0-9]+\.[0-9]+)', open('pyproject.toml').read()); print('v' + m.group(1)) if m else exit(1)")
+          echo "MANIFEST_VERSION=$MANIFEST_VERSION" >> "$GITHUB_ENV"
+          echo "URN_AUTHORITY_VERSION=$URN_AUTHORITY_VERSION" >> "$GITHUB_ENV"
+          sed -i "s|coreason-manifest = { git = \"https://github.com/CoReason-AI/coreason-manifest.git\" }|coreason-manifest = { git = \"https://github.com/CoReason-AI/coreason-manifest.git\", tag = \"$MANIFEST_VERSION\" }|g" pyproject.toml || true
+          sed -i "s|coreason-urn-authority = { git = \"https://github.com/CoReason-AI/coreason-urn-authority.git\" }|coreason-urn-authority = { git = \"https://github.com/CoReason-AI/coreason-urn-authority.git\", tag = \"$URN_AUTHORITY_VERSION\" }|g" pyproject.toml || true
+          uv lock
+        shell: bash
 
       - name: Python SCA Audit (pip-audit)
         run: |

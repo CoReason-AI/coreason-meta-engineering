@@ -21,11 +21,7 @@ COPY pyproject.toml uv.lock ./
 # Copy .git if it exists for versioning
 COPY .gi[t] ./.git/
 
-# Copy local manifest dependency to satisfy path dependency
-COPY coreason-manifest* /coreason-manifest/
 
-# Copy local urn-authority dependency to satisfy path dependency
-COPY coreason-urn-authority* /coreason-urn-authority/
 
 # Copy the project files
 COPY src/ ./src/
