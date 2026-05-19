@@ -311,5 +311,41 @@ def scaffold_manifest_yaml(
     return f"Scaffolded manifest.yaml at {target}"
 
 
+@mcp.tool()  # type: ignore[misc]
+def scaffold_sensory_urn(
+    urn_name: str,
+    geometric_schema: dict[str, typing.Any],
+    target_file_path: str,
+    action_space_id: str,
+    has_binary_assets: bool = False,
+) -> str:
+    """
+    Scaffolds a new Sensory URN AST module by orchestrating LLM agents bounded by the GeometricSchemaIntent.
+
+    If has_binary_assets is True, logic to allocate MCP Resources for binary data (like logos) is included.
+    """
+    urn_name = _sanitize_python_identifier(urn_name)
+    verify_cryptographic_urn_boundary(action_space_id)
+
+    prompt_template = (
+        f"Generate a Sensory UI module for URN {urn_name}.\n"
+        f"Include a docstring with AGENT INSTRUCTION, CAUSAL AFFORDANCE, "
+        f"EPISTEMIC BOUNDS, and MCP ROUTING TRIGGERS ({action_space_id}).\n"
+        f"Ensure all UI visual nodes strictly map to the provided geometric schema.\n"
+    )
+    if has_binary_assets:
+        prompt_template += (
+            "Allocate passive MCP Resource definitions for binary assets (e.g. logos) associated with this UI URN.\n"
+        )
+
+    return orchestrate_generation(
+        target_file_path=target_file_path,
+        action_space_id=action_space_id,
+        geometric_schema=geometric_schema,
+        complexity_score=4,
+        prompt_template=prompt_template,
+    )
+
+
 def main() -> None:  # pragma: no cover
     mcp.run()
