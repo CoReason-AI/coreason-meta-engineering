@@ -9,7 +9,7 @@
 # Source Code: [https://github.com/CoReason-AI/coreason_meta_engineering](https://github.com/CoReason-AI/coreason_meta_engineering)
 import datetime
 import hashlib
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +31,12 @@ class ToolManifest(BaseModel):
     name: str
     description: str
     license_hash: str = Field(default=DEFAULT_PROSPERITY_HASH)
+    license_tier: Literal["prosperity-3.0", "commercial"] = Field(
+        description="The licensing class of this forged asset. "
+        "'prosperity-3.0' = copyright assigned to CoReason, Inc. via CLA. "
+        "'commercial' = tenant retains IP sovereignty under commercial agreement.",
+        default="prosperity-3.0",
+    )
     commercial_owner: str | None = None
     requester_public_key: str | None = None
 

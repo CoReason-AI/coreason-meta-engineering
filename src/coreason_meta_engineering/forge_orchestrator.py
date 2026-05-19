@@ -17,6 +17,7 @@ from pathlib import Path
 from coreason_manifest.spec import CognitiveDeliberativeEnvelopeState
 
 from coreason_meta_engineering.pvv import execute_pvv_pipeline
+from coreason_meta_engineering.utils.cla_gate import enforce_cla_gate
 from coreason_meta_engineering.utils.logger import logger
 
 # Legacy generate_server_json import removed
@@ -110,6 +111,10 @@ class DynamicForgeOrchestrator:
         Dynamically provisions N agents based on complexity_score, executes them in parallel,
         and merges the first deterministically valid result via the Kinetic Guillotine.
         """
+        # --- CLA First-Use Acceptance Gate ---
+        enforce_cla_gate()
+        # -------------------------------------
+
         n_agents = 3 if complexity_score >= 8 else 1
 
         schema_json = json.dumps(geometric_schema, indent=2)
