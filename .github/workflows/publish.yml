@@ -37,6 +37,12 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: "3.14"
+
       - name: Extract versions and Patch PyProject
         run: |
           export MANIFEST_VERSION=$(python -c "import re; m = re.search(r'coreason-manifest==([0-9]+\.[0-9]+\.[0-9]+)', open('pyproject.toml').read()); print('v' + m.group(1)) if m else exit(1)")
@@ -47,12 +53,6 @@ jobs:
           sed -i "s|coreason-urn-authority = { git = \"https://github.com/CoReason-AI/coreason-urn-authority.git\" }|coreason-urn-authority = { git = \"https://github.com/CoReason-AI/coreason-urn-authority.git\", tag = \"$URN_AUTHORITY_VERSION\" }|g" pyproject.toml || true
           uv lock
         shell: bash
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-        with:
-          enable-cache: true
-          python-version: "3.14"
 
       - name: Install dependencies
         run: uv sync --all-extras --dev --frozen
@@ -142,6 +142,12 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: "3.14"
 
       - name: Extract versions and Patch PyProject
         run: |
