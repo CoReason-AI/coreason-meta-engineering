@@ -75,6 +75,11 @@ except ImportError:
                 "payload": "from typing import Annotated\nfrom pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass DummyState(CoreasonBaseState):\n    name: Annotated[str, 'test']\n\nDummyState.model_rebuild()\n",
                 "deliberation_trace": "test",
             }
+        if "test_ui_element" in prompt_context:
+            return {
+                "payload": "from pydantic import BaseModel\nclass CoreasonBaseState(BaseModel): pass\nclass TestUiElement(CoreasonBaseState):\n    pass\n\nTestUiElement.model_rebuild()\n",
+                "deliberation_trace": "test",
+            }
 
         # Default fallback for any other tests
         if "actionspace:solver" in prompt_context:
